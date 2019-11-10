@@ -1,0 +1,57 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+_global_script_classes=[  ]
+_global_script_class_icons={
+
+}
+
+[application]
+
+config/name="Rhythm"
+run/main_scene="res://main.tscn"
+config/icon="res://icon.png"
+
+[audio]
+
+output_latency=5
+channel_disable_threshold_db=-100.0
+channel_disable_time=5.0
+
+[autoload]
+
+Note="*res://Note.gd"
+FileLoader="*res://FileLoader.gd"
+
+[debug]
+
+gdscript/warnings/unused_variable=false
+gdscript/warnings/unused_class_variable=false
+gdscript/warnings/unused_argument=false
+gdscript/warnings/unused_signal=false
+gdscript/warnings/return_value_discarded=false
+gdscript/warnings/integer_division=false
+
+[display]
+
+window/size/width=1920
+window/size/height=1080
+window/handheld/orientation="sensor"
+window/stretch/mode="2d"
+window/stretch/aspect="keep_height"
+
+[gdnative]
+
+singletons=[ "res://addons/videodecoder.gdnlib" ]
+
+[rendering]
+
+quality/filters/msaa=1
+environment/default_environment="res://default_env.tres"

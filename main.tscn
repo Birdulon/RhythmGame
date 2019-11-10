@@ -1,0 +1,70 @@
+[gd_scene load_steps=12 format=2]
+
+[ext_resource path="res://main.gd" type="Script" id=1]
+[ext_resource path="res://songs/cirno_9th_anniversary_best_cpu1_3M.webm" type="VideoStream" id=2]
+[ext_resource path="res://Receptors.gd" type="Script" id=3]
+[ext_resource path="res://NoteHandler.gd" type="Script" id=4]
+[ext_resource path="res://shaders/notelines.shader" type="Shader" id=5]
+[ext_resource path="res://shaders/notemesh.shader" type="Shader" id=6]
+[ext_resource path="res://Bezel.gd" type="Script" id=7]
+[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=8]
+[ext_resource path="res://lbl_main.gd" type="Script" id=9]
+
+[sub_resource type="ShaderMaterial" id=1]
+shader = ExtResource( 5 )
+shader_param/line_color = Plane( 0.8, 0.8, 1, 0.8 )
+shader_param/line_color_double = Plane( 1, 1, 0.6, 0.9 )
+shader_param/dot_color = Plane( 1, 1, 1, 0.8 )
+shader_param/bps = 1.0
+shader_param/line_thickness = 0.012
+shader_param/line_thickness_min = 0.0
+shader_param/dot_thickness = 0.033
+shader_param/dot_fullbright_thickness = 0.013
+shader_param/max_angle = 1.0708
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 6 )
+shader_param/bps = null
+shader_param/star_color = null
+shader_param/held_color = null
+shader_param/screen_size = null
+
+[node name="main" type="Node2D"]
+script = ExtResource( 1 )
+
+[node name="video" type="VideoPlayer" parent="."]
+anchor_right = 0.37
+margin_left = 420.0
+margin_right = 1500.0
+margin_bottom = 1080.0
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 540, 540 )
+mouse_filter = 2
+stream = ExtResource( 2 )
+volume_db = -11.6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Receptors" type="Node2D" parent="."]
+script = ExtResource( 3 )
+
+[node name="NoteHandler" type="Node2D" parent="."]
+script = ExtResource( 4 )
+
+[node name="notelines" type="MeshInstance2D" parent="NoteHandler"]
+material = SubResource( 1 )
+
+[node name="meshinstance" type="MeshInstance2D" parent="NoteHandler"]
+material = SubResource( 2 )
+
+[node name="Bezel" type="Node2D" parent="."]
+script = ExtResource( 7 )
+
+[node name="lbl_main" type="Label" parent="."]
+margin_right = 424.0
+margin_bottom = 216.0
+custom_fonts/font = ExtResource( 8 )
+text = "Fingers on the screen:"
+script = ExtResource( 9 )
