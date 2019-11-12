@@ -8,8 +8,8 @@ var receptor_color := Color.blue
 
 func _draw():
 	# Receptor ring
-	var receptor_circle := arc_point_list(screen_center, receptor_ring_radius, 0.0, 360.0, 360)
-	var receptor_centers := arc_point_list(screen_center, receptor_ring_radius, 22.5, 360.0-22.5, 7)
+	var receptor_circle := arc_point_list(screen_center, theme.receptor_ring_radius, 0.0, 360.0, 360)
+	var receptor_centers := arc_point_list(screen_center, theme.receptor_ring_radius, Rules.FIRST_COLUMN_ANGLE_DEG, Rules.FIRST_COLUMN_ANGLE_DEG+360.0-Rules.COLS_ANGLE_DEG, Rules.COLS)
 
 	# Shadows
 	for i in range(len(receptor_circle)-1):

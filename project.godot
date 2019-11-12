@@ -29,6 +29,8 @@ channel_disable_time=5.0
 
 Note="*res://Note.gd"
 FileLoader="*res://FileLoader.gd"
+Rules="*res://Rules.gd"
+theme="*res://theme.gd"
 
 [debug]
 
@@ -53,5 +55,6 @@ singletons=[ "res://addons/videodecoder.gdnlib" ]
 
 [rendering]
 
+environment/default_clear_color=Color( 0, 0, 0, 1 )
 quality/filters/msaa=1
 environment/default_environment="res://default_env.tres"

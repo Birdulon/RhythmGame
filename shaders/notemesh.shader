@@ -11,6 +11,10 @@ uniform vec2 screen_size;
 
 void fragment() {
 	vec4 sample = texture(TEXTURE, UV);
+	
+	//Not sure if this helps or hurts performance
+	//if (sample.a <= 0.0) discard;
+	
 	float scale = sample.r;
 	float dist = distance(FRAGCOORD.xy, screen_size/2.0);
 	float dist_norm = dist*1.8 / screen_size.y;

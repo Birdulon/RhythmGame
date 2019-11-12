@@ -4,6 +4,7 @@ extends Node
 #class_name Note
 
 enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD}
+enum SlideType {CHORD, ARC_CW, ARC_ACW}
 const DEATH_DELAY := 0.45
 
 static func make_tap(time_hit: float, column: int) -> Dictionary:
