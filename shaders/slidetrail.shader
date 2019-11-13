@@ -12,3 +12,9 @@ uniform float bps = 1.0;
 void vertex() {
 	COLOR.a = clamp(COLOR.a-trail_progress, 0.0, 1.0);
 }
+
+void fragment() {
+	vec4 sample = texture(TEXTURE, UV);
+	COLOR.rgb = sample.rgb;
+	COLOR.a *= sample.a;
+}

@@ -115,6 +115,7 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 	var vertices := PoolVector2Array()
 	var uvs := PoolVector2Array()
 	var colors := PoolColorArray()
+	var size := theme.sprite_size2*SQRT2
 	# First we need to determine how many arrows to leave.
 	# Chord length is 2r*sin(theta/2)
 	# Arc length is r*theta (in rads)
@@ -145,9 +146,9 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 			var angle : float = RADIAL_UNIT_VECTORS[note.column].angle_to_point(RADIAL_UNIT_VECTORS[note.column_release])
 			var start : Vector2 = RADIAL_UNIT_VECTORS[note.column] * theme.receptor_ring_radius
 			var end : Vector2 = RADIAL_UNIT_VECTORS[note.column_release] * theme.receptor_ring_radius
-			var uv1o : Vector2 = polar2cartesian(theme.sprite_size2, angle)
-			var uv2o : Vector2 = polar2cartesian(theme.sprite_size2, angle+PI/2.0)
-			var uv3o : Vector2 = polar2cartesian(theme.sprite_size2, angle-PI/2.0)
+			var uv1o : Vector2 = polar2cartesian(size, angle)
+			var uv2o : Vector2 = polar2cartesian(size, angle+PI/2.0)
+			var uv3o : Vector2 = polar2cartesian(size, angle-PI/2.0)
 			for i in trail_length:
 				var offset : Vector2 = lerp(start, end, (i+1)/float(trail_length))
 				vertices[i*3] = offset + uv1o
@@ -162,9 +163,9 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 				var circle_angle : float = lerp(start_a, end_a, (i+1)/float(trail_length))
 				var angle : float = circle_angle + PI/2.0
 				var offset : Vector2 = polar2cartesian(theme.receptor_ring_radius, circle_angle)
-				vertices[i*3] = offset + polar2cartesian(theme.sprite_size2, angle)
-				vertices[i*3+1] = offset + polar2cartesian(theme.sprite_size2, angle+PI/2.0)
-				vertices[i*3+2] = offset + polar2cartesian(theme.sprite_size2, angle-PI/2.0)
+				vertices[i*3] = offset + polar2cartesian(size, angle)
+				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
+				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
 		Note.SlideType.ARC_ACW:
 			var start_a : float = RADIAL_COL_ANGLES[note.column]
 			var end_a : float = RADIAL_COL_ANGLES[note.column_release]
@@ -174,9 +175,9 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 				var circle_angle : float = lerp(start_a, end_a, (i+1)/float(trail_length))
 				var angle : float = circle_angle - PI/2.0
 				var offset : Vector2 = polar2cartesian(theme.receptor_ring_radius, circle_angle)
-				vertices[i*3] = offset + polar2cartesian(theme.sprite_size2, angle)
-				vertices[i*3+1] = offset + polar2cartesian(theme.sprite_size2, angle+PI/2.0)
-				vertices[i*3+2] = offset + polar2cartesian(theme.sprite_size2, angle-PI/2.0)
+				vertices[i*3] = offset + polar2cartesian(size, angle)
+				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
+				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
