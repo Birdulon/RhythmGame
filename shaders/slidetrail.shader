@@ -2,6 +2,7 @@ shader_type canvas_item;
 //render_mode blend_premul_alpha;
 
 uniform float trail_progress = 0.0;
+uniform float base_alpha = 0.88;
 uniform float bps = 1.0;
 
 // The idea here is to create a static mesh for each slide trail at scorefile load.
@@ -15,6 +16,8 @@ void vertex() {
 
 void fragment() {
 	vec4 sample = texture(TEXTURE, UV);
-	COLOR.rgb = sample.rgb;
-	COLOR.a *= sample.a;
+	COLOR.rgb *= sample.r;
+	COLOR.rgb = mix(COLOR.rgb, vec3(1.0), (sample.g+sample.b)/2.0);
+//	if (sample.rgb == vec3(1.0)) COLOR.rgb = vec3(1.0);
+	COLOR.a *= sample.a * base_alpha;
 }

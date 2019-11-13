@@ -115,7 +115,7 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 	var vertices := PoolVector2Array()
 	var uvs := PoolVector2Array()
 	var colors := PoolColorArray()
-	var size := theme.sprite_size2*SQRT2
+	var size := theme.sprite_size2
 	# First we need to determine how many arrows to leave.
 	# Chord length is 2r*sin(theta/2)
 	# Arc length is r*theta (in rads)
@@ -126,7 +126,7 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 	var trail_length: int
 	match note.slide_type:
 		Note.SlideType.CHORD:
-			unit_length = 2*abs(sin(RADIAL_COL_ANGLES[note.column_release] - RADIAL_COL_ANGLES[note.column]))
+			unit_length = 2*abs(sin((RADIAL_COL_ANGLES[note.column_release] - RADIAL_COL_ANGLES[note.column])/2))
 		Note.SlideType.ARC_CW:
 			unit_length = fposmod(RADIAL_COL_ANGLES[note.column_release] - RADIAL_COL_ANGLES[note.column], TAU)
 		Note.SlideType.ARC_ACW:
@@ -136,21 +136,23 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 #	uvs.resize(3*trail_length)
 	colors.resize(3*trail_length)
 	for i in trail_length:
-		uvs.append_array(UV_ARRAY_SLIDE_ARROW if i%2 else UV_ARRAY_SLIDE_ARROW2)
+		uvs.append_array(UV_ARRAY_SLIDE_ARROW if i%3 else UV_ARRAY_SLIDE_ARROW2)
 		for j in 3:
 #			uvs[i*3+j] = UV_ARRAY_SLIDE_ARROW[j] if i%2 else UV_ARRAY_SLIDE_ARROW2[j]
-			colors[i*3+j] = Color(1.0, 1.0, 1.0, 1.0+float(i))
+			colors[i*3+j] = Color(0.67, 0.67, 1.0, 1.0+float(i))
 
 	match note.slide_type:
 		Note.SlideType.CHORD:
-			var angle : float = RADIAL_UNIT_VECTORS[note.column].angle_to_point(RADIAL_UNIT_VECTORS[note.column_release])
+#			var angle : float = RADIAL_UNIT_VECTORS[note.column].angle_to_point(RADIAL_UNIT_VECTORS[note.column_release])
 			var start : Vector2 = RADIAL_UNIT_VECTORS[note.column] * theme.receptor_ring_radius
 			var end : Vector2 = RADIAL_UNIT_VECTORS[note.column_release] * theme.receptor_ring_radius
+#			var angle : float = start.angle_to_point(end)  # seems to be out by 180° for no good reason
+			var angle : float = (end-start).angle()
 			var uv1o : Vector2 = polar2cartesian(size, angle)
 			var uv2o : Vector2 = polar2cartesian(size, angle+PI/2.0)
 			var uv3o : Vector2 = polar2cartesian(size, angle-PI/2.0)
 			for i in trail_length:
-				var offset : Vector2 = lerp(start, end, (i+1)/float(trail_length))
+				var offset : Vector2 = lerp(start, end, i/float(trail_length))
 				vertices[i*3] = offset + uv1o
 				vertices[i*3+1] = offset + uv2o
 				vertices[i*3+2] = offset + uv3o
@@ -420,8 +422,8 @@ func _process(delta):
 		if active_notes[-1].type == Note.NOTE_SLIDE:
 			slide_trail_mesh_instances.push_back(MeshInstance2D.new())
 			slide_trail_mesh_instances[-1].set_mesh(slide_trail_meshes.pop_front())
-			slide_trail_mesh_instances[-1].set_position(screen_center)
-			add_child(slide_trail_mesh_instances[-1])
+#			slide_trail_mesh_instances[-1].set_position(screen_center)
+			$SlideTrailHandler.add_child(slide_trail_mesh_instances[-1])
 			slide_trail_mesh_instances[-1].set_material(slide_trail_shadermaterial)
 			slide_trail_mesh_instances[-1].material.set_shader_param("trail_progress", 0.0)
 			slide_trail_mesh_instances[-1].set_texture(tex_slide_arrow)

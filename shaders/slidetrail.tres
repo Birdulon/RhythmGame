@@ -5,4 +5,5 @@
 [resource]
 shader = ExtResource( 1 )
 shader_param/trail_progress = 0.0
+shader_param/base_alpha = 0.88
 shader_param/bps = 1.0
