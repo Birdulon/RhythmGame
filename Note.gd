@@ -7,6 +7,73 @@ enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD}
 enum SlideType {CHORD, ARC_CW, ARC_ACW}
 const DEATH_DELAY := 0.45
 
+class NoteBase:
+	var time_hit: float
+	var time_death: float
+	var column: int
+	var double_hit := false
+
+class NoteSlide extends NoteBase:
+	var type := NOTE_SLIDE
+	var time_release: float
+	var duration: float
+	var column_release: int
+	var slide_type: int
+	var slide_id: int
+	var values: Dictionary
+
+	func _init(time_hit: float, duration: float, column: int, column_release: int, slide_type: int):
+		self.time_hit = time_hit
+		self.duration = duration
+		self.time_release = time_hit + duration
+		self.time_death = time_release + DEATH_DELAY
+		self.column = column
+		self.column_release = column_release
+		self.slide_type = slide_type
+		self.values = {}
+		update_slide_variables()
+
+	func update_slide_variables():
+		match slide_type:
+			Note.SlideType.CHORD:
+				values.start = theme.RADIAL_UNIT_VECTORS[column] * theme.receptor_ring_radius
+				values.end = theme.RADIAL_UNIT_VECTORS[column_release] * theme.receptor_ring_radius
+				values.angle = (values.end - values.start).angle()
+			Note.SlideType.ARC_CW:
+				values.start_a = theme.RADIAL_COL_ANGLES[column]
+				values.end_a = theme.RADIAL_COL_ANGLES[column_release]
+				if values.end_a < values.start_a:
+					values.end_a += TAU
+			Note.SlideType.ARC_ACW:
+				values.start_a = theme.RADIAL_COL_ANGLES[column]
+				values.end_a = theme.RADIAL_COL_ANGLES[column_release]
+				if values.end_a > values.start_a:
+					values.end_a -= TAU
+
+	func get_position(progress: float) -> Vector2:
+		match slide_type:
+			Note.SlideType.CHORD:
+				return lerp(values.start, values.end, progress)
+			Note.SlideType.ARC_CW:
+				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
+				return polar2cartesian(theme.receptor_ring_radius, circle_angle)
+			Note.SlideType.ARC_ACW:
+				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
+				return polar2cartesian(theme.receptor_ring_radius, circle_angle)
+
+	func get_angle(progress: float) -> float:
+		match slide_type:
+			Note.SlideType.CHORD:
+				return values.angle
+			Note.SlideType.ARC_CW:
+				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
+				return circle_angle + PI/2.0
+			Note.SlideType.ARC_ACW:
+				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
+				return circle_angle - PI/2.0
+
+
+
 static func make_tap(time_hit: float, column: int) -> Dictionary:
 	return {type=NOTE_TAP, time_hit=time_hit, time_death=time_hit+DEATH_DELAY, column=column, double_hit=false}
 
@@ -17,10 +84,11 @@ static func make_hold(time_hit: float, duration: float, column: int) -> Dictiona
 	var time_release := time_hit + duration
 	return {type=NOTE_HOLD, time_hit=time_hit, time_release=time_release, time_death=time_release+DEATH_DELAY, column=column, double_hit=false}
 
-static func make_slide(time_hit: float, duration: float, column: int, column_release: int) -> Dictionary:
-	var time_release := time_hit + duration
-	return {type=NOTE_SLIDE, time_hit=time_hit, time_release=time_release, duration=duration,
-			time_death=time_release+DEATH_DELAY, column=column, column_release=column_release, double_hit=false}
+static func make_slide(time_hit: float, duration: float, column: int, column_release: int, slide_type:=SlideType.CHORD) -> NoteSlide:
+#	var time_release := time_hit + duration
+#	return {type=NOTE_SLIDE, time_hit=time_hit, time_release=time_release, duration=duration,
+#			time_death=time_release+DEATH_DELAY, column=column, column_release=column_release, double_hit=false}
+	return NoteSlide.new(time_hit, duration, column, column_release, slide_type)
 
 static func make_touch(time_hit: float, location: Vector2) -> Dictionary:
 	return {type=NOTE_TOUCH, time_hit=time_hit, time_death=time_hit+DEATH_DELAY, location=location, double_hit=false}
@@ -45,3 +113,4 @@ static func process_note_list(note_array: Array):
 			if note_array[i].type == NOTE_SLIDE:
 				note_array[i].slide_id = slide_id
 				slide_id += 1
+

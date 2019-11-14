@@ -32,3 +32,14 @@ var COLOR_ARRAY_DOUBLE_8 := PoolColorArray([
 	COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE,
 	COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE
 	])
+
+var screen_filter := Color(0.0, 0.0, 0.0, 0.2)
+
+var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
+var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
+
+func init_radial_values():
+	for i in range(Rules.COLS):
+		var angle = deg2rad(fmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
+		RADIAL_COL_ANGLES.push_back(angle)
+		RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))

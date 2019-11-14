@@ -7,6 +7,9 @@ var shadow_color := Color.black
 var receptor_color := Color.blue
 
 func _draw():
+	# Screen filter
+	draw_rect(Rect2(x_margin, 0, screen_height, screen_height), theme.screen_filter)
+
 	# Receptor ring
 	var receptor_circle := arc_point_list(screen_center, theme.receptor_ring_radius, 0.0, 360.0, 360)
 	var receptor_centers := arc_point_list(screen_center, theme.receptor_ring_radius, Rules.FIRST_COLUMN_ANGLE_DEG, Rules.FIRST_COLUMN_ANGLE_DEG+360.0-Rules.COLS_ANGLE_DEG, Rules.COLS)
@@ -22,3 +25,4 @@ func _draw():
 		draw_line(receptor_circle[i], receptor_circle[i+1], receptor_color, ring_px, true)
 	for i in range(len(receptor_centers)):
 		draw_circle(receptor_centers[i], receptor_px/2, receptor_color)
+

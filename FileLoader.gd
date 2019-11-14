@@ -38,6 +38,7 @@ class SRT:
 					# id2 is slide ID
 					if id2 in slide_idxs:
 						notes[slide_idxs[id2]].column_release = column
+						notes[slide_idxs[id2]].update_slide_variables()
 				_:
 					if id2 == 0:
 						notes.push_back(Note.make_tap(time_hit, column))
@@ -45,16 +46,17 @@ class SRT:
 						# id2 is slide ID, id3 is slide pattern
 						# In order to properly declare the slide, we need the paired endcap which may not be the next note
 						slide_idxs[id2] = len(notes)
-						notes.push_back(Note.make_slide(time_hit, duration, column, -1))
+						var slide_type = Note.SlideType.CHORD
 						match id3:
 							ID3_SLIDE_CHORD:
-								notes[slide_idxs[id2]].slide_type = Note.SlideType.CHORD
+								slide_type = Note.SlideType.CHORD
 							ID3_SLIDE_ARC_CW:
-								notes[slide_idxs[id2]].slide_type = Note.SlideType.ARC_CW
+								slide_type = Note.SlideType.ARC_CW
 							ID3_SLIDE_ARC_ACW:
-								notes[slide_idxs[id2]].slide_type = Note.SlideType.ARC_ACW
+								slide_type = Note.SlideType.ARC_ACW
 							_:
 								print("Unknown slide type: ", id3)
+						notes.push_back(Note.NoteSlide.new(time_hit, duration, column, -1, slide_type))
 		return notes
 
 

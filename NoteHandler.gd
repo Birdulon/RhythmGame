@@ -6,31 +6,15 @@ var tex := preload("res://assets/spritesheet-1024.png")
 var tex_slide_arrow := preload("res://assets/slide-arrow-512.png")
 var slide_trail_shadermaterial := preload("res://shaders/slidetrail.tres")
 
-# Constants for the overall notefield
-var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
-var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
-
-# ------------------------------------------------------
-# Ring segments is only for CPU drawing, superceded for now.
-# ------------------------------------------------------
-#const RING_LINE_SEGMENTS_PER_COLUMN := 12
-#var RING_LINE_SEGMENTS_VECTORS := PoolVector2Array()
-#const ring_segs := Rules.COLS * RING_LINE_SEGMENTS_PER_COLUMN
-#const ring_seg_angle := 360.0/ring_segs
-#var ring_line_segments_alphas = PoolRealArray()
-#var ring_line_segments_widths = PoolRealArray()
-func init_radial_values():
-	for i in range(Rules.COLS):
-		var angle = deg2rad(fmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
-		RADIAL_COL_ANGLES.push_back(angle)
-		RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
-#	for i in range(ring_segs):
-#		var angle = deg2rad(Rules.FIRST_COLUMN_ANGLE_DEG + (i * ring_seg_angle))
-#		RING_LINE_SEGMENTS_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
-#	for i in range(ring_segs/4):
-#		var alpha := 1.0 - (i/float(ring_segs/4))
-#		ring_line_segments_alphas.push_back(alpha)
-#		ring_line_segments_widths.push_back(lerp(alpha, 1.0, 0.5))
+## Constants for the overall notefield
+#var theme.RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
+#var theme.RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
+#
+#func init_radial_values():
+#	for i in range(Rules.COLS):
+#		var angle = deg2rad(fmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
+#		theme.RADIAL_COL_ANGLES.push_back(angle)
+#		theme.RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
 
 const SQRT2 := sqrt(2)
 const DEG45 := deg2rad(45.0)
@@ -72,7 +56,9 @@ var NORMAL_ARRAY_8 := PoolVector3Array([
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------
 # Helper functions to generate meshes from vertex arrays
-func make_tap_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRAY_TAP):
+func make_tap_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, color_array:=theme.COLOR_ARRAY_TAP):
+	var dim = theme.sprite_size2 * scale
+	var vertex_array = PoolVector2Array([note_center + Vector2(-dim, -dim), note_center + Vector2(dim, -dim), note_center + Vector2(-dim, dim), note_center + Vector2(dim, dim)])
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
@@ -81,7 +67,21 @@ func make_tap_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRA
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
-func make_hold_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRAY_HOLD):
+func make_hold_mesh(mesh: ArrayMesh, note_center: Vector2, note_center_rel: Vector2, scale:=1.0, angle:=0.0, color_array = theme.COLOR_ARRAY_HOLD):
+	var dim = theme.sprite_size2 * scale
+	var dim2 = dim * SQRT2
+	var a1 = angle - DEG45
+	var a2 = angle + DEG45
+	var a3 = angle - DEG90
+	var a4 = angle + DEG90
+	var a5 = angle - DEG135
+	var a6 = angle + DEG135
+	var vertex_array = PoolVector2Array([
+		note_center + polar2cartesian(dim2, a1), note_center + polar2cartesian(dim2, a2),
+		note_center + polar2cartesian(dim, a3), note_center + polar2cartesian(dim, a4),
+		note_center_rel + polar2cartesian(dim, a3), note_center_rel + polar2cartesian(dim, a4),
+		note_center_rel + polar2cartesian(dim2, a5), note_center_rel + polar2cartesian(dim2, a6)
+		])
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
@@ -90,7 +90,16 @@ func make_hold_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARR
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
-func make_star_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRAY_STAR):
+func make_star_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, angle:=0.0, color_array:=theme.COLOR_ARRAY_STAR):
+	var dim = theme.sprite_size2 * scale * SQRT2
+	var a1 = angle - DEG45
+	var a2 = angle + DEG45
+	var a3 = angle - DEG135
+	var a4 = angle + DEG135
+	var vertex_array = PoolVector2Array([
+		note_center + polar2cartesian(dim, a1), note_center + polar2cartesian(dim, a2),
+		note_center + polar2cartesian(dim, a3), note_center + polar2cartesian(dim, a4)
+		])
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
@@ -99,18 +108,18 @@ func make_star_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARR
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
-func make_arrow_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRAY_TAP):
-	var arrays = []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = vertex_array
-#	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
-	arrays[Mesh.ARRAY_TEX_UV] = UV_ARRAY_ARROW
-	arrays[Mesh.ARRAY_COLOR] = color_array
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
+#func make_arrow_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRAY_TAP):
+#	var arrays = []
+#	arrays.resize(Mesh.ARRAY_MAX)
+#	arrays[Mesh.ARRAY_VERTEX] = vertex_array
+##	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
+#	arrays[Mesh.ARRAY_TEX_UV] = UV_ARRAY_ARROW
+#	arrays[Mesh.ARRAY_COLOR] = color_array
+#	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
 
 const slide_arrows_per_unit_length := 10
-func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
+func make_slide_trail_mesh(note) -> ArrayMesh:
 	# Generates a mesh centered around origin. Make sure the MeshInstance2D that draws this is centered on the screen.
 	var mesh = ArrayMesh.new()
 	var arrays = []
@@ -128,11 +137,11 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 	var trail_length: int
 	match note.slide_type:
 		Note.SlideType.CHORD:
-			unit_length = 2*abs(sin((RADIAL_COL_ANGLES[note.column_release] - RADIAL_COL_ANGLES[note.column])/2))
+			unit_length = 2*abs(sin((theme.RADIAL_COL_ANGLES[note.column_release] - theme.RADIAL_COL_ANGLES[note.column])/2))
 		Note.SlideType.ARC_CW:
-			unit_length = fposmod(RADIAL_COL_ANGLES[note.column_release] - RADIAL_COL_ANGLES[note.column], TAU)
+			unit_length = fposmod(theme.RADIAL_COL_ANGLES[note.column_release] - theme.RADIAL_COL_ANGLES[note.column], TAU)
 		Note.SlideType.ARC_ACW:
-			unit_length = fposmod(RADIAL_COL_ANGLES[note.column] - RADIAL_COL_ANGLES[note.column_release], TAU)
+			unit_length = fposmod(theme.RADIAL_COL_ANGLES[note.column] - theme.RADIAL_COL_ANGLES[note.column_release], TAU)
 	trail_length = int(floor(unit_length * slide_arrows_per_unit_length))
 	vertices.resize(3*trail_length)
 #	uvs.resize(3*trail_length)
@@ -145,8 +154,8 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 
 	match note.slide_type:
 		Note.SlideType.CHORD:
-			var start : Vector2 = RADIAL_UNIT_VECTORS[note.column] * theme.receptor_ring_radius
-			var end : Vector2 = RADIAL_UNIT_VECTORS[note.column_release] * theme.receptor_ring_radius
+			var start : Vector2 = theme.RADIAL_UNIT_VECTORS[note.column] * theme.receptor_ring_radius
+			var end : Vector2 = theme.RADIAL_UNIT_VECTORS[note.column_release] * theme.receptor_ring_radius
 			var angle : float = (end-start).angle()
 			var uv1o : Vector2 = polar2cartesian(size, angle)
 			var uv2o : Vector2 = polar2cartesian(size, angle+PI/2.0)
@@ -157,8 +166,8 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 				vertices[i*3+1] = offset + uv2o
 				vertices[i*3+2] = offset + uv3o
 		Note.SlideType.ARC_CW:
-			var start_a : float = RADIAL_COL_ANGLES[note.column]
-			var end_a : float = RADIAL_COL_ANGLES[note.column_release]
+			var start_a : float = theme.RADIAL_COL_ANGLES[note.column]
+			var end_a : float = theme.RADIAL_COL_ANGLES[note.column_release]
 			if end_a < start_a:
 				end_a += TAU
 			for i in trail_length:
@@ -169,8 +178,8 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
 				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
 		Note.SlideType.ARC_ACW:
-			var start_a : float = RADIAL_COL_ANGLES[note.column]
-			var end_a : float = RADIAL_COL_ANGLES[note.column_release]
+			var start_a : float = theme.RADIAL_COL_ANGLES[note.column]
+			var end_a : float = theme.RADIAL_COL_ANGLES[note.column_release]
 			if end_a > start_a:
 				end_a -= TAU
 			for i in trail_length:
@@ -188,73 +197,14 @@ func make_slide_trail_mesh(note: Dictionary) -> ArrayMesh:
 	return mesh
 
 
-
-func make_tap_note(mesh: ArrayMesh, column: int, position: float, scale := 1.0, color_array := theme.COLOR_ARRAY_TAP) -> ArrayMesh:
-	if position < theme.INNER_NOTE_CIRCLE_RATIO:
-		scale *= position/theme.INNER_NOTE_CIRCLE_RATIO
-		position = theme.INNER_NOTE_CIRCLE_RATIO
-	var note_center = screen_center + (RADIAL_UNIT_VECTORS[column] * position * theme.receptor_ring_radius)
-	var dim = theme.sprite_size2 * scale
-	var vertices = PoolVector2Array([note_center + Vector2(-dim, -dim), note_center + Vector2(dim, -dim), note_center + Vector2(-dim, dim), note_center + Vector2(dim, dim)])
-	make_tap_mesh(mesh, vertices, color_array)
-	return mesh
-
-func make_hold_note(mesh: ArrayMesh, column: int, position1: float, position2: float, scale := 1.0, color_array = theme.COLOR_ARRAY_HOLD) -> ArrayMesh:
-	if position1 < theme.INNER_NOTE_CIRCLE_RATIO:
-		scale *= position1/theme.INNER_NOTE_CIRCLE_RATIO
-		position1 = theme.INNER_NOTE_CIRCLE_RATIO
-	if position2 < theme.INNER_NOTE_CIRCLE_RATIO:
-		position2 = theme.INNER_NOTE_CIRCLE_RATIO
-	var note_center1 = screen_center + (RADIAL_UNIT_VECTORS[column] * position1 * theme.receptor_ring_radius)
-	var note_center2 = screen_center + (RADIAL_UNIT_VECTORS[column] * position2 * theme.receptor_ring_radius)
-	var dim = theme.sprite_size2 * scale
-	var dim2 = dim * SQRT2
-	var angle = RADIAL_COL_ANGLES[column]
-	var a1 = angle - DEG45
-	var a2 = angle + DEG45
-	var a3 = angle - DEG90
-	var a4 = angle + DEG90
-	var a5 = angle - DEG135
-	var a6 = angle + DEG135
-	var vertices = PoolVector2Array([
-		note_center1 + dim2*Vector2(cos(a1), sin(a1)), note_center1 + dim2*Vector2(cos(a2), sin(a2)),
-		note_center1 + dim*Vector2(cos(a3), sin(a3)), note_center1 + dim*Vector2(cos(a4), sin(a4)),
-		note_center2 + dim*Vector2(cos(a3), sin(a3)), note_center2 + dim*Vector2(cos(a4), sin(a4)),
-		note_center2 + dim2*Vector2(cos(a5), sin(a5)), note_center2 + dim2*Vector2(cos(a6), sin(a6))
-		])
-	make_hold_mesh(mesh, vertices, color_array)
-	return mesh
-
-func make_slide_note(mesh: ArrayMesh, column: int, position: float, speed := 1.0, scale := 1.0, color_array := theme.COLOR_ARRAY_STAR) -> ArrayMesh:
-	if position < theme.INNER_NOTE_CIRCLE_RATIO:
-		scale *= position/theme.INNER_NOTE_CIRCLE_RATIO
-		position = theme.INNER_NOTE_CIRCLE_RATIO
-	var note_center = screen_center + (RADIAL_UNIT_VECTORS[column] * position * theme.receptor_ring_radius)
-	var dim = theme.sprite_size2 * scale * SQRT2
-	var angle = fmod(t*speed, 1.0)*TAU
-	var a1 = angle - DEG45
-	var a2 = angle + DEG45
-	var a3 = angle - DEG135
-	var a4 = angle + DEG135
-	var vertices = PoolVector2Array([
-		note_center + dim*Vector2(cos(a1), sin(a1)), note_center + dim*Vector2(cos(a2), sin(a2)),
-		note_center + dim*Vector2(cos(a3), sin(a3)), note_center + dim*Vector2(cos(a4), sin(a4))
-		])
-	make_star_mesh(mesh, vertices, color_array)
-	return mesh
-
-
 #----------------------------------------------------------------------------------------------------------------------------------------------
 
 func _init():
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
-	init_radial_values()
+	theme.init_radial_values()
 
 func _draw():
 	var mesh := ArrayMesh.new()
-#	var dots := PoolVector2Array()
-#	var dots_dict := {}
-
 	var noteline_data : Image = noteline_array_image.get_rect(Rect2(0, 0, 16, 16))
 	noteline_data.lock()
 	var i := 0
@@ -262,23 +212,32 @@ func _draw():
 
 	for note in active_notes:
 		var position : float = (t+theme.note_forecast_beats-note.time_hit)/theme.note_forecast_beats
-		noteline_data.set_pixel(i%16, i/16, Color(position, note.column, RADIAL_COL_ANGLES[note.column]))
+		var scale := 1.0
+		noteline_data.set_pixel(i%16, i/16, Color(position, note.column, theme.RADIAL_COL_ANGLES[note.column]))
 		i += 1
+		if position < theme.INNER_NOTE_CIRCLE_RATIO:
+			scale *= position/theme.INNER_NOTE_CIRCLE_RATIO
+			position = theme.INNER_NOTE_CIRCLE_RATIO
+		var note_center = (theme.RADIAL_UNIT_VECTORS[note.column] * position * theme.receptor_ring_radius)
 		match note.type:
 			Note.NOTE_TAP:
 				var color = theme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else theme.COLOR_ARRAY_TAP
-				make_tap_note(mesh, note.column, position, 1, color)
+				make_tap_mesh(mesh, note_center, scale, color)
 			Note.NOTE_HOLD:
 				var color = theme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else theme.COLOR_ARRAY_HOLD
 				var position_rel : float = (t+theme.note_forecast_beats-note.time_release)/theme.note_forecast_beats
 				if position_rel > 0:
-					var note_rel_center := screen_center + (RADIAL_UNIT_VECTORS[note.column] * position_rel * theme.receptor_ring_radius)
-					noteline_data.set_pixel(j%16, 15, Color(position_rel, note.column, RADIAL_COL_ANGLES[note.column]))
+					var note_rel_center := (theme.RADIAL_UNIT_VECTORS[note.column] * position_rel * theme.receptor_ring_radius)
+					noteline_data.set_pixel(j%16, 15, Color(position_rel, note.column, theme.RADIAL_COL_ANGLES[note.column]))
 					j += 1
-				make_hold_note(mesh, note.column, position, position_rel, 1.0, theme.COLOR_ARRAY_HOLD_HELD)
+				if position_rel < theme.INNER_NOTE_CIRCLE_RATIO:
+					position_rel = theme.INNER_NOTE_CIRCLE_RATIO
+				var note_center_rel = (theme.RADIAL_UNIT_VECTORS[note.column] * position_rel * theme.receptor_ring_radius)
+				make_hold_mesh(mesh, note_center, note_center_rel, scale, theme.RADIAL_COL_ANGLES[note.column], color)
 			Note.NOTE_SLIDE:
 				var color = theme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else theme.COLOR_ARRAY_STAR
-				make_slide_note(mesh, note.column, position, 1.0, color)
+				var angle = fmod(t/note.duration, 1.0)*TAU
+				make_star_mesh(mesh, note_center, scale, angle, color)
 				var trail_alpha := 1.0
 				if position < theme.INNER_NOTE_CIRCLE_RATIO:
 					trail_alpha = 0.0
@@ -286,7 +245,10 @@ func _draw():
 					trail_alpha = min(1.0, (position-theme.INNER_NOTE_CIRCLE_RATIO)/(1-theme.INNER_NOTE_CIRCLE_RATIO*2))
 				else:
 					var trail_progress : float = clamp((t - note.time_hit - theme.SLIDE_DELAY)/(note.duration - theme.SLIDE_DELAY), 0.0, 1.0)
-					slide_trail_mesh_instances[note.slide_id].material.set_shader_param("trail_progress", trail_progress)
+					var star_pos : Vector2 = note.get_position(trail_progress)
+					var star_angle : float = note.get_angle(trail_progress)
+					make_star_mesh(mesh, star_pos, 1.33, star_angle+PI, color)
+#					slide_trail_mesh_instances[note.slide_id].material.set_shader_param("trail_progress", trail_progress)
 					if t > note.time_release:
 						trail_alpha = max(1 - (t - note.time_release)/Note.DEATH_DELAY, 0.0)
 				slide_trail_mesh_instances[note.slide_id].material.set_shader_param("base_alpha", trail_alpha*0.88)
@@ -318,9 +280,12 @@ func _ready():
 
 	var rec_scale1 = (float(screen_height)/float(theme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
+#	var vertex_array_playfield := PoolVector2Array([
+#		Vector2(x_margin, screen_height), Vector2(x_margin, 0.0),
+#		Vector2(x_margin+screen_height, screen_height), Vector2(x_margin+screen_height, 0.0)])
 	var vertex_array_playfield := PoolVector2Array([
-		Vector2(x_margin, screen_height), Vector2(x_margin, 0.0),
-		Vector2(x_margin+screen_height, screen_height), Vector2(x_margin+screen_height, 0.0)])
+		Vector2(-screen_height/2.0, screen_height/2.0), Vector2(-screen_height/2.0, -screen_height/2.0),
+		Vector2(screen_height/2.0, screen_height/2.0), Vector2(screen_height/2.0, -screen_height/2.0)])
 	var mesh_playfield := ArrayMesh.new()
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -397,7 +362,6 @@ func _process(delta):
 		if note.type == Note.NOTE_SLIDE:
 			var meshi = MeshInstance2D.new()
 			meshi.set_mesh(slide_trail_meshes[note.slide_id])
-#			meshi.set_position(screen_center)
 			meshi.set_material(slide_trail_shadermaterial.duplicate())
 			meshi.material.set_shader_param("trail_progress", 0.0)
 			meshi.set_texture(tex_slide_arrow)
@@ -408,7 +372,7 @@ func _process(delta):
 
 	# DEBUG: Reset after all notes are done
 	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and (time > 10.0) and not get_node("/root/main/video").is_playing():
-		time = -2.0
+		time = -10.0
 		next_note_to_load = 0
 
 	# Redraw

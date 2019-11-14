@@ -52,10 +52,10 @@ __meta__ = {
 script = ExtResource( 4 )
 
 [node name="NoteHandler" type="Node2D" parent="."]
+position = Vector2( 960, 540 )
 script = ExtResource( 5 )
 
 [node name="SlideTrailHandler" type="Node2D" parent="NoteHandler"]
-position = Vector2( 960, 540 )
 
 [node name="notelines" type="MeshInstance2D" parent="NoteHandler"]
 material = SubResource( 1 )
