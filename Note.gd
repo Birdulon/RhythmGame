@@ -72,6 +72,16 @@ class NoteSlide extends NoteBase:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
 				return circle_angle - PI/2.0
 
+	func get_slide_length() -> float:
+		# Return unit-circle (r=1) length of slide trail
+		match slide_type:
+			Note.SlideType.CHORD:
+				return 2*abs(sin((theme.RADIAL_COL_ANGLES[column_release] - theme.RADIAL_COL_ANGLES[column])/2))
+			Note.SlideType.ARC_CW:
+				return fposmod(theme.RADIAL_COL_ANGLES[column_release] - theme.RADIAL_COL_ANGLES[column], TAU)
+			Note.SlideType.ARC_ACW:
+				return fposmod(theme.RADIAL_COL_ANGLES[column] - theme.RADIAL_COL_ANGLES[column_release], TAU)
+
 
 
 static func make_tap(time_hit: float, column: int) -> Dictionary:

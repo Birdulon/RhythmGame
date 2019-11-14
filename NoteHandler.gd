@@ -133,16 +133,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 		color = Color(1.0, 1.0, 0.35)
 
 	# First we need to determine how many arrows to leave.
-	var unit_length: float
-	var trail_length: int
-	match note.slide_type:
-		Note.SlideType.CHORD:
-			unit_length = 2*abs(sin((theme.RADIAL_COL_ANGLES[note.column_release] - theme.RADIAL_COL_ANGLES[note.column])/2))
-		Note.SlideType.ARC_CW:
-			unit_length = fposmod(theme.RADIAL_COL_ANGLES[note.column_release] - theme.RADIAL_COL_ANGLES[note.column], TAU)
-		Note.SlideType.ARC_ACW:
-			unit_length = fposmod(theme.RADIAL_COL_ANGLES[note.column] - theme.RADIAL_COL_ANGLES[note.column_release], TAU)
-	trail_length = int(floor(unit_length * slide_arrows_per_unit_length))
+	var trail_length : int = int(floor(note.get_slide_length() * slide_arrows_per_unit_length))
 	vertices.resize(3*trail_length)
 #	uvs.resize(3*trail_length)
 	colors.resize(3*trail_length)
@@ -154,38 +145,26 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 
 	match note.slide_type:
 		Note.SlideType.CHORD:
-			var start : Vector2 = theme.RADIAL_UNIT_VECTORS[note.column] * theme.receptor_ring_radius
-			var end : Vector2 = theme.RADIAL_UNIT_VECTORS[note.column_release] * theme.receptor_ring_radius
-			var angle : float = (end-start).angle()
+			var angle : float = note.get_angle(0)
 			var uv1o : Vector2 = polar2cartesian(size, angle)
 			var uv2o : Vector2 = polar2cartesian(size, angle+PI/2.0)
 			var uv3o : Vector2 = polar2cartesian(size, angle-PI/2.0)
 			for i in trail_length:
-				var offset : Vector2 = lerp(start, end, i/float(trail_length))
+				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
 				vertices[i*3] = offset + uv1o
 				vertices[i*3+1] = offset + uv2o
 				vertices[i*3+2] = offset + uv3o
 		Note.SlideType.ARC_CW:
-			var start_a : float = theme.RADIAL_COL_ANGLES[note.column]
-			var end_a : float = theme.RADIAL_COL_ANGLES[note.column_release]
-			if end_a < start_a:
-				end_a += TAU
 			for i in trail_length:
-				var circle_angle : float = lerp(start_a, end_a, (i+1)/float(trail_length))
-				var angle : float = circle_angle + PI/2.0
-				var offset : Vector2 = polar2cartesian(theme.receptor_ring_radius, circle_angle)
+				var angle : float = note.get_angle((i+1)/float(trail_length))
+				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
 				vertices[i*3] = offset + polar2cartesian(size, angle)
 				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
 				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
 		Note.SlideType.ARC_ACW:
-			var start_a : float = theme.RADIAL_COL_ANGLES[note.column]
-			var end_a : float = theme.RADIAL_COL_ANGLES[note.column_release]
-			if end_a > start_a:
-				end_a -= TAU
 			for i in trail_length:
-				var circle_angle : float = lerp(start_a, end_a, (i+1)/float(trail_length))
-				var angle : float = circle_angle - PI/2.0
-				var offset : Vector2 = polar2cartesian(theme.receptor_ring_radius, circle_angle)
+				var angle : float = note.get_angle((i+1)/float(trail_length))
+				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
 				vertices[i*3] = offset + polar2cartesian(size, angle)
 				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
 				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
@@ -247,7 +226,7 @@ func _draw():
 					var trail_progress : float = clamp((t - note.time_hit - theme.SLIDE_DELAY)/(note.duration - theme.SLIDE_DELAY), 0.0, 1.0)
 					var star_pos : Vector2 = note.get_position(trail_progress)
 					var star_angle : float = note.get_angle(trail_progress)
-					make_star_mesh(mesh, star_pos, 1.33, star_angle+PI, color)
+					make_star_mesh(mesh, star_pos, 1.33, star_angle, color)
 #					slide_trail_mesh_instances[note.slide_id].material.set_shader_param("trail_progress", trail_progress)
 					if t > note.time_release:
 						trail_alpha = max(1 - (t - note.time_release)/Note.DEATH_DELAY, 0.0)
@@ -335,7 +314,7 @@ func _process(delta):
 #	if (t_old < 0) and (t >= 0):
 #		get_node("/root/main/video").play()
 	var vt_delta := time - video_start_time()
-	if (vt_delta >= 0.0) and not get_node("/root/main/video").is_playing():
+	if (0.0 <= vt_delta) and (vt_delta < 1.0) and not get_node("/root/main/video").is_playing():
 		get_node("/root/main/video").play()
 		get_node("/root/main/video").set_stream_position(vt_delta)
 
