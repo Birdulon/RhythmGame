@@ -11,7 +11,11 @@ uniform float bps = 1.0;
 // We don't need vertex alpha normally so we can just set that to large whole numbers
 // on each arrow (1.0, 2.0, 3.0, ... 50.0) and then use a uniform progress float.
 void vertex() {
-	COLOR.a = clamp(COLOR.a-trail_progress, 0.0, 1.0);
+//	COLOR.a = clamp(COLOR.a-trail_progress, 0.0, 1.0);
+	if (COLOR.a<trail_progress)
+		COLOR.a = 0.0;
+	else
+		COLOR.a = 1.0;
 }
 
 void fragment() {
