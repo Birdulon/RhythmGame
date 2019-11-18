@@ -34,6 +34,8 @@ var COLOR_ARRAY_DOUBLE_8 := PoolColorArray([
 	])
 
 var screen_filter := Color(0.0, 0.0, 0.0, 0.2)
+var receptor_color := Color.blue
+var bezel_color := Color.black
 
 var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
 var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const

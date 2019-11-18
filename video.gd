@@ -9,5 +9,5 @@ func update_aspect_ratio(ratio: float):
 	# e.g. for a 1920x1080 video you'd call update_aspect_ratio(1920.0/1080.0)
 	# e.g. for a 1440x1080 video you'd call update_aspect_ratio(1440.0/1080.0)
 	var height = 1080/ratio
-	margin_top = (1080 - height)/2.0
-	margin_bottom = margin_top + height
+	margin_top = -height/2.0
+	margin_bottom = height/2.0
