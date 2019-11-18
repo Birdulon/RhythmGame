@@ -2,19 +2,20 @@ extends "res://main.gd"
 
 # This script will draw all note events.
 
-var tex := preload("res://assets/spritesheet-1024.png")
-var tex_slide_arrow := preload("res://assets/slide-arrow-512.png")
+var tex := preload("res://assets/spritesheet-4k.png")
+var tex_judgement_text := preload("res://assets/text-4k.png")
+var tex_slide_arrow := preload("res://assets/slide-arrow-4k.png")
 var slide_trail_shadermaterial := preload("res://shaders/slidetrail.tres")
 
 ## Constants for the overall notefield
-#var theme.RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
-#var theme.RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
+#var GameTheme.RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
+#var GameTheme.RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
 #
 #func init_radial_values():
 #	for i in range(Rules.COLS):
 #		var angle = deg2rad(fmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
-#		theme.RADIAL_COL_ANGLES.push_back(angle)
-#		theme.RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
+#		GameTheme.RADIAL_COL_ANGLES.push_back(angle)
+#		GameTheme.RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
 
 const SQRT2 := sqrt(2)
 const DEG45 := deg2rad(45.0)
@@ -54,10 +55,42 @@ var NORMAL_ARRAY_8 := PoolVector3Array([
 	DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL
 	])
 
+# Text UVs
+var text_UV_arrays := []
+func make_text_UV(row: int, column: int) -> PoolVector2Array:
+	return PoolVector2Array([Vector2(column/4.0, row/8.0), Vector2((column+1)/4.0, row/8.0), Vector2(column/4.0, (row+1)/8.0), Vector2((column+1)/4.0, (row+1)/8.0)])
+func make_text_UVs():
+	for row in 8:
+		for column in 4:
+			text_UV_arrays.append(make_text_UV(row, column))
+enum TextStyle {STRAIGHT=0, ARC=1, ARC_EARLY=2, ARC_LATE=3}
+enum TextWord {NICE=0, OK=4, NG=8, PERFECT=12, GREAT=16, GOOD=20, ALMOST=24, MISS=28}
+
+func make_text_mesh(mesh: ArrayMesh, text_id: int, pos: Vector2, angle: float, alpha:=1.0, scale:=1.0):
+	var r := GameTheme.judge_text_size2 * scale
+	var vertex_array := PoolVector2Array([
+		pos+polar2cartesian(r, angle+GameTheme.JUDGE_TEXT_ANG2), # TODO: fix this UV/vertex order mess
+		pos+polar2cartesian(r, angle+GameTheme.JUDGE_TEXT_ANG1),
+		pos+polar2cartesian(r, angle+GameTheme.JUDGE_TEXT_ANG4),
+		pos+polar2cartesian(r, angle+GameTheme.JUDGE_TEXT_ANG3)
+	])
+	var arrays = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertex_array
+	arrays[Mesh.ARRAY_TEX_UV] = text_UV_arrays[text_id]
+	arrays[Mesh.ARRAY_COLOR] = GameTheme.color_array_text(alpha)
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
+
+func make_judgement_text(mesh: ArrayMesh, text_id: int, col: int, progress:=0.0):
+	make_text_mesh(mesh, text_id,
+		GameTheme.RADIAL_UNIT_VECTORS[col] * GameTheme.receptor_ring_radius * lerp(0.85, 0.8, progress),
+		GameTheme.RADIAL_COL_ANGLES[col]-PI/2.0, lerp(1.0, 0.0, progress), lerp(1.0, 0.5, progress)
+	)
+
 # ----------------------------------------------------------------------------------------------------------------------------------------------------
 # Helper functions to generate meshes from vertex arrays
-func make_tap_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, color_array:=theme.COLOR_ARRAY_TAP):
-	var dim = theme.sprite_size2 * scale
+func make_tap_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, color_array:=GameTheme.COLOR_ARRAY_TAP):
+	var dim = GameTheme.sprite_size2 * scale
 	var vertex_array = PoolVector2Array([note_center + Vector2(-dim, -dim), note_center + Vector2(dim, -dim), note_center + Vector2(-dim, dim), note_center + Vector2(dim, dim)])
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -67,8 +100,8 @@ func make_tap_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, color_arra
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
-func make_hold_mesh(mesh: ArrayMesh, note_center: Vector2, note_center_rel: Vector2, scale:=1.0, angle:=0.0, color_array = theme.COLOR_ARRAY_HOLD):
-	var dim = theme.sprite_size2 * scale
+func make_hold_mesh(mesh: ArrayMesh, note_center: Vector2, note_center_rel: Vector2, scale:=1.0, angle:=0.0, color_array = GameTheme.COLOR_ARRAY_HOLD):
+	var dim = GameTheme.sprite_size2 * scale
 	var dim2 = dim * SQRT2
 	var a1 = angle - DEG45
 	var a2 = angle + DEG45
@@ -90,8 +123,8 @@ func make_hold_mesh(mesh: ArrayMesh, note_center: Vector2, note_center_rel: Vect
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
-func make_star_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, angle:=0.0, color_array:=theme.COLOR_ARRAY_STAR):
-	var dim = theme.sprite_size2 * scale * SQRT2
+func make_star_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, angle:=0.0, color_array:=GameTheme.COLOR_ARRAY_STAR):
+	var dim = GameTheme.sprite_size2 * scale * SQRT2
 	var a1 = angle - DEG45
 	var a2 = angle + DEG45
 	var a3 = angle - DEG135
@@ -108,7 +141,7 @@ func make_star_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, angle:=0.
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 
-#func make_arrow_mesh(mesh: ArrayMesh, vertex_array, color_array = theme.COLOR_ARRAY_TAP):
+#func make_arrow_mesh(mesh: ArrayMesh, vertex_array, color_array = GameTheme.COLOR_ARRAY_TAP):
 #	var arrays = []
 #	arrays.resize(Mesh.ARRAY_MAX)
 #	arrays[Mesh.ARRAY_VERTEX] = vertex_array
@@ -127,7 +160,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 	var vertices := PoolVector2Array()
 	var uvs := PoolVector2Array()
 	var colors := PoolColorArray()
-	var size := theme.sprite_size2
+	var size := GameTheme.sprite_size2
 	var color := Color(0.67, 0.67, 1.0)
 	if note.double_hit:
 		color = Color(1.0, 1.0, 0.35)
@@ -180,7 +213,8 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 
 func _init():
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
-	theme.init_radial_values()
+	GameTheme.init_radial_values()
+	make_text_UVs()
 
 func _draw():
 	var mesh := ArrayMesh.new()
@@ -190,40 +224,40 @@ func _draw():
 	var j := 0
 
 	for note in active_notes:
-		var position : float = (t+theme.note_forecast_beats-note.time_hit)/theme.note_forecast_beats
+		var position : float = (t+GameTheme.note_forecast_beats-note.time_hit)/GameTheme.note_forecast_beats
 		var scale := 1.0
-		noteline_data.set_pixel(i%16, i/16, Color(position, note.column, theme.RADIAL_COL_ANGLES[note.column]))
+		noteline_data.set_pixel(i%16, i/16, Color(position, note.column, GameTheme.RADIAL_COL_ANGLES[note.column]))
 		i += 1
-		if position < theme.INNER_NOTE_CIRCLE_RATIO:
-			scale *= position/theme.INNER_NOTE_CIRCLE_RATIO
-			position = theme.INNER_NOTE_CIRCLE_RATIO
-		var note_center = (theme.RADIAL_UNIT_VECTORS[note.column] * position * theme.receptor_ring_radius)
+		if position < GameTheme.INNER_NOTE_CIRCLE_RATIO:
+			scale *= position/GameTheme.INNER_NOTE_CIRCLE_RATIO
+			position = GameTheme.INNER_NOTE_CIRCLE_RATIO
+		var note_center = (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position * GameTheme.receptor_ring_radius)
 		match note.type:
 			Note.NOTE_TAP:
-				var color = theme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else theme.COLOR_ARRAY_TAP
+				var color = GameTheme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else GameTheme.COLOR_ARRAY_TAP
 				make_tap_mesh(mesh, note_center, scale, color)
 			Note.NOTE_HOLD:
-				var color = theme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else theme.COLOR_ARRAY_HOLD
-				var position_rel : float = (t+theme.note_forecast_beats-note.time_release)/theme.note_forecast_beats
+				var color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
+				var position_rel : float = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
 				if position_rel > 0:
-					var note_rel_center := (theme.RADIAL_UNIT_VECTORS[note.column] * position_rel * theme.receptor_ring_radius)
-					noteline_data.set_pixel(j%16, 15, Color(position_rel, note.column, theme.RADIAL_COL_ANGLES[note.column]))
+					var note_rel_center := (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position_rel * GameTheme.receptor_ring_radius)
+					noteline_data.set_pixel(j%16, 15, Color(position_rel, note.column, GameTheme.RADIAL_COL_ANGLES[note.column]))
 					j += 1
-				if position_rel < theme.INNER_NOTE_CIRCLE_RATIO:
-					position_rel = theme.INNER_NOTE_CIRCLE_RATIO
-				var note_center_rel = (theme.RADIAL_UNIT_VECTORS[note.column] * position_rel * theme.receptor_ring_radius)
-				make_hold_mesh(mesh, note_center, note_center_rel, scale, theme.RADIAL_COL_ANGLES[note.column], color)
+				if position_rel < GameTheme.INNER_NOTE_CIRCLE_RATIO:
+					position_rel = GameTheme.INNER_NOTE_CIRCLE_RATIO
+				var note_center_rel = (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position_rel * GameTheme.receptor_ring_radius)
+				make_hold_mesh(mesh, note_center, note_center_rel, scale, GameTheme.RADIAL_COL_ANGLES[note.column], color)
 			Note.NOTE_SLIDE:
-				var color = theme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else theme.COLOR_ARRAY_STAR
+				var color = GameTheme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else GameTheme.COLOR_ARRAY_STAR
 				var angle = fmod(t/note.duration, 1.0)*TAU
 				make_star_mesh(mesh, note_center, scale, angle, color)
 				var trail_alpha := 1.0
-				if position < theme.INNER_NOTE_CIRCLE_RATIO:
+				if position < GameTheme.INNER_NOTE_CIRCLE_RATIO:
 					trail_alpha = 0.0
 				elif position < 1.0:
-					trail_alpha = min(1.0, (position-theme.INNER_NOTE_CIRCLE_RATIO)/(1-theme.INNER_NOTE_CIRCLE_RATIO*2))
+					trail_alpha = min(1.0, (position-GameTheme.INNER_NOTE_CIRCLE_RATIO)/(1-GameTheme.INNER_NOTE_CIRCLE_RATIO*2))
 				else:
-					var trail_progress : float = clamp((t - note.time_hit - theme.SLIDE_DELAY)/(note.duration - theme.SLIDE_DELAY), 0.0, 1.0)
+					var trail_progress : float = clamp((t - note.time_hit - GameTheme.SLIDE_DELAY)/(note.duration - GameTheme.SLIDE_DELAY), 0.0, 1.0)
 					var star_pos : Vector2 = note.get_position(trail_progress)
 					var star_angle : float = note.get_angle(trail_progress)
 					make_star_mesh(mesh, star_pos, 1.33, star_angle, color)
@@ -238,6 +272,18 @@ func _draw():
 	$notelines.set_texture(noteline_data_tex)
 
 	$meshinstance.set_mesh(mesh)
+
+	var textmesh := ArrayMesh.new()
+	make_judgement_text(textmesh, TextWord.PERFECT+TextStyle.ARC, 0, 0.0)
+	make_judgement_text(textmesh, TextWord.GREAT+TextStyle.ARC_LATE, 1, 0.0)
+	make_judgement_text(textmesh, TextWord.GOOD+TextStyle.ARC_EARLY, 2, 0.1)
+	make_judgement_text(textmesh, TextWord.ALMOST+TextStyle.ARC_LATE, 3, 0.2)
+	make_judgement_text(textmesh, TextWord.MISS+TextStyle.ARC, 4, 0.4)
+	make_judgement_text(textmesh, TextWord.NICE+TextStyle.ARC, 5, 0.6)
+	make_judgement_text(textmesh, TextWord.OK+TextStyle.ARC, 6, 0.8)
+	make_judgement_text(textmesh, TextWord.NG+TextStyle.ARC, 7, 0.9)
+	$JudgeText.set_mesh(textmesh)
+
 #	draw_mesh(mesh, tex)
 
 var noteline_array_image := Image.new()
@@ -251,13 +297,13 @@ func _ready():
 	all_notes = []
 	next_note_to_load = 0
 
-	$meshinstance.material.set_shader_param("star_color", theme.COLOR_STAR)
-	$meshinstance.material.set_shader_param("held_color", theme.COLOR_HOLD_HELD)
+	$meshinstance.material.set_shader_param("star_color", GameTheme.COLOR_STAR)
+	$meshinstance.material.set_shader_param("held_color", GameTheme.COLOR_HOLD_HELD)
 	$meshinstance.material.set_shader_param("bps", bpm/60.0)
 	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
 	$meshinstance.set_texture(tex)
 
-	var rec_scale1 = (float(screen_height)/float(theme.receptor_ring_radius))*0.5
+	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
 #	var vertex_array_playfield := PoolVector2Array([
 #		Vector2(x_margin, screen_height), Vector2(x_margin, 0.0),
@@ -332,7 +378,7 @@ func _process(delta):
 		if next_note_to_load >= len(all_notes):
 			# All notes have been loaded, maybe do something
 			break
-		if all_notes[next_note_to_load].time_hit > (t + theme.note_forecast_beats):
+		if all_notes[next_note_to_load].time_hit > (t + GameTheme.note_forecast_beats):
 			# Next chronological note isn't ready to load yet
 			break
 		# Next chronological note is ready to load, load it

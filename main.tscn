@@ -1,18 +1,19 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://songs/cirno_1080p_rt_cpu1_3M.webm" type="VideoStream" id=2]
 [ext_resource path="res://video.gd" type="Script" id=3]
 [ext_resource path="res://Receptors.gd" type="Script" id=4]
 [ext_resource path="res://NoteHandler.gd" type="Script" id=5]
-[ext_resource path="res://shaders/notelines.shader" type="Shader" id=6]
-[ext_resource path="res://shaders/notemesh.shader" type="Shader" id=7]
-[ext_resource path="res://Bezel.gd" type="Script" id=8]
-[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=9]
-[ext_resource path="res://InputHandler.gd" type="Script" id=10]
+[ext_resource path="res://assets/text-4k.png" type="Texture" id=6]
+[ext_resource path="res://shaders/notelines.shader" type="Shader" id=7]
+[ext_resource path="res://shaders/notemesh.shader" type="Shader" id=8]
+[ext_resource path="res://Bezel.gd" type="Script" id=9]
+[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=10]
+[ext_resource path="res://InputHandler.gd" type="Script" id=11]
 
 [sub_resource type="ShaderMaterial" id=1]
-shader = ExtResource( 6 )
+shader = ExtResource( 7 )
 shader_param/line_color = Plane( 0.8, 0.8, 1, 0.8 )
 shader_param/line_color_double = Plane( 1, 1, 0.6, 0.9 )
 shader_param/dot_color = Plane( 1, 1, 1, 0.8 )
@@ -24,7 +25,7 @@ shader_param/dot_fullbright_thickness = 0.013
 shader_param/max_angle = 1.0708
 
 [sub_resource type="ShaderMaterial" id=2]
-shader = ExtResource( 7 )
+shader = ExtResource( 8 )
 shader_param/bps = null
 shader_param/star_color = null
 shader_param/held_color = null
@@ -34,7 +35,8 @@ shader_param/screen_size = null
 position = Vector2( 960, 540 )
 script = ExtResource( 1 )
 __meta__ = {
-"_edit_vertical_guides_": [ 1450.0 ]
+"_edit_horizontal_guides_": [  ],
+"_edit_vertical_guides_": [ 420.85, 1500.91 ]
 }
 
 [node name="video" type="VideoPlayer" parent="."]
@@ -61,6 +63,9 @@ script = ExtResource( 5 )
 
 [node name="SlideTrailHandler" type="Node2D" parent="NoteHandler"]
 
+[node name="JudgeText" type="MeshInstance2D" parent="NoteHandler"]
+texture = ExtResource( 6 )
+
 [node name="notelines" type="MeshInstance2D" parent="NoteHandler"]
 material = SubResource( 1 )
 
@@ -68,13 +73,13 @@ material = SubResource( 1 )
 material = SubResource( 2 )
 
 [node name="Bezel" type="Node2D" parent="."]
-script = ExtResource( 8 )
+script = ExtResource( 9 )
 
 [node name="InputHandler" type="Label" parent="."]
 margin_left = -960.0
 margin_top = -540.0
 margin_right = 960.0
 margin_bottom = 540.0
-custom_fonts/font = ExtResource( 9 )
+custom_fonts/font = ExtResource( 10 )
 text = "Fingers on the screen:"
-script = ExtResource( 10 )
+script = ExtResource( 11 )

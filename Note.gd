@@ -36,17 +36,17 @@ class NoteSlide extends NoteBase:
 	func update_slide_variables():
 		match slide_type:
 			Note.SlideType.CHORD:
-				values.start = theme.RADIAL_UNIT_VECTORS[column] * theme.receptor_ring_radius
-				values.end = theme.RADIAL_UNIT_VECTORS[column_release] * theme.receptor_ring_radius
+				values.start = GameTheme.RADIAL_UNIT_VECTORS[column] * GameTheme.receptor_ring_radius
+				values.end = GameTheme.RADIAL_UNIT_VECTORS[column_release] * GameTheme.receptor_ring_radius
 				values.angle = (values.end - values.start).angle()
 			Note.SlideType.ARC_CW:
-				values.start_a = theme.RADIAL_COL_ANGLES[column]
-				values.end_a = theme.RADIAL_COL_ANGLES[column_release]
+				values.start_a = GameTheme.RADIAL_COL_ANGLES[column]
+				values.end_a = GameTheme.RADIAL_COL_ANGLES[column_release]
 				if values.end_a < values.start_a:
 					values.end_a += TAU
 			Note.SlideType.ARC_ACW:
-				values.start_a = theme.RADIAL_COL_ANGLES[column]
-				values.end_a = theme.RADIAL_COL_ANGLES[column_release]
+				values.start_a = GameTheme.RADIAL_COL_ANGLES[column]
+				values.end_a = GameTheme.RADIAL_COL_ANGLES[column_release]
 				if values.end_a > values.start_a:
 					values.end_a -= TAU
 
@@ -56,10 +56,10 @@ class NoteSlide extends NoteBase:
 				return lerp(values.start, values.end, progress)
 			Note.SlideType.ARC_CW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
-				return polar2cartesian(theme.receptor_ring_radius, circle_angle)
+				return polar2cartesian(GameTheme.receptor_ring_radius, circle_angle)
 			Note.SlideType.ARC_ACW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
-				return polar2cartesian(theme.receptor_ring_radius, circle_angle)
+				return polar2cartesian(GameTheme.receptor_ring_radius, circle_angle)
 
 	func get_angle(progress: float) -> float:
 		match slide_type:
@@ -76,11 +76,11 @@ class NoteSlide extends NoteBase:
 		# Return unit-circle (r=1) length of slide trail
 		match slide_type:
 			Note.SlideType.CHORD:
-				return 2*abs(sin((theme.RADIAL_COL_ANGLES[column_release] - theme.RADIAL_COL_ANGLES[column])/2))
+				return 2*abs(sin((GameTheme.RADIAL_COL_ANGLES[column_release] - GameTheme.RADIAL_COL_ANGLES[column])/2))
 			Note.SlideType.ARC_CW:
-				return fposmod(theme.RADIAL_COL_ANGLES[column_release] - theme.RADIAL_COL_ANGLES[column], TAU)
+				return fposmod(GameTheme.RADIAL_COL_ANGLES[column_release] - GameTheme.RADIAL_COL_ANGLES[column], TAU)
 			Note.SlideType.ARC_ACW:
-				return fposmod(theme.RADIAL_COL_ANGLES[column] - theme.RADIAL_COL_ANGLES[column_release], TAU)
+				return fposmod(GameTheme.RADIAL_COL_ANGLES[column] - GameTheme.RADIAL_COL_ANGLES[column_release], TAU)
 
 
 
