@@ -28,10 +28,13 @@ var bpm := 120.0
 var sync_offset_video := 0.0  # Time in seconds to the first beat
 var sync_offset_audio := 0.0  # Time in seconds to the first beat
 var active_notes := []
+var active_judgement_texts := []
 var all_notes := []
 var next_note_to_load := 0
 var slide_trail_meshes := {}
 var slide_trail_mesh_instances := {}
+
+var noteline_array_image := Image.new()
 
 # UV vertex arrays for our sprites
 # tap/star/arrow are 4-vertex 2-triangle simple squares
@@ -65,6 +68,15 @@ func make_text_UVs():
 			text_UV_arrays.append(make_text_UV(row, column))
 enum TextStyle {STRAIGHT=0, ARC=1, ARC_EARLY=2, ARC_LATE=3}
 enum TextWord {NICE=0, OK=4, NG=8, PERFECT=12, GREAT=16, GOOD=20, ALMOST=24, MISS=28}
+const TextJudgement := {
+	0: TextWord.PERFECT + TextStyle.ARC,
+	1: TextWord.GREAT + TextStyle.ARC_LATE,
+	-1: TextWord.GREAT + TextStyle.ARC_EARLY,
+	2: TextWord.GOOD + TextStyle.ARC_LATE,
+	-2: TextWord.GOOD + TextStyle.ARC_EARLY,
+	3: TextWord.ALMOST + TextStyle.ARC_LATE,
+	-3: TextWord.ALMOST + TextStyle.ARC_EARLY,
+}
 
 func make_text_mesh(mesh: ArrayMesh, text_id: int, pos: Vector2, angle: float, alpha:=1.0, scale:=1.0):
 	var r := GameTheme.judge_text_size2 * scale
@@ -83,8 +95,8 @@ func make_text_mesh(mesh: ArrayMesh, text_id: int, pos: Vector2, angle: float, a
 
 func make_judgement_text(mesh: ArrayMesh, text_id: int, col: int, progress:=0.0):
 	make_text_mesh(mesh, text_id,
-		GameTheme.RADIAL_UNIT_VECTORS[col] * GameTheme.receptor_ring_radius * lerp(0.85, 0.8, progress),
-		GameTheme.RADIAL_COL_ANGLES[col]-PI/2.0, lerp(1.0, 0.0, progress), lerp(1.0, 0.5, progress)
+		GameTheme.RADIAL_UNIT_VECTORS[col] * GameTheme.receptor_ring_radius * lerp(0.85, 0.85*0.75, progress),
+		GameTheme.RADIAL_COL_ANGLES[col]-PI/2.0, lerp(1.0, 0.0, progress), lerp(1.0, 0.75, progress)
 	)
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -208,14 +220,63 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh
 
+#----------------------------------------------------------------------------------------------------------------------------------------------
+func activate_note(note, judgement):
+	active_judgement_texts.append({col=note.column, judgement=judgement, time=t})
+
+	note.time_activated = t
+	match note.type:
+		Note.NOTE_HOLD:
+			note.is_held = true
+		Note.NOTE_SLIDE:
+			pass # Set up slide trail?
+	return
+
+func button_pressed(col):
+	for note in active_notes:
+		if note.column != col:
+			continue
+		if note.time_activated != INF:
+			continue
+		var hit_delta = t - note.time_hit
+		if hit_delta >= 0.0:
+			if hit_delta > Rules.JUDGEMENT_TIMES_POST[-1]:
+				continue  # missed
+			for i in Rules.JUDGEMENT_TIERS:
+				if hit_delta <= Rules.JUDGEMENT_TIMES_POST[i]:
+					activate_note(note, i)
+					return
+		else:
+			if -hit_delta > Rules.JUDGEMENT_TIMES_PRE[-1]:
+				continue  # too far away
+			for i in Rules.JUDGEMENT_TIERS:
+				if -hit_delta <= Rules.JUDGEMENT_TIMES_POST[i]:
+					activate_note(note, -i)
+					return
+
+func touchbutton_pressed(col):
+	button_pressed(col)
+
+func check_hold_release(col):
+	for note in active_notes:
+		if note.column != col:
+			continue
+		if note.type == Note.NOTE_HOLD:
+			if note.is_held == true:
+				note.is_held = false
+				pass
+
+func button_released(col):
+	# We only care about hold release.
+	# For that particular case, we want both to be unheld.
+	if $"/root/main/InputHandler".touchbuttons_pressed[col] == 0:
+		check_hold_release(col)
+
+func touchbutton_released(col):
+	if $"/root/main/InputHandler".buttons_pressed[col] == 0:
+		check_hold_release(col)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
-
-func _init():
-	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
-	GameTheme.init_radial_values()
-	make_text_UVs()
-
 func _draw():
 	var mesh := ArrayMesh.new()
 	var noteline_data : Image = noteline_array_image.get_rect(Rect2(0, 0, 16, 16))
@@ -234,10 +295,16 @@ func _draw():
 		var note_center = (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position * GameTheme.receptor_ring_radius)
 		match note.type:
 			Note.NOTE_TAP:
-				var color = GameTheme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else GameTheme.COLOR_ARRAY_TAP
+				var color: PoolColorArray
+				if note.time_activated == INF:
+					color = GameTheme.color_array_tap(1.0, note.double_hit)
+				else:
+					color = GameTheme.color_array_tap(lerp(1.0, 0.0, (note.time_death-t)/Note.DEATH_DELAY), note.double_hit)
 				make_tap_mesh(mesh, note_center, scale, color)
 			Note.NOTE_HOLD:
 				var color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
+				if note.is_held:
+					color = GameTheme.COLOR_ARRAY_HOLD_HELD
 				var position_rel : float = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
 				if position_rel > 0:
 					var note_rel_center := (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position_rel * GameTheme.receptor_ring_radius)
@@ -272,21 +339,25 @@ func _draw():
 	$notelines.set_texture(noteline_data_tex)
 
 	$meshinstance.set_mesh(mesh)
-
-	var textmesh := ArrayMesh.new()
-	make_judgement_text(textmesh, TextWord.PERFECT+TextStyle.ARC, 0, 0.0)
-	make_judgement_text(textmesh, TextWord.GREAT+TextStyle.ARC_LATE, 1, 0.0)
-	make_judgement_text(textmesh, TextWord.GOOD+TextStyle.ARC_EARLY, 2, 0.1)
-	make_judgement_text(textmesh, TextWord.ALMOST+TextStyle.ARC_LATE, 3, 0.2)
-	make_judgement_text(textmesh, TextWord.MISS+TextStyle.ARC, 4, 0.4)
-	make_judgement_text(textmesh, TextWord.NICE+TextStyle.ARC, 5, 0.6)
-	make_judgement_text(textmesh, TextWord.OK+TextStyle.ARC, 6, 0.8)
-	make_judgement_text(textmesh, TextWord.NG+TextStyle.ARC, 7, 0.9)
-	$JudgeText.set_mesh(textmesh)
-
 #	draw_mesh(mesh, tex)
 
-var noteline_array_image := Image.new()
+	var textmesh := ArrayMesh.new()
+#	make_judgement_text(textmesh, TextWord.PERFECT+TextStyle.ARC, 0, fmod(t, 1.0))
+#	make_judgement_text(textmesh, TextWord.GREAT+TextStyle.ARC_LATE, 1, ease(fmod(t, 1.0), 1.25))
+#	make_judgement_text(textmesh, TextWord.GOOD+TextStyle.ARC_EARLY, 2, clamp(fmod(t, 2.0)-1, 0, 1))
+#	make_judgement_text(textmesh, TextWord.ALMOST+TextStyle.ARC_LATE, 3, ease(clamp(fmod(t, 2.0)-1, 0, 1), 1.25))
+#	make_judgement_text(textmesh, TextWord.MISS+TextStyle.ARC, 4, clamp(fmod(t, 2.0)-0.5, 0, 1))
+#	make_judgement_text(textmesh, TextWord.NICE+TextStyle.ARC, 5, ease(clamp(fmod(t, 2.0)-0.5, 0, 1), 1.25))
+#	make_judgement_text(textmesh, TextWord.OK+TextStyle.ARC, 6, fmod(t, 2.0)*0.5)
+#	make_judgement_text(textmesh, TextWord.NG+TextStyle.ARC, 7, ease(fmod(t, 2.0)*0.5, 1.25))
+	for text in active_judgement_texts:
+		make_judgement_text(textmesh, TextJudgement[text.judgement], text.col, (t-text.time)/GameTheme.judge_text_duration)
+	$JudgeText.set_mesh(textmesh)
+
+func _init():
+	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+	GameTheme.init_radial_values()
+	make_text_UVs()
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -325,7 +396,8 @@ func _ready():
 	noteline_array_image.fill(Color(0.0, 0.0, 0.0))
 	# Format: first 15 rows are for hit events, last row is for releases only (no ring glow)
 
-	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_master.srt")
+#	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_master.srt")
+	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_adv.srt")
 	bpm = 175.0
 	sync_offset_audio = 0.553
 	sync_offset_video = 0.553
@@ -335,6 +407,13 @@ func _ready():
 	for note in all_notes:
 		if note.type == Note.NOTE_SLIDE:
 			slide_trail_meshes[note.slide_id] = make_slide_trail_mesh(note)
+
+	$"/root/main/InputHandler".connect("button_pressed", self, "button_pressed")
+	$"/root/main/InputHandler".connect("touchbutton_pressed", self, "touchbutton_pressed")
+	$"/root/main/InputHandler".connect("button_released", self, "button_released")
+	$"/root/main/InputHandler".connect("touchbutton_released", self, "touchbutton_released")
+
+
 
 func game_time(realtime: float) -> float:
 	return time * bpm / 60.0
@@ -372,6 +451,11 @@ func _process(delta):
 				$SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
 				slide_trail_mesh_instances.erase(note.slide_id)
 			active_notes.remove(i)
+
+	# Clean out expired judgement texts
+	# By design they will always be in order so we can ignore anything past the first index
+	while (len(active_judgement_texts) > 0) and ((t-active_judgement_texts[0].time) > GameTheme.judge_text_duration):
+		active_judgement_texts.pop_front()
 
 	# Add new notes as necessary
 	while true:

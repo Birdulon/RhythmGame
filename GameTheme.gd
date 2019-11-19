@@ -16,6 +16,8 @@ const JUDGE_TEXT_ANG3 := PI + JUDGE_TEXT_ANG2
 const JUDGE_TEXT_ANG4 := -JUDGE_TEXT_ANG2
 var judge_text_size2 := 0.5*judge_text_size/cos(JUDGE_TEXT_ANG2)
 
+var judge_text_duration := 2.0
+
 # Color definitions
 const COLOR_TAP := Color(1, 0.15, 0.15, 1)
 const COLOR_TAP2 := Color(0.75, 0.5, 0, 1)  # High-score taps ("breaks" in maimai)
@@ -51,7 +53,7 @@ var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
 
 func init_radial_values():
 	for i in range(Rules.COLS):
-		var angle = deg2rad(fmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
+		var angle = deg2rad(fposmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
 		RADIAL_COL_ANGLES.push_back(angle)
 		RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
 
@@ -59,3 +61,11 @@ func init_radial_values():
 func color_array_text(alpha: float) -> PoolColorArray:
 	var color := Color(COLOR_TEXT.r, COLOR_TEXT.g, COLOR_TEXT.b, alpha)
 	return PoolColorArray([color, color, color, color])
+
+func color_array_tap(alpha: float, double:=false) -> PoolColorArray:
+	if alpha >= 1.0:
+		return COLOR_ARRAY_DOUBLE_4 if double else COLOR_ARRAY_TAP
+	else:
+		var col := COLOR_DOUBLE if double else COLOR_TAP
+		var color = Color(col.r, col.g, col.b, alpha)
+		return PoolColorArray([color, color, color, color])

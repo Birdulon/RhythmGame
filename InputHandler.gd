@@ -27,7 +27,7 @@ func _init():
 func _ready():
 	set_process_unhandled_input(true)				# process user input
 	set_fingers(0)
-	connect("button_pressed", self, "print_pressed")
+#	connect("button_pressed", self, "print_pressed")
 
 
 func print_pressed(col: int):
