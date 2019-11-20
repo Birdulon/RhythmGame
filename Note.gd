@@ -5,7 +5,7 @@ extends Node
 
 enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD}
 enum SlideType {CHORD, ARC_CW, ARC_ACW}
-const DEATH_DELAY := 0.45
+const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
 
 class NoteBase:
 	var time_hit: float

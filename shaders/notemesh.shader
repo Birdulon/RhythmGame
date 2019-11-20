@@ -42,5 +42,5 @@ void fragment() {
 		COLOR.rgb = mix(COLOR.rgb, vec3(1.0), bright_scale);  // Preserve white outlines
 	}
 	
-	COLOR.a = texture(TEXTURE, UV).a;
+	COLOR.a = clamp(COLOR.a*texture(TEXTURE, UV).a, 0.0, 1.0);
 }

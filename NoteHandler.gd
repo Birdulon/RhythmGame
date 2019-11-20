@@ -27,10 +27,13 @@ var t := 0.0
 var bpm := 120.0
 var sync_offset_video := 0.0  # Time in seconds to the first beat
 var sync_offset_audio := 0.0  # Time in seconds to the first beat
+
 var active_notes := []
-var active_judgement_texts := []
 var all_notes := []
 var next_note_to_load := 0
+var active_judgement_texts := []
+var scores := {}
+
 var slide_trail_meshes := {}
 var slide_trail_mesh_instances := {}
 
@@ -76,7 +79,15 @@ const TextJudgement := {
 	-2: TextWord.GOOD + TextStyle.ARC_EARLY,
 	3: TextWord.ALMOST + TextStyle.ARC_LATE,
 	-3: TextWord.ALMOST + TextStyle.ARC_EARLY,
+	"MISS": TextWord.MISS + TextStyle.ARC
 }
+
+func initialise_scores():
+	scores = {}
+	for type in [Note.NOTE_TAP, Note.NOTE_HOLD, Note.NOTE_SLIDE]:
+		scores[type] = {}
+		for key in TextJudgement:
+			scores[type][key] = 0
 
 func make_text_mesh(mesh: ArrayMesh, text_id: int, pos: Vector2, angle: float, alpha:=1.0, scale:=1.0):
 	var r := GameTheme.judge_text_size2 * scale
@@ -223,6 +234,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 #----------------------------------------------------------------------------------------------------------------------------------------------
 func activate_note(note, judgement):
 	active_judgement_texts.append({col=note.column, judgement=judgement, time=t})
+	scores[note.type][judgement] += 1
 
 	note.time_activated = t
 	match note.type:
@@ -238,7 +250,7 @@ func button_pressed(col):
 			continue
 		if note.time_activated != INF:
 			continue
-		var hit_delta = t - note.time_hit
+		var hit_delta = (t - note.time_hit) * 60.0/bpm  # Judgement times are in seconds not gametime
 		if hit_delta >= 0.0:
 			if hit_delta > Rules.JUDGEMENT_TIMES_POST[-1]:
 				continue  # missed
@@ -293,16 +305,16 @@ func _draw():
 			scale *= position/GameTheme.INNER_NOTE_CIRCLE_RATIO
 			position = GameTheme.INNER_NOTE_CIRCLE_RATIO
 		var note_center = (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position * GameTheme.receptor_ring_radius)
+		var color: PoolColorArray
 		match note.type:
 			Note.NOTE_TAP:
-				var color: PoolColorArray
-				if note.time_activated == INF:
+				if note.time_hit >= t:
 					color = GameTheme.color_array_tap(1.0, note.double_hit)
 				else:
-					color = GameTheme.color_array_tap(lerp(1.0, 0.0, (note.time_death-t)/Note.DEATH_DELAY), note.double_hit)
+					color = GameTheme.color_array_tap(clamp((note.time_death-t)/Note.DEATH_DELAY, 0.0, 1.0), note.double_hit)
 				make_tap_mesh(mesh, note_center, scale, color)
 			Note.NOTE_HOLD:
-				var color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
+				color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
 				if note.is_held:
 					color = GameTheme.COLOR_ARRAY_HOLD_HELD
 				var position_rel : float = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
@@ -315,7 +327,7 @@ func _draw():
 				var note_center_rel = (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position_rel * GameTheme.receptor_ring_radius)
 				make_hold_mesh(mesh, note_center, note_center_rel, scale, GameTheme.RADIAL_COL_ANGLES[note.column], color)
 			Note.NOTE_SLIDE:
-				var color = GameTheme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else GameTheme.COLOR_ARRAY_STAR
+				color = GameTheme.COLOR_ARRAY_DOUBLE_4 if note.double_hit else GameTheme.COLOR_ARRAY_STAR
 				var angle = fmod(t/note.duration, 1.0)*TAU
 				make_star_mesh(mesh, note_center, scale, angle, color)
 				var trail_alpha := 1.0
@@ -358,6 +370,7 @@ func _init():
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 	GameTheme.init_radial_values()
 	make_text_UVs()
+	initialise_scores()
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -444,6 +457,7 @@ func _process(delta):
 		get_node("/root/main/video").set_stream_position(vt_delta)
 
 	# Clean out expired notes
+	var miss_time: float = Rules.JUDGEMENT_TIMES_POST[-1] * bpm/60.0
 	for i in range(len(active_notes)-1, -1, -1):
 		var note = active_notes[i]
 		if note.time_death < t:
@@ -451,6 +465,11 @@ func _process(delta):
 				$SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
 				slide_trail_mesh_instances.erase(note.slide_id)
 			active_notes.remove(i)
+		elif note.time_activated == INF:
+			if ((t-note.time_hit) > miss_time) and not note.missed:
+				active_judgement_texts.append({col=note.column, judgement="MISS", time=t})
+				scores[note.type]["MISS"] += 1
+				note.missed = true
 
 	# Clean out expired judgement texts
 	# By design they will always be in order so we can ignore anything past the first index
@@ -480,9 +499,9 @@ func _process(delta):
 		next_note_to_load += 1
 
 	# DEBUG: Reset after all notes are done
-	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and (time > 10.0) and not get_node("/root/main/video").is_playing():
-		time = -10.0
-		next_note_to_load = 0
+#	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and (time > 10.0) and not get_node("/root/main/video").is_playing():
+#		time = -10.0
+#		next_note_to_load = 0
 
 	# Redraw
 	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
