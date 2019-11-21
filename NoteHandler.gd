@@ -7,6 +7,10 @@ var tex_judgement_text := preload("res://assets/text-4k.png")
 var tex_slide_arrow := preload("res://assets/slide-arrow-4k.png")
 var slide_trail_shadermaterial := preload("res://shaders/slidetrail.tres")
 
+var snd_miss := preload("res://assets/miss.wav")
+var snd_clap := preload("res://assets/softclap.wav")
+var snd_judgement = [snd_clap, snd_clap, snd_clap, snd_clap]
+
 ## Constants for the overall notefield
 #var GameTheme.RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
 #var GameTheme.RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
@@ -234,6 +238,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 #----------------------------------------------------------------------------------------------------------------------------------------------
 func activate_note(note, judgement):
 	active_judgement_texts.append({col=note.column, judgement=judgement, time=t})
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[judgement])
 	scores[note.type][judgement] += 1
 
 	note.time_activated = t
@@ -470,6 +475,7 @@ func _process(delta):
 				active_judgement_texts.append({col=note.column, judgement="MISS", time=t})
 				scores[note.type]["MISS"] += 1
 				note.missed = true
+				SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_miss)
 
 	# Clean out expired judgement texts
 	# By design they will always be in order so we can ignore anything past the first index

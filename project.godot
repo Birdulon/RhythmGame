@@ -31,6 +31,7 @@ Note="*res://Note.gd"
 FileLoader="*res://FileLoader.gd"
 Rules="*res://Rules.gd"
 GameTheme="*res://GameTheme.gd"
+SFXPlayer="*res://SFXPlayer.gd"
 
 [debug]
 
