@@ -1,6 +1,7 @@
 extends "res://main.gd"
 
 # This script will draw all note events.
+var running := false
 
 var tex := preload("res://assets/spritesheet-4k.png")
 var tex_judgement_text := preload("res://assets/text-4k.png")
@@ -399,18 +400,6 @@ func set_time(seconds: float):
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	set_time(-3.0)
-	bpm = 120.0
-	active_notes = []
-	all_notes = []
-	next_note_to_load = 0
-
-	$meshinstance.material.set_shader_param("star_color", GameTheme.COLOR_STAR)
-	$meshinstance.material.set_shader_param("held_color", GameTheme.COLOR_HOLD_HELD)
-	$meshinstance.material.set_shader_param("bps", bpm/60.0)
-	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
-	$meshinstance.set_texture(tex)
-
 	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
 	var vertex_array_playfield := PoolVector2Array([
@@ -430,6 +419,16 @@ func _ready():
 	noteline_array_image.fill(Color(0.0, 0.0, 0.0))
 	# Format: first 15 rows are for hit events, last row is for releases only (no ring glow)
 
+	$"/root/main/InputHandler".connect("button_pressed", self, "button_pressed")
+	$"/root/main/InputHandler".connect("touchbutton_pressed", self, "touchbutton_pressed")
+	$"/root/main/InputHandler".connect("button_released", self, "button_released")
+	$"/root/main/InputHandler".connect("touchbutton_released", self, "touchbutton_released")
+
+func load_track():
+	set_time(-3.0)
+	active_notes = []
+	all_notes = []
+	next_note_to_load = 0
 #	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_master.srt")
 	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_adv.srt")
 	bpm = 175.0
@@ -442,10 +441,11 @@ func _ready():
 		if note.type == Note.NOTE_SLIDE:
 			slide_trail_meshes[note.slide_id] = make_slide_trail_mesh(note)
 
-	$"/root/main/InputHandler".connect("button_pressed", self, "button_pressed")
-	$"/root/main/InputHandler".connect("touchbutton_pressed", self, "touchbutton_pressed")
-	$"/root/main/InputHandler".connect("button_released", self, "button_released")
-	$"/root/main/InputHandler".connect("touchbutton_released", self, "touchbutton_released")
+	$meshinstance.material.set_shader_param("star_color", GameTheme.COLOR_STAR)
+	$meshinstance.material.set_shader_param("held_color", GameTheme.COLOR_HOLD_HELD)
+	$meshinstance.material.set_shader_param("bps", bpm/60.0)
+	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
+	$meshinstance.set_texture(tex)
 
 
 func intro_click():
@@ -470,6 +470,9 @@ func audio_start_time() -> float:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 var timers_set := false
 func _process(delta):
+	if !running:
+		return
+
 	$meshinstance.material.set_shader_param("bps", bpm/60.0)
 	$notelines.material.set_shader_param("bps", bpm/60.0)
 

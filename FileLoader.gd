@@ -97,3 +97,19 @@ class Test:
 				notes.push_back(Note.make_tap(bar*4 + (i/8.0), (bar + i)%8))
 				notes.push_back(Note.make_tap(bar*4 + (i/8.0), (bar + i + 3)%8))
 		return notes
+
+func load_folder(folder):
+	var file = File.new()
+	var err = file.open("%s/song.json" % folder, File.READ)
+	if err != OK:
+		print(err)
+		return err
+	var result_json = JSON.parse(file.get_as_text())
+	file.close()
+	if result_json.error != OK:
+		print("Error: ", result_json.error)
+		print("Error Line: ", result_json.error_line)
+		print("Error String: ", result_json.error_string)
+		return result_json.error
+	var result = result_json.result
+	return result
