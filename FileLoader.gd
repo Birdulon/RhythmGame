@@ -22,7 +22,7 @@ class SRT:
 		var slide_idxs = {}
 		while (file.get_position() < (length-2)):
 			var noteline = file.get_csv_line()
-			var time_hit := (float(noteline[0]) + float(noteline[1])) * beats_per_measure
+			var time_hit := (float(noteline[0]) + (float(noteline[1]))-1.0) * beats_per_measure
 			var duration := float(noteline[2]) * beats_per_measure
 			var column := int(noteline[3])
 			var id := int(noteline[4])

@@ -9,17 +9,37 @@ var slide_trail_shadermaterial := preload("res://shaders/slidetrail.tres")
 
 var snd_miss := preload("res://assets/miss.wav")
 var snd_clap := preload("res://assets/softclap.wav")
-var snd_judgement = [snd_clap, snd_clap, snd_clap, snd_clap]
-
-## Constants for the overall notefield
-#var GameTheme.RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
-#var GameTheme.RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
-#
-#func init_radial_values():
-#	for i in range(Rules.COLS):
-#		var angle = deg2rad(fmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
-#		GameTheme.RADIAL_COL_ANGLES.push_back(angle)
-#		GameTheme.RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
+var snd_count_in := snd_clap
+var snd_judgement := {
+	0: snd_clap,
+	1: snd_clap,
+	-1: snd_clap,
+	2: snd_clap,
+	-2: snd_clap,
+	3: snd_miss,
+	-3: snd_miss,
+	"MISS": snd_miss
+}
+var db_judgement := {
+	0: 0.0,
+	1: -1.5,
+	-1: -1.5,
+	2: -3.0,
+	-2: -3.0,
+	3: -6.0,
+	-3: -6.0,
+	"MISS": 0.0
+}
+var pitch_judgement := {
+	0: 1.0,
+	-1: 1.0/0.75,
+	1: 0.75,
+	-2: 1.0/0.60,
+	2: 0.60,
+	-3: 1.5,
+	3: 1.5,
+	"MISS": 1.0
+}
 
 const SQRT2 := sqrt(2)
 const DEG45 := deg2rad(45.0)
@@ -238,7 +258,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 #----------------------------------------------------------------------------------------------------------------------------------------------
 func activate_note(note, judgement):
 	active_judgement_texts.append({col=note.column, judgement=judgement, time=t})
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[judgement])
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[judgement], db_judgement[judgement], pitch_judgement[judgement])
 	scores[note.type][judgement] += 1
 
 	note.time_activated = t
@@ -255,7 +275,7 @@ func button_pressed(col):
 			continue
 		if note.time_activated != INF:
 			continue
-		var hit_delta = (t - note.time_hit) * 60.0/bpm  # Judgement times are in seconds not gametime
+		var hit_delta = real_time(t - note.time_hit)  # Judgement times are in seconds not gametime
 		if hit_delta >= 0.0:
 			if hit_delta > Rules.JUDGEMENT_TIMES_POST[-1]:
 				continue  # missed
@@ -359,14 +379,6 @@ func _draw():
 #	draw_mesh(mesh, tex)
 
 	var textmesh := ArrayMesh.new()
-#	make_judgement_text(textmesh, TextWord.PERFECT+TextStyle.ARC, 0, fmod(t, 1.0))
-#	make_judgement_text(textmesh, TextWord.GREAT+TextStyle.ARC_LATE, 1, ease(fmod(t, 1.0), 1.25))
-#	make_judgement_text(textmesh, TextWord.GOOD+TextStyle.ARC_EARLY, 2, clamp(fmod(t, 2.0)-1, 0, 1))
-#	make_judgement_text(textmesh, TextWord.ALMOST+TextStyle.ARC_LATE, 3, ease(clamp(fmod(t, 2.0)-1, 0, 1), 1.25))
-#	make_judgement_text(textmesh, TextWord.MISS+TextStyle.ARC, 4, clamp(fmod(t, 2.0)-0.5, 0, 1))
-#	make_judgement_text(textmesh, TextWord.NICE+TextStyle.ARC, 5, ease(clamp(fmod(t, 2.0)-0.5, 0, 1), 1.25))
-#	make_judgement_text(textmesh, TextWord.OK+TextStyle.ARC, 6, fmod(t, 2.0)*0.5)
-#	make_judgement_text(textmesh, TextWord.NG+TextStyle.ARC, 7, ease(fmod(t, 2.0)*0.5, 1.25))
 	for text in active_judgement_texts:
 		make_judgement_text(textmesh, TextJudgement[text.judgement], text.col, (t-text.time)/GameTheme.judge_text_duration)
 	$JudgeText.set_mesh(textmesh)
@@ -432,20 +444,23 @@ func _ready():
 	$"/root/main/InputHandler".connect("touchbutton_released", self, "touchbutton_released")
 
 
+func intro_click():
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_count_in)
 
 func game_time(realtime: float) -> float:
-	return time * bpm / 60.0
+	return realtime * bpm / 60.0
+
+func real_time(gametime: float) -> float:
+	return gametime * 60.0 / bpm
 
 func video_start_time() -> float:
-	# We give a 4 beat delay until the first note of the chart. Should have a sound for each beat.
-	var four_beats := 4.0 * 60.0/bpm
-	return four_beats - sync_offset_video
+	return -sync_offset_video
 
 func audio_start_time() -> float:
-	var four_beats := 4.0 * 60.0/bpm
-	return four_beats - sync_offset_audio
+	return -sync_offset_audio
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
+var timers_set := false
 func _process(delta):
 	$meshinstance.material.set_shader_param("bps", bpm/60.0)
 	$notelines.material.set_shader_param("bps", bpm/60.0)
@@ -453,6 +468,19 @@ func _process(delta):
 	var t_old := game_time(time)
 	time += delta
 	t = game_time(time)
+
+	if (not timers_set) and (t > -5.0):
+		timers_set = true
+		for i in [-4.0, -3.0, -2.0, -1.0]:
+			var delay := real_time(i) - time
+			var timer = Timer.new()
+			timer.set_one_shot(false)
+#			timer.set_timer_process_mode(Timer.TIMER_PROCESS_FIXED)
+			timer.set_wait_time(delay)
+			timer.connect("timeout", self, "intro_click")
+			timer.start()
+			add_child(timer)
+			timer.connect("timeout", timer, "queue_free")
 
 #	if (t_old < 0) and (t >= 0):
 #		get_node("/root/main/video").play()
@@ -475,7 +503,7 @@ func _process(delta):
 				active_judgement_texts.append({col=note.column, judgement="MISS", time=t})
 				scores[note.type]["MISS"] += 1
 				note.missed = true
-				SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_miss)
+				SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement["MISS"], db_judgement["MISS"])
 
 	# Clean out expired judgement texts
 	# By design they will always be in order so we can ignore anything past the first index
