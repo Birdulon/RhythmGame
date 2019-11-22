@@ -46,11 +46,12 @@ const DEG45 := deg2rad(45.0)
 const DEG90 := deg2rad(90.0)
 const DEG135 := deg2rad(135.0)
 
-var time := 0.0
-var t := 0.0
-var bpm := 120.0
-var sync_offset_video := 0.0  # Time in seconds to the first beat
-var sync_offset_audio := 0.0  # Time in seconds to the first beat
+var time_zero_msec: int = 0
+var time: float = 0.0
+var t: float = 0.0  # Game time
+var bpm: float = 120.0
+var sync_offset_video: float = 0.0  # Time in seconds to the first beat
+var sync_offset_audio: float = 0.0  # Time in seconds to the first beat
 
 var active_notes := []
 var all_notes := []
@@ -275,7 +276,8 @@ func button_pressed(col):
 			continue
 		if note.time_activated != INF:
 			continue
-		var hit_delta = real_time(t - note.time_hit)  # Judgement times are in seconds not gametime
+		#var hit_delta = real_time(t - note.time_hit)  # Judgement times are in seconds not gametime
+		var hit_delta = get_realtime_precise() - real_time(note.time_hit)  # Judgement times are in seconds not gametime
 		if hit_delta >= 0.0:
 			if hit_delta > Rules.JUDGEMENT_TIMES_POST[-1]:
 				continue  # missed
@@ -389,10 +391,15 @@ func _init():
 	make_text_UVs()
 	initialise_scores()
 
+func set_time(seconds: float):
+	var msecs = OS.get_ticks_msec()
+	time_zero_msec = msecs - (seconds * 1000)
+	time = seconds
+	t = game_time(time)
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	t = 0.0
-	time = -2.0
+	set_time(-3.0)
 	bpm = 120.0
 	active_notes = []
 	all_notes = []
@@ -406,9 +413,6 @@ func _ready():
 
 	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
-#	var vertex_array_playfield := PoolVector2Array([
-#		Vector2(x_margin, screen_height), Vector2(x_margin, 0.0),
-#		Vector2(x_margin+screen_height, screen_height), Vector2(x_margin+screen_height, 0.0)])
 	var vertex_array_playfield := PoolVector2Array([
 		Vector2(-screen_height/2.0, screen_height/2.0), Vector2(-screen_height/2.0, -screen_height/2.0),
 		Vector2(screen_height/2.0, screen_height/2.0), Vector2(screen_height/2.0, -screen_height/2.0)])
@@ -447,6 +451,10 @@ func _ready():
 func intro_click():
 	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_count_in)
 
+func get_realtime_precise() -> float:
+	# Usually we only update the gametime once per process loop, but for input callbacks it's good to have msec precision
+	return (OS.get_ticks_msec() - time_zero_msec)/1000.0
+
 func game_time(realtime: float) -> float:
 	return realtime * bpm / 60.0
 
@@ -466,7 +474,8 @@ func _process(delta):
 	$notelines.material.set_shader_param("bps", bpm/60.0)
 
 	var t_old := game_time(time)
-	time += delta
+#	time += delta
+	time = get_realtime_precise()
 	t = game_time(time)
 
 	if (not timers_set) and (t > -5.0):
