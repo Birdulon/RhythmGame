@@ -50,6 +50,10 @@ func _process(delta):
 func draw_string_centered(font, position, string, color := Color.white):
 	draw_string(font, Vector2(position.x - font.get_string_size(string).x/2.0, position.y + font.get_ascent()), string, color)
 
+func diffstr(difficulty: float):
+	# Convert .5 to +
+	return str(int(floor(difficulty))) + ("+" if fmod(difficulty, 1.0)>0.4 else "")
+
 func _draw():
 	var songs = len(song_defs)
 	var size = 216
@@ -75,22 +79,22 @@ func _draw():
 		var key = songslist[selected_song%s]
 		var subsize = size * scales[0]
 		y = gy + spacer_y
-		draw_rect(Rect2(-subsize/2.0 - outline_px, y - outline_px, subsize + outline_px*2, subsize + outline_px*2), GameTheme.COLOR_DIFFICULTY[selected_difficulty])
+		draw_rect(Rect2(-subsize/2.0 - outline_px, y - outline_px, subsize + outline_px*2, subsize + outline_px*2), GameTheme.COLOR_DIFFICULTY[selected_difficulty*2])
 		draw_texture_rect(song_images[key], Rect2(-subsize/2.0, y, subsize, subsize), false)
 		if selected:
 			draw_string_centered(TitleFont, Vector2(0, y+subsize), song_defs[key]["title"], Color(0.95, 0.95, 1.0))
-		draw_string_centered(GenreFont, Vector2(subsize/2.0 - 24, gy+subsize+8), str(song_defs[key]["chart_difficulties"][selected_difficulty]), GameTheme.COLOR_DIFFICULTY[selected_difficulty])
+		draw_string_centered(GenreFont, Vector2(subsize/2.0 - 24, gy+subsize+8), diffstr(song_defs[key]["chart_difficulties"][selected_difficulty]), GameTheme.COLOR_DIFFICULTY[selected_difficulty*2])
 		for i in [1, 2, 3]:
 			key = songslist[(selected_song+i)%s]
 			subsize = size * scales[i]
 			var gx = size * (cumscales[i] - scales[0]*0.5 - scales[i]*0.5) + spacer_x * i
-			draw_rect(Rect2(gx - subsize/2.0 - outline_px, y - outline_px, subsize + outline_px*2, subsize + outline_px*2), GameTheme.COLOR_DIFFICULTY[selected_difficulty])
+			draw_rect(Rect2(gx - subsize/2.0 - outline_px, y - outline_px, subsize + outline_px*2, subsize + outline_px*2), GameTheme.COLOR_DIFFICULTY[selected_difficulty*2])
 			draw_texture_rect(song_images[key], Rect2(gx - subsize/2.0, y, subsize, subsize), false)
-			draw_string_centered(GenreFont, Vector2(gx + subsize/2.0 - 24, gy+subsize+8), str(song_defs[key]["chart_difficulties"][selected_difficulty]), GameTheme.COLOR_DIFFICULTY[selected_difficulty])
+			draw_string_centered(GenreFont, Vector2(gx + subsize/2.0 - 24, gy+subsize+8), diffstr(song_defs[key]["chart_difficulties"][selected_difficulty]), GameTheme.COLOR_DIFFICULTY[selected_difficulty*2])
 			key = songslist[(selected_song-i)%s]
-			draw_rect(Rect2(-gx - subsize/2.0 - outline_px, y - outline_px, subsize + outline_px*2, subsize + outline_px*2), GameTheme.COLOR_DIFFICULTY[selected_difficulty])
+			draw_rect(Rect2(-gx - subsize/2.0 - outline_px, y - outline_px, subsize + outline_px*2, subsize + outline_px*2), GameTheme.COLOR_DIFFICULTY[selected_difficulty*2])
 			draw_texture_rect(song_images[key], Rect2(-gx - subsize/2.0, y, subsize, subsize), false)
-			draw_string_centered(GenreFont, Vector2(-gx + subsize/2.0 - 24, gy+subsize+8), str(song_defs[key]["chart_difficulties"][selected_difficulty]), GameTheme.COLOR_DIFFICULTY[selected_difficulty])
+			draw_string_centered(GenreFont, Vector2(-gx + subsize/2.0 - 24, gy+subsize+8), diffstr(song_defs[key]["chart_difficulties"][selected_difficulty]), GameTheme.COLOR_DIFFICULTY[selected_difficulty*2])
 		gy += size + (spacer_y * 2)
 
 #	for key in song_images:
@@ -100,3 +104,18 @@ func _draw():
 #		if x >= (size + spacer_x)*2:
 #			x = -(size + spacer_x)*2
 #			y += size + spacer_y
+
+
+func _input(event):
+	if event.is_action_pressed("ui_right"):
+		selected_song += 1
+	if event.is_action_pressed("ui_left"):
+		selected_song -= 1
+	if event.is_action_pressed("ui_up"):
+		selected_genre = int(max(0, selected_genre - 1))
+	if event.is_action_pressed("ui_down"):
+		selected_genre = int(min(1, selected_genre + 1))
+	if event.is_action_pressed("ui_page_up"):
+		selected_difficulty = int(max(0, selected_difficulty - 1))
+	if event.is_action_pressed("ui_page_down"):
+		selected_difficulty = int(min(4, selected_difficulty + 1))

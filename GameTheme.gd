@@ -29,9 +29,9 @@ const COLOR_TEXT := Color(1, 1, 1, 1)
 
 const COLOR_DIFFICULTY := PoolColorArray([  # Background, foreground for each
 	Color(0.435, 0.333, 1.000), Color(1.0, 1.0, 1.0),
-	Color(0.506, 0.851, 0.333), Color(1.0, 1.0, 1.0),
+	Color(0.150, 1.000, 0.275), Color(1.0, 1.0, 1.0),
 	Color(0.973, 0.718, 0.039), Color(1.0, 1.0, 1.0),
-	Color(1.000, 0.541, 0.584), Color(1.0, 1.0, 1.0),
+	Color(1.000, 0.150, 0.150), Color(1.0, 1.0, 1.0),
 	Color(0.761, 0.271, 0.902), Color(1.0, 1.0, 1.0),
 	Color(1.0, 1.0, 1.0), Color(0.737, 0.188, 0.894),
 ])
