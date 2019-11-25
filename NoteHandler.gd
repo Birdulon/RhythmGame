@@ -424,16 +424,28 @@ func _ready():
 	$"/root/main/InputHandler".connect("button_released", self, "button_released")
 	$"/root/main/InputHandler".connect("touchbutton_released", self, "touchbutton_released")
 
-func load_track():
+func load_track(data: Dictionary, difficulty_idx: int):
 	set_time(-3.0)
 	active_notes = []
 	all_notes = []
 	next_note_to_load = 0
-#	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_master.srt")
-	all_notes = FileLoader.SRT.load_file("res://songs/199_cirno_adv.srt")
-	bpm = 175.0
-	sync_offset_audio = 0.553
-	sync_offset_video = 0.553
+	all_notes = FileLoader.SRT.load_file(data.directory + "/" + data.chart_filelist[difficulty_idx])
+	bpm = data.bpm_values[0]
+	sync_offset_audio = data.audio_offsets[0]
+	sync_offset_video = data.video_offsets[0]
+	var audiostream = AudioStreamOGGVorbis.new()
+#	var asb = load(data.directory + "/" + data.audio_filelist[0])
+#	audiostream.set_data(asb.get_data())
+	# Unbelievably stupid bug, infuriating workaround
+	var oggfile = File.new()
+	oggfile.open(data.directory + "/" + data.audio_filelist[0], File.READ)
+	audiostream.set_data(oggfile.get_buffer(oggfile.get_len()))
+	oggfile.close()
+	var videostream = load(data.directory + "/" + data.video_filelist[0])
+
+	$"/root/main/music".set_stream(audiostream)
+	$"/root/main/video".set_stream(videostream)
+	$"/root/main/video".update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
 #	all_notes = FileLoader.Test.stress_pattern()
 
 	Note.process_note_list(all_notes)
@@ -500,6 +512,11 @@ func _process(delta):
 	if (0.0 <= vt_delta) and (vt_delta < 1.0) and not get_node("/root/main/video").is_playing():
 		get_node("/root/main/video").play()
 		get_node("/root/main/video").set_stream_position(vt_delta)
+	var at_delta := time - audio_start_time()
+	if (0.0 <= at_delta) and (at_delta < 1.0) and not get_node("/root/main/music").is_playing():
+#		get_node("/root/main/music").play()
+#		get_node("/root/main/music").seek(at_delta)
+		get_node("/root/main/music").play(at_delta)
 
 	# Clean out expired notes
 	var miss_time: float = Rules.JUDGEMENT_TIMES_POST[-1] * bpm/60.0

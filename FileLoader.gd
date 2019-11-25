@@ -112,4 +112,5 @@ func load_folder(folder):
 		print("Error String: ", result_json.error_string)
 		return result_json.error
 	var result = result_json.result
+	result.directory = folder
 	return result

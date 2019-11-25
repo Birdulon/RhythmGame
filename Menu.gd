@@ -5,15 +5,22 @@ var song_images = {}
 var genres = {}
 
 enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
+enum MenuMode {SONG_SELECT, CHART_SELECT, OPTIONS, GAMEPLAY}
 
 var selected_genre: int = 0
 var selected_song: int = 0
 var selected_song_vis: int = 0
 var selected_song_delta: float = 0.0  # For floaty display scrolling
-var selected_song_speed: float = 0.25  # For floaty display scrolling
+var selected_song_speed: float = 0.0  # For floaty display scrolling
 var selected_difficulty = ChartDifficulty.ADV
+var menu_mode = MenuMode.SONG_SELECT
+var menu_mode_prev = MenuMode.SONG_SELECT
+var menu_mode_prev_fade_timer := 0.0
+var menu_mode_prev_fade_timer_duration := 0.25
+var currently_playing := false
 
 var touchrects = []
+var touchrects2 = []
 
 var TitleFont := preload("res://assets/MenuTitleFont.tres")
 var GenreFont := preload("res://assets/MenuGenreFont.tres")
@@ -60,7 +67,14 @@ func _process(delta):
 	elif selected_song_delta < -0.5:
 		selected_song_delta += 1.0
 		selected_song_vis -= 1
+
+	menu_mode_prev_fade_timer = max(0.0, menu_mode_prev_fade_timer - delta)
 	update()
+	if (menu_mode == MenuMode.GAMEPLAY) and (menu_mode_prev_fade_timer <= 0.0) and not $"/root/main/NoteHandler".running:
+		var songslist = genres[genres.keys()[selected_genre]]
+		var song_key = songslist[selected_song % len(songslist)]
+		$"/root/main/NoteHandler".load_track(song_defs[song_key], selected_difficulty)
+		$"/root/main/NoteHandler".running = true
 
 func draw_string_centered(font, position, string, color := Color.white):
 	draw_string(font, Vector2(position.x - font.get_string_size(string).x/2.0, position.y + font.get_ascent()), string, color)
@@ -83,13 +97,14 @@ func diffstr(difficulty: float):
 	return str(int(floor(difficulty))) + ("+" if fmod(difficulty, 1.0)>0.4 else "")
 
 
-func _draw_song_select(center_x):
+func _draw_song_select(center: Vector2) -> Array:
 	var size = 216
 	var spacer_x = 12
 	var spacer_y = 64
 	var sel_scales := [1.0, 0.8, 0.64, 0.512, 0.4096]
 	var bg_scales := [0.64, 0.64, 0.64, 0.512, 0.4096]
-	var gy := -160.0
+	var gy := center.y
+	var touchrects := []
 
 	for g in len(genres):
 		var selected: bool = (g == selected_genre)
@@ -108,7 +123,7 @@ func _draw_song_select(center_x):
 			scales[-len(base_scales)] = base_scales[-1]
 
 		var subsize = size * scales[0]
-		var gx = center_x - (subsize + spacer_x) * selected_song_delta
+		var gx = center.x - (subsize + spacer_x) * selected_song_delta
 		var genre = genres.keys()[g]
 		draw_string_centered(GenreFont, Vector2(0, gy), genre)
 		var songslist = genres[genre]
@@ -132,22 +147,89 @@ func _draw_song_select(center_x):
 			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x - subsize, y), subsize)
 			touchrects.append({rect=r, song_idx=selected_song_vis-i, genre_idx=g})
 		gy += size*base_scales[0] + (spacer_y * 2)
+	return touchrects
+
+func _draw_chart_select(center: Vector2) -> Array:
+	var size = 192
+	var spacer_x = 12
+	var touchrects = []
+	var songslist = genres[genres.keys()[selected_genre]]
+	var song_key = songslist[selected_song % len(songslist)]
+	var x = center.x - (size*2.5 + spacer_x*2)
+	for diff in 5:
+		var r = draw_songtile(song_key, Vector2(x, center.y), size, false, diff, (9 if diff == selected_difficulty else 3))
+		touchrects.append({rect=r, chart_idx=diff})
+		x += size + spacer_x
+	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+64), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
+	touchrects.append({rect=Rect2(-450.0, 150.0, 900.0, 300.0), chart_idx=-1})
+	return touchrects
 
 
 func _draw():
 	var songs = len(song_defs)
 	var size = 216
 	var outline_px = 3
-	var center_x = 0.0
+	var center = Vector2(0.0, -160.0)
 	touchrects = []
-	_draw_song_select(center_x)
+	touchrects2 = []
 
+	if menu_mode_prev_fade_timer > 0.0:
+		var progress = 1.0 - menu_mode_prev_fade_timer/menu_mode_prev_fade_timer_duration
+		var center_prev = lerp(center, Vector2(0.0, 700.0), progress)
+		var center_next = lerp(Vector2(0.0, -700.0), center, progress)
+		match menu_mode_prev:
+			MenuMode.SONG_SELECT:
+				_draw_song_select(center_prev)
+			MenuMode.CHART_SELECT:
+				_draw_chart_select(center_prev)
+			MenuMode.OPTIONS:
+				pass
+			MenuMode.GAMEPLAY:
+				pass
+		match menu_mode:
+			MenuMode.SONG_SELECT:
+				_draw_song_select(center_next)
+			MenuMode.CHART_SELECT:
+				_draw_chart_select(center_next)
+			MenuMode.OPTIONS:
+				pass
+			MenuMode.GAMEPLAY:
+				pass
+	else:
+		match menu_mode:
+			MenuMode.SONG_SELECT:
+				touchrects = _draw_song_select(center)
+			MenuMode.CHART_SELECT:
+				touchrects2 = _draw_chart_select(center)
+			MenuMode.OPTIONS:
+				pass
+			MenuMode.GAMEPLAY:
+				pass
 
+func set_menu_mode(mode):
+	menu_mode_prev = menu_mode
+	menu_mode = mode
+	menu_mode_prev_fade_timer = menu_mode_prev_fade_timer_duration
 
 func touch_select_song(touchdict):
-	self.selected_genre = touchdict.genre_idx
-	self.selected_song = touchdict.song_idx
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact)
+	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song == touchdict.song_idx):
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		set_menu_mode(MenuMode.CHART_SELECT)
+	else:
+		self.selected_genre = touchdict.genre_idx
+		self.selected_song = touchdict.song_idx
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
+
+func touch_select_chart(touchdict):
+	if touchdict.chart_idx == selected_difficulty:
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		set_menu_mode(MenuMode.GAMEPLAY)
+	elif touchdict.chart_idx < 0:
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -3.0, 0.7)
+		set_menu_mode(MenuMode.SONG_SELECT)
+	else:
+		self.selected_difficulty = touchdict.chart_idx
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
 
 
 func _input(event):
@@ -157,6 +239,9 @@ func _input(event):
 			for d in touchrects:
 				if d.rect.has_point(pos):
 					touch_select_song(d)
+			for d in touchrects2:
+				if d.rect.has_point(pos):
+					touch_select_chart(d)
 	elif event.is_action_pressed("ui_right"):
 		selected_song += 1
 	elif event.is_action_pressed("ui_left"):
