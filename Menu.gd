@@ -9,7 +9,7 @@ enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
 var selected_genre: int = 0
 var selected_song: int = 0
 var selected_song_delta: float = 0.0  # For floaty display scrolling
-var selected_song_speed: float = 0.5  # For floaty display scrolling
+var selected_song_speed: float = 0.25  # For floaty display scrolling
 var selected_difficulty = ChartDifficulty.ADV
 
 var TitleFont := preload("res://assets/MenuTitleFont.tres")
@@ -91,21 +91,15 @@ func _draw():
 		var scales = []
 		scales.resize(len(base_scales)*2-1)
 		if selected_song_delta >= 0.0:
-			scales[0] = lerp(base_scales[0], base_scales[1], selected_song_delta)
 			for i in len(base_scales)-1:
 				scales[i+1] = lerp(base_scales[i+1], base_scales[i], selected_song_delta)
-			for i in len(base_scales)-2:
-				scales[-i-1] = lerp(base_scales[i+1], base_scales[i+2], selected_song_delta)
-			var i = len(base_scales)
-			scales[i] = base_scales[-1]
+				scales[-i] = lerp(base_scales[i], base_scales[i+1], selected_song_delta)
+			scales[len(base_scales)] = base_scales[-1]
 		else:
-			scales[0] = lerp(base_scales[0], base_scales[1], -selected_song_delta)
 			for i in len(base_scales)-1:
+				scales[i] = lerp(base_scales[i], base_scales[i+1], -selected_song_delta)
 				scales[-i-1] = lerp(base_scales[i+1], base_scales[i], -selected_song_delta)
-			for i in len(base_scales)-2:
-				scales[i+1] = lerp(base_scales[i+1], base_scales[i+2], -selected_song_delta)
-			var i = len(base_scales)
-			scales[-i] = base_scales[-1]
+			scales[-len(base_scales)] = base_scales[-1]
 
 		var subsize = size * scales[0]
 		var gx = center_x - (subsize + spacer_x) * selected_song_delta
