@@ -6,8 +6,10 @@ var genres = {}
 
 enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
 
-var selected_genre := 0
-var selected_song := 0
+var selected_genre: int = 0
+var selected_song: int = 0
+var selected_song_delta: float = 0.0  # For floaty display scrolling
+var selected_song_speed: float = 0.5  # For floaty display scrolling
 var selected_difficulty = ChartDifficulty.ADV
 
 var TitleFont := preload("res://assets/MenuTitleFont.tres")
@@ -45,6 +47,13 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	selected_song_delta += selected_song_speed * delta
+	if selected_song_delta > 0.5:
+		selected_song_delta -= 1.0
+		selected_song += 1
+	elif selected_song_delta < -0.5:
+		selected_song_delta += 1.0
+		selected_song -= 1
 	update()
 
 func draw_string_centered(font, position, string, color := Color.white):
@@ -71,44 +80,54 @@ func _draw():
 	var spacer_x = 12
 	var spacer_y = 64
 	var outline_px = 3
-	var x = -(size + spacer_x)*2
-	var y = -(size + spacer_y)
-	var sel_scales := [1.0, 0.8, 0.64, 0.512]
-	var sel_cumscales := [1.0, 1.8, 2.44, 2.952]
-	var bg_scales := [0.64, 0.64, 0.64, 0.512]
-	var bg_cumscales := [0.64, 1.28, 1.92, 2.432]
+	var center_x = 0.0
+	var sel_scales := [1.0, 0.8, 0.64, 0.512, 0.4096]
+	var bg_scales := [0.64, 0.64, 0.64, 0.512, 0.4096]
 
-	var gy := -160
+	var gy := -160.0
 	for g in len(genres):
 		var selected: bool = (g == selected_genre)
-		var scales = sel_scales if selected else bg_scales
-#		var cumscales = sel_cumscales if selected else bg_cumscales
+		var base_scales = sel_scales if selected else bg_scales
+		var scales = []
+		scales.resize(len(base_scales)*2-1)
+		if selected_song_delta >= 0.0:
+			scales[0] = lerp(base_scales[0], base_scales[1], selected_song_delta)
+			for i in len(base_scales)-1:
+				scales[i+1] = lerp(base_scales[i+1], base_scales[i], selected_song_delta)
+			for i in len(base_scales)-2:
+				scales[-i-1] = lerp(base_scales[i+1], base_scales[i+2], selected_song_delta)
+			var i = len(base_scales)
+			scales[i] = base_scales[-1]
+		else:
+			scales[0] = lerp(base_scales[0], base_scales[1], -selected_song_delta)
+			for i in len(base_scales)-1:
+				scales[-i-1] = lerp(base_scales[i+1], base_scales[i], -selected_song_delta)
+			for i in len(base_scales)-2:
+				scales[i+1] = lerp(base_scales[i+1], base_scales[i+2], -selected_song_delta)
+			var i = len(base_scales)
+			scales[-i] = base_scales[-1]
+
+		var subsize = size * scales[0]
+		var gx = center_x - (subsize + spacer_x) * selected_song_delta
 		var genre = genres.keys()[g]
 		draw_string_centered(GenreFont, Vector2(0, gy), genre)
 		var songslist = genres[genre]
 		var s = len(songslist)
-		var key = songslist[selected_song%s]
-		var subsize = size * scales[0]
-		y = gy + spacer_y
-		var gx = -subsize/2.0
-		draw_songtile(key, Vector2(gx, y), subsize, selected)
-		for i in [1, 2, 3]:
-			gx += subsize + spacer_x
+		var key = songslist[selected_song % s]
+		var y = gy + spacer_y
+		var x = -subsize/2.0
+		draw_songtile(key, Vector2(gx+x, y), subsize, selected, selected_difficulty)
+		for i in [1, 2, 3, 4]:
+			x += subsize + spacer_x
 			subsize = size * scales[i]
-			draw_songtile(songslist[(selected_song+i)%s], Vector2(gx, y), subsize)
-			draw_songtile(songslist[(selected_song-i)%s], Vector2(-gx - subsize, y), subsize)
-#			var gx = size * (cumscales[i] - scales[0]*0.5 - scales[i]*0.5) + spacer_x * i
-#			draw_songtile(songslist[(selected_song+i)%s], Vector2(gx - subsize/2.0, y), subsize)
-#			draw_songtile(songslist[(selected_song-i)%s], Vector2(-gx - subsize/2.0, y), subsize)
+			draw_songtile(songslist[(selected_song+i) % s], Vector2(gx+x, y), subsize)
+		subsize = size * scales[0]
+		x = -subsize/2.0
+		for i in [1, 2, 3, 4]:
+			x += subsize + spacer_x
+			subsize = size * scales[-i]
+			draw_songtile(songslist[(selected_song-i) % s], Vector2(gx-x - subsize, y), subsize)
 		gy += size + (spacer_y * 2)
-
-#	for key in song_images:
-#		draw_texture_rect(song_images[key], Rect2(x, y, size, size), false)
-#		draw_string_centered(TitleFont, Vector2(x+size/2.0, y+size), song_defs[key]["title"], Color(0.95, 0.95, 1.0))
-#		x += size + spacer_x
-#		if x >= (size + spacer_x)*2:
-#			x = -(size + spacer_x)*2
-#			y += size + spacer_y
 
 
 func _input(event):
