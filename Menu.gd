@@ -5,7 +5,7 @@ var song_images = {}
 var genres = {}
 
 enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
-enum MenuMode {SONG_SELECT, CHART_SELECT, OPTIONS, GAMEPLAY}
+enum MenuMode {SONG_SELECT, CHART_SELECT, OPTIONS, GAMEPLAY, SCORE_SCREEN}
 
 var selected_genre: int = 0
 var selected_song: int = 0
@@ -19,8 +19,10 @@ var menu_mode_prev_fade_timer := 0.0
 var menu_mode_prev_fade_timer_duration := 0.25
 var currently_playing := false
 
-var touchrects = []
-var touchrects2 = []
+var scorescreen_song_key := ""
+var scorescreen_score_data := {}
+
+var touch_rects = []
 
 var TitleFont := preload("res://assets/MenuTitleFont.tres")
 var GenreFont := preload("res://assets/MenuGenreFont.tres")
@@ -55,6 +57,7 @@ func scan_library():
 
 func _ready():
 	scan_library()
+	$"/root/main/NoteHandler".connect("finished_song", self, "finished_song")
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -164,14 +167,44 @@ func _draw_chart_select(center: Vector2) -> Array:
 	touchrects.append({rect=Rect2(-450.0, 150.0, 900.0, 300.0), chart_idx=-1})
 	return touchrects
 
+func _draw_score_screen(center: Vector2) -> Array:
+	var size = 192
+	var spacer_x = 12
+	var touchrects = []
+	var songslist = genres[genres.keys()[selected_genre]]
+	var song_key = scorescreen_song_key
+	var x = center.x
+	var y = center.y - 200
+	draw_songtile(song_key, Vector2(x-size/2.0, y), size, false, selected_difficulty, 3)
+	draw_string_centered(TitleFont, Vector2(x, y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
+	var notestrs = ["Tap", "Hold", "Slide"]
+	var judgestrs = ["Perfect", "Great", "Good", "Almost", "Miss"]
+	for i in len(judgestrs):
+		draw_string_centered(TitleFont, Vector2(x-300+(120*(i+1)), y+size+64), judgestrs[i], Color(0.95, 0.95, 1.0))
+	for i in len(notestrs):
+		draw_string_centered(TitleFont, Vector2(x-300, y+size+128+64*i), notestrs[i]+"s:", Color(0.95, 0.95, 1.0))
+		for j in len(judgestrs):
+			var score
+			if j == 0:
+				score = str(scorescreen_score_data[i][0])
+			elif j == 4:
+				score = str(scorescreen_score_data[i]["MISS"])
+			else:
+				score = str(scorescreen_score_data[i][j] + scorescreen_score_data[i][-j])
+			draw_string_centered(TitleFont, Vector2(x-300+(120*(j+1)), y+size+128+64*i), score, Color(0.95, 0.95, 1.0))
+#	touchrects.append({rect=r, chart_idx=diff})
+	touchrects.append({rect=Rect2(-450.0, 150.0, 900.0, 300.0), next_menu=MenuMode.SONG_SELECT})
+	return touchrects
+
 
 func _draw():
 	var songs = len(song_defs)
 	var size = 216
 	var outline_px = 3
 	var center = Vector2(0.0, -160.0)
-	touchrects = []
-	touchrects2 = []
+	touch_rects = []
+	for i in MenuMode:
+		touch_rects.append([])
 
 	if menu_mode_prev_fade_timer > 0.0:
 		var progress = 1.0 - menu_mode_prev_fade_timer/menu_mode_prev_fade_timer_duration
@@ -186,6 +219,8 @@ func _draw():
 				pass
 			MenuMode.GAMEPLAY:
 				pass
+			MenuMode.SCORE_SCREEN:
+				_draw_score_screen(center_prev)
 		match menu_mode:
 			MenuMode.SONG_SELECT:
 				_draw_song_select(center_next)
@@ -195,16 +230,20 @@ func _draw():
 				pass
 			MenuMode.GAMEPLAY:
 				pass
+			MenuMode.SCORE_SCREEN:
+				_draw_score_screen(center_next)
 	else:
 		match menu_mode:
 			MenuMode.SONG_SELECT:
-				touchrects = _draw_song_select(center)
+				touch_rects[menu_mode] = _draw_song_select(center)
 			MenuMode.CHART_SELECT:
-				touchrects2 = _draw_chart_select(center)
+				touch_rects[menu_mode] = _draw_chart_select(center)
 			MenuMode.OPTIONS:
 				pass
 			MenuMode.GAMEPLAY:
 				pass
+			MenuMode.SCORE_SCREEN:
+				touch_rects[menu_mode] = _draw_score_screen(center)
 
 func set_menu_mode(mode):
 	menu_mode_prev = menu_mode
@@ -231,26 +270,44 @@ func touch_select_chart(touchdict):
 		self.selected_difficulty = touchdict.chart_idx
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
 
+func touch_score_screen(touchdict):
+	if touchdict.has("next_menu"):
+		set_menu_mode(touchdict.next_menu)
+
+func finished_song(song_key, score_data):
+	scorescreen_song_key = song_key
+	scorescreen_score_data = score_data
+	set_menu_mode(MenuMode.SCORE_SCREEN)
+
 
 func _input(event):
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			var pos = event.position - get_global_transform_with_canvas().get_origin()
-			for d in touchrects:
-				if d.rect.has_point(pos):
-					touch_select_song(d)
-			for d in touchrects2:
-				if d.rect.has_point(pos):
-					touch_select_chart(d)
-	elif event.is_action_pressed("ui_right"):
-		selected_song += 1
-	elif event.is_action_pressed("ui_left"):
-		selected_song -= 1
-	elif event.is_action_pressed("ui_up"):
-		selected_genre = int(max(0, selected_genre - 1))
-	elif event.is_action_pressed("ui_down"):
-		selected_genre = int(min(1, selected_genre + 1))
-	elif event.is_action_pressed("ui_page_up"):
-		selected_difficulty = int(max(0, selected_difficulty - 1))
-	elif event.is_action_pressed("ui_page_down"):
-		selected_difficulty = int(min(4, selected_difficulty + 1))
+			match menu_mode:
+				MenuMode.SONG_SELECT:
+					for d in touch_rects[MenuMode.SONG_SELECT]:
+						if d.rect.has_point(pos):
+							touch_select_song(d)
+				MenuMode.CHART_SELECT:
+					for d in touch_rects[MenuMode.CHART_SELECT]:
+						if d.rect.has_point(pos):
+							touch_select_chart(d)
+				MenuMode.SCORE_SCREEN:
+					for d in touch_rects[MenuMode.SCORE_SCREEN]:
+						if d.rect.has_point(pos):
+							touch_score_screen(d)
+	match menu_mode:
+		MenuMode.SONG_SELECT:
+			if event.is_action_pressed("ui_right"):
+				selected_song += 1
+			elif event.is_action_pressed("ui_left"):
+				selected_song -= 1
+			elif event.is_action_pressed("ui_up"):
+				selected_genre = int(max(0, selected_genre - 1))
+			elif event.is_action_pressed("ui_down"):
+				selected_genre = int(min(1, selected_genre + 1))
+			elif event.is_action_pressed("ui_page_up"):
+				selected_difficulty = int(max(0, selected_difficulty - 1))
+			elif event.is_action_pressed("ui_page_down"):
+				selected_difficulty = int(min(4, selected_difficulty + 1))

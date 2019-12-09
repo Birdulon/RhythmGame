@@ -1,7 +1,9 @@
 extends "res://main.gd"
 
 # This script will draw all note events.
+signal finished_song(song_key, score_data)
 var running := false
+var song_key = ""
 
 var tex := preload("res://assets/spritesheet-4k.png")
 var tex_judgement_text := preload("res://assets/text-4k.png")
@@ -342,9 +344,13 @@ func _draw():
 					color = GameTheme.color_array_tap(clamp((note.time_death-t)/Note.DEATH_DELAY, 0.0, 1.0), note.double_hit)
 				make_tap_mesh(mesh, note_center, scale, color)
 			Note.NOTE_HOLD:
-				color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
 				if note.is_held:
 					color = GameTheme.COLOR_ARRAY_HOLD_HELD
+					note_center = GameTheme.RADIAL_UNIT_VECTORS[note.column] * GameTheme.receptor_ring_radius
+				elif position > 1.0:
+					color = GameTheme.COLOR_ARRAY_DOUBLE_MISS_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD_MISS
+				else:
+					color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
 				var position_rel : float = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
 				if position_rel > 0:
 					var note_rel_center := (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position_rel * GameTheme.receptor_ring_radius)
@@ -429,6 +435,7 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	active_notes = []
 	all_notes = []
 	next_note_to_load = 0
+	self.song_key = data.directory.rsplit("/", true, 1)[1]
 	all_notes = FileLoader.SRT.load_file(data.directory + "/" + data.chart_filelist[difficulty_idx])
 	bpm = data.bpm_values[0]
 	sync_offset_audio = data.audio_offsets[0]
@@ -565,6 +572,9 @@ func _process(delta):
 #	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and (time > 10.0) and not get_node("/root/main/video").is_playing():
 #		time = -10.0
 #		next_note_to_load = 0
+	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and not get_node("/root/main/music").is_playing():
+		self.running = false
+		emit_signal("finished_song", song_key, scores)
 
 	# Redraw
 	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
