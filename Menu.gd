@@ -75,9 +75,41 @@ func save_score():
 	file.close()
 	scorescreen_saved = true
 
+func load_score(filename):
+	var rootdir = "user://scores"
+	var dir = Directory.new()
+	dir.make_dir_recursive(rootdir)
+	var file = File.new()
+	var err = file.open(rootdir + "/" + filename, File.READ)
+	if err != OK:
+		print(err)
+		return err
+	var result_json = JSON.parse(file.get_as_text())
+	file.close()
+	if result_json.error != OK:
+		print("Error: ", result_json.error)
+		print("Error Line: ", result_json.error_line)
+		print("Error String: ", result_json.error_string)
+		return result_json.error
+	var result = result_json.result
+	var data = {}
+	for key in result.score_data:
+		var value = {}
+		for k2 in result.score_data[key]:
+			if k2 == "MISS":
+				value[k2] = result.score_data[key][k2]
+			else:
+				value[int(k2)] = result.score_data[key][k2]
+		data[int(key)] = value
+	scorescreen_score_data = data
+	scorescreen_song_key = result.song_key
+	scorescreen_saved = true
+	set_menu_mode(MenuMode.SCORE_SCREEN)
+
 func _ready():
 	scan_library()
 	$"/root/main/NoteHandler".connect("finished_song", self, "finished_song")
+	load_score("20191210T235010.json")
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -256,10 +288,12 @@ func _draw_score_screen(center: Vector2) -> Array:
 			break
 		else:
 			score_idx += 1
-#	$ScoreText.draw_string_centered(ScoreFont, Vector2(x_score, y1), Rules.SCORE_STRINGS[score_idx], Color(1.0, 1.0, 1.0))
-#	$ScoreText.draw_string_centered(TitleFont, Vector2(x_score, y1+y_spacing*3), "%2.3f%%"%(overall_score*100.0), Color(1.0, 1.0, 1.0))
-	draw_string_centered(ScoreFont, Vector2(x_score, y1), Rules.SCORE_STRINGS[score_idx], Color(1.0, 1.0, 1.0))
-	draw_string_centered(TitleFont, Vector2(x_score, y1+y_spacing*3), "%2.3f%%"%(overall_score*100.0), Color(1.0, 1.0, 1.0))
+#	draw_string_centered(ScoreFont, Vector2(x_score, y1), Rules.SCORE_STRINGS[score_idx], Color(1.0, 1.0, 1.0))
+#	draw_string_centered(TitleFont, Vector2(x_score, y1+y_spacing*3), "%2.3f%%"%(overall_score*100.0), Color(1.0, 1.0, 1.0))
+	$ScoreText.position = Vector2(x_score, y1)
+	$ScoreText.score = Rules.SCORE_STRINGS[score_idx]
+	$ScoreText.score_sub = "%2.3f%%"%(overall_score*100.0)
+	$ScoreText.update()
 
 	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*4), "Early : Late", Color(0.95, 0.95, 1.0))
 	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*5), "%3d%% : %3d%%"%[notecount_early*100/notecount_total, notecount_late*100/notecount_total], Color(0.95, 0.95, 1.0))
@@ -291,8 +325,8 @@ func _draw():
 
 	if menu_mode_prev_fade_timer > 0.0:
 		var progress = 1.0 - menu_mode_prev_fade_timer/menu_mode_prev_fade_timer_duration
-		var center_prev = lerp(center, Vector2(0.0, 700.0), progress)
-		var center_next = lerp(Vector2(0.0, -700.0), center, progress)
+		var center_prev = lerp(center, Vector2(0.0, 900.0), progress)
+		var center_next = lerp(Vector2(0.0, -900.0), center, progress)
 		match menu_mode_prev:
 			MenuMode.SONG_SELECT:
 				_draw_song_select(center_prev)
@@ -360,6 +394,10 @@ func touch_score_screen(touchdict):
 	if touchdict.has("next_menu"):
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		set_menu_mode(touchdict.next_menu)
+		$ScoreText.score = ""
+		$ScoreText.score_sub = ""
+		# TODO: time this to coincide with the menu going fully offscreen
+		$ScoreText.update()
 	elif touchdict.has("action"):
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		if touchdict.action == "save":

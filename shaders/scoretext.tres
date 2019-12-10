@@ -5,49 +5,39 @@ code = "shader_type canvas_item;
 //render_mode unshaded;
 
 uniform float bps;
-uniform vec4 star_color : hint_color;
-uniform vec4 held_color : hint_color;
-uniform vec2 screen_size;
+//uniform vec4 star_color : hint_color;
+//uniform vec4 held_color : hint_color;
 
-//void vertex() {
-//}
+// All components are in the range [0…1], including hue.
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
 void fragment() {
-	vec4 sample = texture(TEXTURE, UV);
+	float wave_scale = 0.015;
+	float timescale = 0.2;
+	float t = TIME * timescale;
+	vec3 hsv;
+//	hsv.x = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.x+TIME*3.0);
+//	hsv.y = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.y+TIME*2.5);
+//	hsv.z = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.x+wave_scale*FRAGCOORD.y*cos(TIME*0.01)+TIME*3.5);
+	hsv.x = mod(wave_scale*wave_scale*FRAGCOORD.x+t*1.3 + 0.33*sin(wave_scale*FRAGCOORD.y+t*0.5) + 0.33*sin(wave_scale*FRAGCOORD.x+t*0.25), 1.0);
+	hsv.y = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.y+t*2.5) + 0.25*cos(wave_scale*FRAGCOORD.x+t*3.5);
+	hsv.z = 0.75 + 0.25*sin(wave_scale*FRAGCOORD.x+wave_scale*FRAGCOORD.y*cos(t*0.01)+t*1.5);
+	if (COLOR.x >= 0.5) COLOR.rgb = hsv2rgb(hsv); else COLOR.rgb = vec3(1.0) - hsv2rgb(hsv);
 	
-	float color_scale = sample.r;
-	float bright_scale = (sample.g+sample.b)/2.0;
-	float dist = distance(FRAGCOORD.xy, screen_size/2.0);
-	float dist_norm = dist*1.8 / screen_size.y;
-	if (COLOR.rgb == star_color.rgb){
-		// Star ripple
-		COLOR.rg += dist_norm*0.33;
-		COLOR.rgb *= mix(abs(0.5-mod(TIME*bps*2.0+dist_norm, 1.0)), 1.0, 0.75);
-		COLOR.rgb *= color_scale;  // Preserve black outlines
-		COLOR.rgb = mix(COLOR.rgb, vec3(1.0), bright_scale);  // Preserve white outlines
-	} else if (COLOR.rgb == held_color.rgb){
-		// Hold note being held, flashy effects
-		COLOR.b *= mix(2.0*abs(0.5-mod(TIME*bps*2.0+dist_norm, 1.0)), 1.0, 0.35);
-		COLOR.g *= mix(1.0 - 2.0*abs(0.5-mod(TIME*bps*0.5+dist_norm, 1.0)), 0.0, 0.35);
-		COLOR.r *= mix(abs(0.5-mod(TIME*bps, 1.0)), 1.0, 0.85);
-		if (color_scale < 0.5){ // Make black outlines shine
-			COLOR.rgb = mix(COLOR.rgb, vec3(mix(dist_norm, abs(0.5-mod(TIME*bps*8.0, 1.0)), 0.33)), 1.0-(color_scale*2.0));
-		}
-		COLOR.rgb = mix(COLOR.rgb, vec3(1.0), 0.33);  // brighten overall
-		COLOR.rgb = mix(COLOR.rgb, vec3(0.25), bright_scale);  // Invert white outlines
-	} else {
-		COLOR.gb += 0.1;
-		COLOR.rgb *= mix(abs(0.5-mod(TIME*bps, 1.0)), 1.0, 0.85);
-		COLOR.rgb *= color_scale;  // Preserve black outlines
-		COLOR.rgb = mix(COLOR.rgb, vec3(1.0), bright_scale);  // Preserve white outlines
-	}
+//	if (color_scale < 0.5){ // Make black outlines shine
+//		COLOR.rgb = mix(COLOR.rgb, vec3(mix(dist_norm, abs(0.5-mod(TIME*bps*8.0, 1.0)), 0.33)), 1.0-(color_scale*2.0));
+//	}
+//	COLOR.rgb = mix(COLOR.rgb, vec3(1.0), 0.1);  // brighten overall
+//	COLOR.rgb = mix(COLOR.rgb, vec3(0.25), color_scale);  // Invert white outlines
 	
-	COLOR.a = clamp(COLOR.a*texture(TEXTURE, UV).a, 0.0, 1.0);
+	COLOR.a = clamp(texture(TEXTURE, UV).a, 0.0, 1.0);
 }"
 
 [resource]
 shader = SubResource( 1 )
 shader_param/bps = null
-shader_param/star_color = null
-shader_param/held_color = null
-shader_param/screen_size = null

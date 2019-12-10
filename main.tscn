@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://video.gd" type="Script" id=2]
@@ -8,9 +8,11 @@
 [ext_resource path="res://shaders/notelines.shader" type="Shader" id=6]
 [ext_resource path="res://shaders/notemesh.shader" type="Shader" id=7]
 [ext_resource path="res://Menu.gd" type="Script" id=8]
-[ext_resource path="res://Bezel.gd" type="Script" id=9]
-[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=10]
-[ext_resource path="res://InputHandler.gd" type="Script" id=11]
+[ext_resource path="res://shaders/scoretext.tres" type="Material" id=9]
+[ext_resource path="res://ScoreText.gd" type="Script" id=10]
+[ext_resource path="res://Bezel.gd" type="Script" id=11]
+[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=12]
+[ext_resource path="res://InputHandler.gd" type="Script" id=13]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 6 )
@@ -77,15 +79,17 @@ material = SubResource( 2 )
 script = ExtResource( 8 )
 
 [node name="ScoreText" type="Node2D" parent="Menu"]
+material = ExtResource( 9 )
+script = ExtResource( 10 )
 
 [node name="Bezel" type="Node2D" parent="."]
-script = ExtResource( 9 )
+script = ExtResource( 11 )
 
 [node name="InputHandler" type="Label" parent="."]
 margin_left = -960.0
 margin_top = -540.0
 margin_right = 960.0
 margin_bottom = 540.0
-custom_fonts/font = ExtResource( 10 )
+custom_fonts/font = ExtResource( 12 )
 text = "Fingers on the screen:"
-script = ExtResource( 11 )
+script = ExtResource( 13 )
