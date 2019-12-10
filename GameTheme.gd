@@ -64,12 +64,21 @@ var COLOR_ARRAY_DOUBLE_MISS_8 := PoolColorArray([
 	COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS
 	])
 
-var screen_filter := Color(0.0, 0.0, 0.0, 0.2)
+var screen_filter_min_alpha := 0.2
+var screen_filter := Color(0.0, 0.0, 0.0, screen_filter_min_alpha)
+signal screen_filter_changed()
 var receptor_color := Color.blue
 var bezel_color := Color.black
 
 var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
 var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
+
+func set_screen_filter_alpha(alpha: float):
+	# Scale to minimum alpha
+	var new_alpha = lerp(screen_filter_min_alpha, 1.0, alpha)
+	if new_alpha != screen_filter.a:
+		screen_filter = Color(screen_filter.r, screen_filter.g, screen_filter.b, new_alpha)
+		emit_signal("screen_filter_changed")
 
 func init_radial_values():
 	for i in range(Rules.COLS):

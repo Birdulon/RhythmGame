@@ -21,11 +21,14 @@ var currently_playing := false
 
 var scorescreen_song_key := ""
 var scorescreen_score_data := {}
+var scorescreen_datetime := {}
+var scorescreen_saved := false
 
 var touch_rects = []
 
 var TitleFont := preload("res://assets/MenuTitleFont.tres")
 var GenreFont := preload("res://assets/MenuGenreFont.tres")
+var ScoreFont := preload("res://assets/MenuScoreFont.tres")
 var snd_interact := preload("res://assets/softclap.wav")
 
 func scan_library():
@@ -54,6 +57,23 @@ func scan_library():
 		dir.list_dir_end()
 	else:
 		print("An error occurred when trying to access the songs directory: ", err)
+
+func save_score():
+	var rootdir = "user://scores"
+	var dir = Directory.new()
+	dir.make_dir_recursive(rootdir)
+	var data = {}
+	data.score_data = scorescreen_score_data
+	data.song_key = scorescreen_song_key
+	var json = JSON.print(data)
+	var file = File.new()
+	var err = file.open(rootdir + "/{year}{month}{day}T{hour}{minute}{second}.json".format(scorescreen_datetime), File.WRITE)
+	if err != OK:
+		print(err)
+		return err
+	file.store_string(json)
+	file.close()
+	scorescreen_saved = true
 
 func _ready():
 	scan_library()
@@ -175,26 +195,37 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var song_key = scorescreen_song_key
 	var x = center.x
 	var y = center.y - 200
+	var x_songtile = x - 120
+	var x_score = x + 120
 	var x2 = x - 360
 	var x_spacing = 116
 	var y_spacing = 48
-	var y1 = y + size + y_spacing
-	var y2 = y1 + 120
+	var y1 = y
+	var y2 = y + size + y_spacing*2
 
-	draw_songtile(song_key, Vector2(x-size/2.0, y), size, false, selected_difficulty, 3)
-	draw_string_centered(TitleFont, Vector2(x, y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
+	var tex_judgement_text = $"/root/main/NoteHandler".tex_judgement_text
+	var judgement_text_scale = 0.667
+	var judgement_text_width = 256 * judgement_text_scale
+	var judgement_text_height = 64 * judgement_text_scale
+
+	draw_songtile(song_key, Vector2(x_songtile-size/2.0, y), size, false, selected_difficulty, 3)
+	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
 	var notestrs = ["Tap", "Hold", "Slide"]
 	var judgestrs = Array(Rules.JUDGEMENT_STRINGS + ["Miss"])
 	var judge_scores = [1.0, 0.9, 0.75, 0.5, 0.0]
 	var notetype_weights = [1.0, 2.0, 2.0]
-	var notetype_scores = []
-	var notetype_counts = []
+	var notecount_total = 0
+	var notecount_early = 0
+	var notecount_late = 0
 	var total_score = 0.0
 	var total_scoremax = 0.0
+
 	for i in len(judgestrs):
 		# For each judgement type, print a column header
-		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(i+1), y2), judgestrs[i], Color(0.95, 0.95, 1.0))
+#		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(i+1), y2), judgestrs[i], Color(0.95, 0.95, 1.0))
+		draw_texture_rect_region(tex_judgement_text, Rect2(x2+x_spacing*(i+1)-judgement_text_width/2.0, y2, judgement_text_width, judgement_text_height), Rect2(0, 128*(i+3), 512, 128))
 	draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y2), "Score", Color(0.95, 0.95, 1.0))
+
 	for i in len(notestrs):
 		# For each note type, make a row and print scores
 		draw_string_centered(TitleFont, Vector2(x2, y2+y_spacing*(i+1)), notestrs[i]+"s:", Color(0.95, 0.95, 1.0))
@@ -208,14 +239,16 @@ func _draw_score_screen(center: Vector2) -> Array:
 				score = scorescreen_score_data[i]["MISS"]
 			else:
 				score = scorescreen_score_data[i][j] + scorescreen_score_data[i][-j]
+				notecount_early += scorescreen_score_data[i][-j]
+				notecount_late += scorescreen_score_data[i][j]
 			draw_string_centered(TitleFont, Vector2(x2+x_spacing*(j+1), y2+y_spacing*(i+1)), str(score), Color(0.95, 0.95, 1.0))
+			notecount_total += score  # Kinda redundant, will probably refactor eventually
 			note_count += score
 			note_score += score * judge_scores[j]
 		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y2+y_spacing*(i+1)), "%2.2f%%"%(note_score/note_count*100.0), Color(0.95, 0.95, 1.0))
-		notetype_counts.append(note_count)
-		notetype_scores.append(note_score)
 		total_score += note_score * notetype_weights[i]
 		total_scoremax += note_count * notetype_weights[i]
+
 	var overall_score = total_score/total_scoremax
 	var score_idx = 0
 	for cutoff in Rules.SCORE_CUTOFFS:
@@ -223,10 +256,27 @@ func _draw_score_screen(center: Vector2) -> Array:
 			break
 		else:
 			score_idx += 1
-	draw_string_centered(TitleFont, Vector2(x, y1), Rules.SCORE_STRINGS[score_idx], Color(0.95, 0.95, 1.0))
-	draw_string_centered(TitleFont, Vector2(x, y1+y_spacing), "%2.3f%%"%(overall_score*100.0), Color(0.95, 0.95, 1.0))
-#	touchrects.append({rect=r, chart_idx=diff})
-	touchrects.append({rect=Rect2(-450.0, 150.0, 900.0, 300.0), next_menu=MenuMode.SONG_SELECT})
+#	$ScoreText.draw_string_centered(ScoreFont, Vector2(x_score, y1), Rules.SCORE_STRINGS[score_idx], Color(1.0, 1.0, 1.0))
+#	$ScoreText.draw_string_centered(TitleFont, Vector2(x_score, y1+y_spacing*3), "%2.3f%%"%(overall_score*100.0), Color(1.0, 1.0, 1.0))
+	draw_string_centered(ScoreFont, Vector2(x_score, y1), Rules.SCORE_STRINGS[score_idx], Color(1.0, 1.0, 1.0))
+	draw_string_centered(TitleFont, Vector2(x_score, y1+y_spacing*3), "%2.3f%%"%(overall_score*100.0), Color(1.0, 1.0, 1.0))
+
+	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*4), "Early : Late", Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*5), "%3d%% : %3d%%"%[notecount_early*100/notecount_total, notecount_late*100/notecount_total], Color(0.95, 0.95, 1.0))
+
+	var rect_songselect := Rect2(-100.0, 300.0, 400.0, 100.0)
+	draw_rect(rect_songselect, Color.red)
+	draw_string_centered(TitleFont, Vector2(x+100, 320), "Song Select", Color(0.95, 0.95, 1.0))
+	touchrects.append({rect=rect_songselect, next_menu=MenuMode.SONG_SELECT})
+
+	var rect_save := Rect2(-300.0, 300.0, 180.0, 100.0)
+	if not scorescreen_saved:
+		draw_rect(rect_save, Color.blue)
+		draw_string_centered(TitleFont, Vector2(x-210, 320), "Save", Color(0.95, 0.95, 1.0))
+		touchrects.append({rect=rect_save, action="save"})
+	else:
+		draw_rect(rect_save, Color.darkgray)
+		draw_string_centered(TitleFont, Vector2(x-210, 320), "Saved", Color(0.95, 0.95, 1.0))
 	return touchrects
 
 
@@ -251,7 +301,7 @@ func _draw():
 			MenuMode.OPTIONS:
 				pass
 			MenuMode.GAMEPLAY:
-				pass
+				GameTheme.set_screen_filter_alpha(progress)
 			MenuMode.SCORE_SCREEN:
 				_draw_score_screen(center_prev)
 		match menu_mode:
@@ -262,20 +312,23 @@ func _draw():
 			MenuMode.OPTIONS:
 				pass
 			MenuMode.GAMEPLAY:
-				pass
+				GameTheme.set_screen_filter_alpha(1.0 - progress)
 			MenuMode.SCORE_SCREEN:
 				_draw_score_screen(center_next)
 	else:
 		match menu_mode:
 			MenuMode.SONG_SELECT:
+				GameTheme.set_screen_filter_alpha(1.0)
 				touch_rects[menu_mode] = _draw_song_select(center)
 			MenuMode.CHART_SELECT:
+				GameTheme.set_screen_filter_alpha(1.0)
 				touch_rects[menu_mode] = _draw_chart_select(center)
 			MenuMode.OPTIONS:
 				pass
 			MenuMode.GAMEPLAY:
-				pass
+				GameTheme.set_screen_filter_alpha(0.0)
 			MenuMode.SCORE_SCREEN:
+				GameTheme.set_screen_filter_alpha(1.0)
 				touch_rects[menu_mode] = _draw_score_screen(center)
 
 func set_menu_mode(mode):
@@ -305,11 +358,18 @@ func touch_select_chart(touchdict):
 
 func touch_score_screen(touchdict):
 	if touchdict.has("next_menu"):
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		set_menu_mode(touchdict.next_menu)
+	elif touchdict.has("action"):
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		if touchdict.action == "save":
+			save_score()
 
 func finished_song(song_key, score_data):
 	scorescreen_song_key = song_key
 	scorescreen_score_data = score_data
+	scorescreen_datetime = OS.get_datetime()
+	scorescreen_saved = false
 	set_menu_mode(MenuMode.SCORE_SCREEN)
 
 

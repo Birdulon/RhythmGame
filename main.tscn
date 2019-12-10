@@ -76,6 +76,8 @@ material = SubResource( 2 )
 [node name="Menu" type="Node2D" parent="."]
 script = ExtResource( 8 )
 
+[node name="ScoreText" type="Node2D" parent="Menu"]
+
 [node name="Bezel" type="Node2D" parent="."]
 script = ExtResource( 9 )
 

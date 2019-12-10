@@ -26,3 +26,5 @@ func _draw():
 	for i in range(len(receptor_centers)):
 		draw_circle(receptor_centers[i], receptor_px/2, GameTheme.receptor_color)
 
+func _ready():
+	GameTheme.connect("screen_filter_changed", self, "update")
