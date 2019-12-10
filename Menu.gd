@@ -175,23 +175,56 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var song_key = scorescreen_song_key
 	var x = center.x
 	var y = center.y - 200
+	var x2 = x - 360
+	var x_spacing = 116
+	var y_spacing = 48
+	var y1 = y + size + y_spacing
+	var y2 = y1 + 120
+
 	draw_songtile(song_key, Vector2(x-size/2.0, y), size, false, selected_difficulty, 3)
 	draw_string_centered(TitleFont, Vector2(x, y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
 	var notestrs = ["Tap", "Hold", "Slide"]
-	var judgestrs = ["Perfect", "Great", "Good", "Almost", "Miss"]
+	var judgestrs = Array(Rules.JUDGEMENT_STRINGS + ["Miss"])
+	var judge_scores = [1.0, 0.9, 0.75, 0.5, 0.0]
+	var notetype_weights = [1.0, 2.0, 2.0]
+	var notetype_scores = []
+	var notetype_counts = []
+	var total_score = 0.0
+	var total_scoremax = 0.0
 	for i in len(judgestrs):
-		draw_string_centered(TitleFont, Vector2(x-300+(120*(i+1)), y+size+64), judgestrs[i], Color(0.95, 0.95, 1.0))
+		# For each judgement type, print a column header
+		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(i+1), y2), judgestrs[i], Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y2), "Score", Color(0.95, 0.95, 1.0))
 	for i in len(notestrs):
-		draw_string_centered(TitleFont, Vector2(x-300, y+size+128+64*i), notestrs[i]+"s:", Color(0.95, 0.95, 1.0))
+		# For each note type, make a row and print scores
+		draw_string_centered(TitleFont, Vector2(x2, y2+y_spacing*(i+1)), notestrs[i]+"s:", Color(0.95, 0.95, 1.0))
+		var note_score = 0
+		var note_count = 0
 		for j in len(judgestrs):
 			var score
 			if j == 0:
-				score = str(scorescreen_score_data[i][0])
-			elif j == 4:
-				score = str(scorescreen_score_data[i]["MISS"])
+				score = scorescreen_score_data[i][0]
+			elif j >= len(judgestrs)-1:
+				score = scorescreen_score_data[i]["MISS"]
 			else:
-				score = str(scorescreen_score_data[i][j] + scorescreen_score_data[i][-j])
-			draw_string_centered(TitleFont, Vector2(x-300+(120*(j+1)), y+size+128+64*i), score, Color(0.95, 0.95, 1.0))
+				score = scorescreen_score_data[i][j] + scorescreen_score_data[i][-j]
+			draw_string_centered(TitleFont, Vector2(x2+x_spacing*(j+1), y2+y_spacing*(i+1)), str(score), Color(0.95, 0.95, 1.0))
+			note_count += score
+			note_score += score * judge_scores[j]
+		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y2+y_spacing*(i+1)), "%2.2f%%"%(note_score/note_count*100.0), Color(0.95, 0.95, 1.0))
+		notetype_counts.append(note_count)
+		notetype_scores.append(note_score)
+		total_score += note_score * notetype_weights[i]
+		total_scoremax += note_count * notetype_weights[i]
+	var overall_score = total_score/total_scoremax
+	var score_idx = 0
+	for cutoff in Rules.SCORE_CUTOFFS:
+		if overall_score >= cutoff:
+			break
+		else:
+			score_idx += 1
+	draw_string_centered(TitleFont, Vector2(x, y1), Rules.SCORE_STRINGS[score_idx], Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x, y1+y_spacing), "%2.3f%%"%(overall_score*100.0), Color(0.95, 0.95, 1.0))
 #	touchrects.append({rect=r, chart_idx=diff})
 	touchrects.append({rect=Rect2(-450.0, 150.0, 900.0, 300.0), next_menu=MenuMode.SONG_SELECT})
 	return touchrects
