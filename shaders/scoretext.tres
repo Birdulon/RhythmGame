@@ -11,30 +11,69 @@ uniform float bps;
 // All components are in the range [0…1], including hue.
 vec3 hsv2rgb(vec3 c)
 {
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+vec3 hsl2rgb(vec3 c)
+{
+//    vec3 rgb = clamp( abs(mod(c.x*6.0 + vec3(0.0,4.0,2.0), 6.0) - 3.0)-1.0, 0.0, 1.0 );
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    vec3 rgb = clamp(p-K.xxx, 0.0, 1.0);
+    return clamp(c.z + c.y*(rgb-0.5)*(1.0-abs(2.0*c.z-1.0)), 0.0, 1.0);
+}
+
+vec3 lab2xyz(vec3 c){
+	float fy=(c.x+16.)/116.,
+	      fx=c.y/500.+fy,
+	      fz=fy-c.z/200.;
+	vec3 scale = vec3(95.047, 100.000, 108.883);
+	return scale * vec3(
+		(fx > 0.206897) ? fx*fx*fx : (fx-16./116.)/7.787,
+		(fy > 0.206897) ? fy*fy*fy : (fy-16./116.)/7.787,
+		(fz > 0.206897) ? fz*fz*fz : (fz-16./116.)/7.787
+	);
+}
+vec3 xyz2rgb(vec3 c){
+	vec3 v = (c/100.0) * mat3(
+		vec3( 3.2406,-1.5372,-0.4986),
+		vec3(-0.9689, 1.8758, 0.0415),
+		vec3( 0.0557,-0.2040, 1.0570)
+	);
+	vec3 r = vec3(
+		(v.r>.0031308) ? (1.055*pow(v.r, (1./2.4)) - 0.055) : 12.92*v.r,
+		(v.g>.0031308) ? (1.055*pow(v.g, (1./2.4)) - 0.055) : 12.92*v.g,
+		(v.b>.0031308) ? (1.055*pow(v.b, (1./2.4)) - 0.055) : 12.92*v.b
+	);
+	return r;
+}
+vec3 lab2rgb(vec3 c){return xyz2rgb(lab2xyz(vec3(100.*c.x,2.*127.*(c.y-.5),2.*127.*(c.z-.5))));}
+
+
 void fragment() {
 	float wave_scale = 0.015;
-	float timescale = 0.2;
+	float timescale = 0.5;
 	float t = TIME * timescale;
-	vec3 hsv;
-//	hsv.x = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.x+TIME*3.0);
-//	hsv.y = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.y+TIME*2.5);
-//	hsv.z = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.x+wave_scale*FRAGCOORD.y*cos(TIME*0.01)+TIME*3.5);
-	hsv.x = mod(wave_scale*wave_scale*FRAGCOORD.x+t*1.3 + 0.33*sin(wave_scale*FRAGCOORD.y+t*0.5) + 0.33*sin(wave_scale*FRAGCOORD.x+t*0.25), 1.0);
-	hsv.y = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.y+t*2.5) + 0.25*cos(wave_scale*FRAGCOORD.x+t*3.5);
-	hsv.z = 0.75 + 0.25*sin(wave_scale*FRAGCOORD.x+wave_scale*FRAGCOORD.y*cos(t*0.01)+t*1.5);
-	if (COLOR.x >= 0.5) COLOR.rgb = hsv2rgb(hsv); else COLOR.rgb = vec3(1.0) - hsv2rgb(hsv);
-	
-//	if (color_scale < 0.5){ // Make black outlines shine
-//		COLOR.rgb = mix(COLOR.rgb, vec3(mix(dist_norm, abs(0.5-mod(TIME*bps*8.0, 1.0)), 0.33)), 1.0-(color_scale*2.0));
-//	}
-//	COLOR.rgb = mix(COLOR.rgb, vec3(1.0), 0.1);  // brighten overall
-//	COLOR.rgb = mix(COLOR.rgb, vec3(0.25), color_scale);  // Invert white outlines
-	
+//	vec3 hsv;
+////	hsv.x = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.x+TIME*3.0);
+////	hsv.y = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.y+TIME*2.5);
+////	hsv.z = 0.5 + 0.5*sin(wave_scale*FRAGCOORD.x+wave_scale*FRAGCOORD.y*cos(TIME*0.01)+TIME*3.5);
+//	hsv.x = fract(wave_scale*wave_scale*FRAGCOORD.x+t*1.3 + 0.33*sin(wave_scale*FRAGCOORD.y+t*0.5) + 0.33*sin(wave_scale*FRAGCOORD.x+t*0.25));
+//	hsv.y = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.y+t*2.5) + 0.25*cos(wave_scale*FRAGCOORD.x+t*3.5);
+////	hsv.z = 0.75 + 0.25*sin(wave_scale*FRAGCOORD.x+wave_scale*FRAGCOORD.y*cos(t*0.01)+t*1.5);
+//	hsv.z = mix(COLOR.x, 0.5, 0.5);
+//	COLOR.rgb = hsl2rgb(hsv);
+////	if (COLOR.x >= 0.5) COLOR.rgb = hsl2rgb(hsv); else COLOR.rgb = vec3(1.0) - hsl2rgb(hsv);
+
+	vec3 lab;
+//	lab.x = mix(COLOR.x, 0.5, 0.5);
+	lab.x = mix(COLOR.x, 0.5, 0.35+0.25*cos(TIME * 3.141592654));
+	lab.y = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.y+t*2.5) + 0.125*sin(0.5*wave_scale*FRAGCOORD.y+cos(t*1.5) + 0.125*cos(t*5.5));
+	lab.z = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.x+t*2.25) + 0.125*sin(0.5*wave_scale*FRAGCOORD.x+cos(t*3.5) + 0.125*cos(t*6.5));
+	COLOR.rgb = lab2rgb(lab);
+
 	COLOR.a = clamp(texture(TEXTURE, UV).a, 0.0, 1.0);
 }"
 
