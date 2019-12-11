@@ -33,7 +33,7 @@ var snd_interact := preload("res://assets/softclap.wav")
 
 func scan_library():
 	print("Scanning library")
-	var rootdir = "res://songs"
+	var rootdir = "user://songs"
 	var dir = Directory.new()
 	var err = dir.open(rootdir)
 	if err == OK:
