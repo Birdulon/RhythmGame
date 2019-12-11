@@ -62,6 +62,7 @@ var next_note_to_load := 0
 var active_judgement_texts := []
 var scores := {}
 
+var active_slide_trails := []
 var slide_trail_meshes := {}
 var slide_trail_mesh_instances := {}
 
@@ -116,6 +117,11 @@ func initialise_scores():
 		scores[type] = {}
 		for key in TextJudgement:
 			scores[type][key] = 0
+	# Release types
+	for type in [Note.NOTE_HOLD, Note.NOTE_SLIDE]:
+		scores[-type] = {}
+		for key in TextJudgement:
+			scores[-type][key] = 0
 
 func make_text_mesh(mesh: ArrayMesh, text_id: int, pos: Vector2, angle: float, alpha:=1.0, scale:=1.0):
 	var r := GameTheme.judge_text_size2 * scale
@@ -270,8 +276,24 @@ func activate_note(note, judgement):
 		Note.NOTE_HOLD:
 			note.is_held = true
 		Note.NOTE_SLIDE:
-			pass # Set up slide trail?
-	return
+			# Set up slide trail?
+			active_slide_trails.append(note)
+			note.progress = 0.0
+
+func activate_note_release(note, judgement):
+	# Only for Hold, Slide
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[judgement], db_judgement[judgement], pitch_judgement[judgement])
+	scores[-note.type][judgement] += 1
+
+	match note.type:
+		Note.NOTE_HOLD:
+			note.is_held = false
+			note.time_released = t
+			active_judgement_texts.append({col=note.column, judgement=judgement, time=t})
+		Note.NOTE_SLIDE:
+			active_judgement_texts.append({col=note.column_release, judgement=judgement, time=t})
+		Note.NOTE_TOUCH_HOLD:
+			pass
 
 func button_pressed(col):
 	for note in active_notes:
@@ -283,21 +305,51 @@ func button_pressed(col):
 		var hit_delta = get_realtime_precise() - real_time(note.time_hit)  # Judgement times are in seconds not gametime
 		if hit_delta >= 0.0:
 			if hit_delta > Rules.JUDGEMENT_TIMES_POST[-1]:
-				continue  # missed
+				continue  # missed, don't consume input
 			for i in Rules.JUDGEMENT_TIERS:
 				if hit_delta <= Rules.JUDGEMENT_TIMES_POST[i]:
 					activate_note(note, i)
-					return
+					return  # Consume input because one press shouldn't trigger two notes
 		else:
 			if -hit_delta > Rules.JUDGEMENT_TIMES_PRE[-1]:
-				continue  # too far away
+				continue  # too far away, don't consume input
 			for i in Rules.JUDGEMENT_TIERS:
-				if -hit_delta <= Rules.JUDGEMENT_TIMES_POST[i]:
+				if -hit_delta <= Rules.JUDGEMENT_TIMES_PRE[i]:
 					activate_note(note, -i)
 					return
-
 func touchbutton_pressed(col):
 	button_pressed(col)
+
+
+func do_hold_release(note):
+	var hit_delta = get_realtime_precise() - real_time(note.time_release)  # Judgement times are in seconds not gametime
+	if hit_delta >= 0.0:
+		for i in Rules.JUDGEMENT_TIERS-1:
+			if hit_delta <= Rules.JUDGEMENT_TIMES_RELEASE_POST[i]:
+				activate_note_release(note, i)
+				return
+		activate_note_release(note, Rules.JUDGEMENT_TIERS-1)  # No "miss" for releasing, only worst judgement.
+		return
+	else:
+		for i in Rules.JUDGEMENT_TIERS-1:
+			if -hit_delta <= Rules.JUDGEMENT_TIMES_RELEASE_PRE[i]:
+				activate_note_release(note, -i)
+				return
+		activate_note_release(note, Rules.JUDGEMENT_TIERS-1)  # No "miss" for releasing, only worst judgement.
+		return
+
+func do_slide_release(note):
+	var hit_delta = get_realtime_precise() - real_time(note.time_release)  # Judgement times are in seconds not gametime
+	if hit_delta >= 0.0:
+		for i in Rules.JUDGEMENT_TIERS:
+			if hit_delta <= Rules.JUDGEMENT_TIMES_SLIDE_POST[i]:
+				activate_note_release(note, i)
+				return
+	else:
+		for i in Rules.JUDGEMENT_TIERS:
+			if -hit_delta <= Rules.JUDGEMENT_TIMES_SLIDE_PRE[i]:
+				activate_note_release(note, -i)
+				return
 
 func check_hold_release(col):
 	for note in active_notes:
@@ -305,15 +357,13 @@ func check_hold_release(col):
 			continue
 		if note.type == Note.NOTE_HOLD:
 			if note.is_held == true:
-				note.is_held = false
-				pass
+				do_hold_release(note)  # Separate function since there's no need to "consume" releases
 
 func button_released(col):
 	# We only care about hold release.
 	# For that particular case, we want both to be unheld.
 	if $"/root/main/InputHandler".touchbuttons_pressed[col] == 0:
 		check_hold_release(col)
-
 func touchbutton_released(col):
 	if $"/root/main/InputHandler".buttons_pressed[col] == 0:
 		check_hold_release(col)
@@ -345,10 +395,14 @@ func _draw():
 				make_tap_mesh(mesh, note_center, scale, color)
 			Note.NOTE_HOLD:
 				if note.is_held:
+					position = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
 					color = GameTheme.COLOR_ARRAY_HOLD_HELD
-					note_center = GameTheme.RADIAL_UNIT_VECTORS[note.column] * GameTheme.receptor_ring_radius
+					note_center = GameTheme.RADIAL_UNIT_VECTORS[note.column] * GameTheme.receptor_ring_radius * max(position, 1.0)
 				elif position > 1.0:
 					color = GameTheme.COLOR_ARRAY_DOUBLE_MISS_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD_MISS
+					if note.time_released != INF:
+						position = (t+GameTheme.note_forecast_beats-note.time_released)/GameTheme.note_forecast_beats
+						note_center = GameTheme.RADIAL_UNIT_VECTORS[note.column] * GameTheme.receptor_ring_radius * position
 				else:
 					color = GameTheme.COLOR_ARRAY_DOUBLE_8 if note.double_hit else GameTheme.COLOR_ARRAY_HOLD
 				var position_rel : float = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
@@ -374,7 +428,8 @@ func _draw():
 					var star_pos : Vector2 = note.get_position(trail_progress)
 					var star_angle : float = note.get_angle(trail_progress)
 					make_star_mesh(mesh, star_pos, 1.33, star_angle, color)
-#					slide_trail_mesh_instances[note.slide_id].material.set_shader_param("trail_progress", trail_progress)
+					if note.progress != INF:
+						slide_trail_mesh_instances[note.slide_id].material.set_shader_param("trail_progress", note.progress)
 					if t > note.time_release:
 						trail_alpha = max(1 - (t - note.time_release)/Note.DEATH_DELAY, 0.0)
 				slide_trail_mesh_instances[note.slide_id].material.set_shader_param("base_alpha", trail_alpha*0.88)
@@ -391,6 +446,29 @@ func _draw():
 	for text in active_judgement_texts:
 		make_judgement_text(textmesh, TextJudgement[text.judgement], text.col, (t-text.time)/GameTheme.judge_text_duration)
 	$JudgeText.set_mesh(textmesh)
+
+
+func _input(event):
+	var pos
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			pos = event.position - get_global_transform_with_canvas().get_origin()
+		else:
+			return
+	elif event is InputEventScreenDrag:
+		pos = event.position - get_global_transform_with_canvas().get_origin()
+	else:
+		return
+
+	for i in range(len(active_slide_trails)-1, -1, -1):
+		var note = active_slide_trails[i]
+		var center = note.get_position(note.progress)
+		if (pos - center).length_squared() < 10000.0:
+			note.progress += 0.09
+			if note.progress >= 1.0:
+				do_slide_release(note)
+				active_slide_trails.remove(i)
+
 
 func _init():
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
@@ -440,14 +518,7 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	bpm = data.bpm_values[0]
 	sync_offset_audio = data.audio_offsets[0]
 	sync_offset_video = data.video_offsets[0]
-	var audiostream = AudioStreamOGGVorbis.new()
-#	var asb = load(data.directory + "/" + data.audio_filelist[0])
-#	audiostream.set_data(asb.get_data())
-	# Unbelievably stupid bug, infuriating workaround
-	var oggfile = File.new()
-	oggfile.open(data.directory + "/" + data.audio_filelist[0], File.READ)
-	audiostream.set_data(oggfile.get_buffer(oggfile.get_len()))
-	oggfile.close()
+	var audiostream = FileLoader.load_ogg(data.directory + "/" + data.audio_filelist[0])
 	var videostream = load(data.directory + "/" + data.video_filelist[0])
 
 	$"/root/main/music".set_stream(audiostream)
@@ -533,13 +604,26 @@ func _process(delta):
 			if note.type == Note.NOTE_SLIDE:
 				$SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
 				slide_trail_mesh_instances.erase(note.slide_id)
+				var idx = active_slide_trails.find(note)
+				if idx >= 0:
+					active_slide_trails.remove(idx)
+					active_judgement_texts.append({col=note.column_release, judgement="MISS", time=t})
+					scores[-Note.NOTE_SLIDE]["MISS"] += 1
+					note.missed_slide = true
+					SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement["MISS"], db_judgement["MISS"])
 			active_notes.remove(i)
 		elif note.time_activated == INF:
 			if ((t-note.time_hit) > miss_time) and not note.missed:
 				active_judgement_texts.append({col=note.column, judgement="MISS", time=t})
 				scores[note.type]["MISS"] += 1
+				if Note.RELEASE_SCORE_TYPES.has(note.type):
+					scores[-note.type]["MISS"] += 1
 				note.missed = true
 				SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement["MISS"], db_judgement["MISS"])
+				if note.type == Note.NOTE_SLIDE:
+					# Even if you miss the hit you can still slide, we're so nice
+					active_slide_trails.append(note)
+					note.progress = 0.0
 
 	# Clean out expired judgement texts
 	# By design they will always be in order so we can ignore anything past the first index
@@ -574,6 +658,7 @@ func _process(delta):
 #		next_note_to_load = 0
 	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and not get_node("/root/main/music").is_playing():
 		self.running = false
+		self.timers_set = false
 		emit_signal("finished_song", song_key, scores)
 
 	# Redraw

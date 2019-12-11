@@ -44,7 +44,7 @@ func scan_library():
 				if dir.file_exists(key + "/song.json"):
 					song_defs[key] = FileLoader.load_folder("%s/%s" % [rootdir, key])
 					print("Loaded song directory: %s" % key)
-					song_images[key] = load("%s/%s/%s" % [rootdir, key, song_defs[key]["tile_filename"]])
+					song_images[key] = FileLoader.load_image("%s/%s/%s" % [rootdir, key, song_defs[key]["tile_filename"]])
 					if song_defs[key]["genre"] in genres:
 						genres[song_defs[key]["genre"]].append(key)
 					else:
@@ -67,7 +67,11 @@ func save_score():
 	data.song_key = scorescreen_song_key
 	var json = JSON.print(data)
 	var file = File.new()
-	var err = file.open(rootdir + "/{year}{month}{day}T{hour}{minute}{second}.json".format(scorescreen_datetime), File.WRITE)
+#	var filename = rootdir + "/{year}{month}{day}T{hour}{minute}{second}.json".format(scorescreen_datetime)
+	# So uh. Can't zero-pad using the string.format() method. This sucks.
+	var dt = scorescreen_datetime
+	var filename = rootdir + "/%04d%02d%02dT%02d%02d%02d.json"%[dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+	var err = file.open(filename, File.WRITE)
 	if err != OK:
 		print(err)
 		return err
@@ -109,7 +113,7 @@ func load_score(filename):
 func _ready():
 	scan_library()
 	$"/root/main/NoteHandler".connect("finished_song", self, "finished_song")
-	load_score("20191210T235010.json")
+	load_score("20191211T234131.json")  # For testing purposes
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -229,11 +233,11 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var y = center.y - 200
 	var x_songtile = x - 120
 	var x_score = x + 120
-	var x2 = x - 360
-	var x_spacing = 116
-	var y_spacing = 48
+	var x2 = x - 370
+	var x_spacing = 124
+	var y_spacing = 42
 	var y1 = y
-	var y2 = y + size + y_spacing*2
+	var y2 = y + size + y_spacing*1.5
 
 	var tex_judgement_text = $"/root/main/NoteHandler".tex_judgement_text
 	var judgement_text_scale = 0.667
@@ -242,10 +246,12 @@ func _draw_score_screen(center: Vector2) -> Array:
 
 	draw_songtile(song_key, Vector2(x_songtile-size/2.0, y), size, false, selected_difficulty, 3)
 	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
-	var notestrs = ["Tap", "Hold", "Slide"]
+	var notestrs = ["Taps:", "Holds Hit:", "Released:", "Slides Hit:", "Slid:"]
+	var notetypes = [0, 1, -1, 2, -2]
+	var note_spacing = [0.0, 1.25, 2.25, 3.5, 4.5]
 	var judgestrs = Array(Rules.JUDGEMENT_STRINGS + ["Miss"])
 	var judge_scores = [1.0, 0.9, 0.75, 0.5, 0.0]
-	var notetype_weights = [1.0, 2.0, 2.0]
+	var notetype_weights = [1.0, 1.0, 1.0, 1.0, 1.0]
 	var notecount_total = 0
 	var notecount_early = 0
 	var notecount_late = 0
@@ -260,24 +266,30 @@ func _draw_score_screen(center: Vector2) -> Array:
 
 	for i in len(notestrs):
 		# For each note type, make a row and print scores
-		draw_string_centered(TitleFont, Vector2(x2, y2+y_spacing*(i+1)), notestrs[i]+"s:", Color(0.95, 0.95, 1.0))
+		var idx = notetypes[i]
 		var note_score = 0
 		var note_count = 0
+#		var y_row = y2+y_spacing*(i+1)
+		var y_row = y2 + y_spacing * (note_spacing[i]+1)
+		draw_string_centered(TitleFont, Vector2(x2, y_row), notestrs[i], Color(0.95, 0.95, 1.0))
 		for j in len(judgestrs):
 			var score
 			if j == 0:
-				score = scorescreen_score_data[i][0]
+				score = scorescreen_score_data[idx][0]
 			elif j >= len(judgestrs)-1:
-				score = scorescreen_score_data[i]["MISS"]
+				score = scorescreen_score_data[idx]["MISS"]
 			else:
-				score = scorescreen_score_data[i][j] + scorescreen_score_data[i][-j]
-				notecount_early += scorescreen_score_data[i][-j]
-				notecount_late += scorescreen_score_data[i][j]
-			draw_string_centered(TitleFont, Vector2(x2+x_spacing*(j+1), y2+y_spacing*(i+1)), str(score), Color(0.95, 0.95, 1.0))
+				score = scorescreen_score_data[idx][j] + scorescreen_score_data[idx][-j]
+				notecount_early += scorescreen_score_data[idx][-j]
+				notecount_late += scorescreen_score_data[idx][j]
+			if (j >= len(judgestrs)-1) and (idx == -1):
+				draw_string_centered(TitleFont, Vector2(x2+x_spacing*(j+1), y_row), "^", Color(0.95, 0.95, 1.0))
+			else:
+				draw_string_centered(TitleFont, Vector2(x2+x_spacing*(j+1), y_row), str(score), Color(0.95, 0.95, 1.0))
 			notecount_total += score  # Kinda redundant, will probably refactor eventually
 			note_count += score
 			note_score += score * judge_scores[j]
-		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y2+y_spacing*(i+1)), "%2.2f%%"%(note_score/note_count*100.0), Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y_row), "%2.2f%%"%(note_score/note_count*100.0), Color(0.95, 0.95, 1.0))
 		total_score += note_score * notetype_weights[i]
 		total_scoremax += note_count * notetype_weights[i]
 
@@ -295,8 +307,8 @@ func _draw_score_screen(center: Vector2) -> Array:
 	$ScoreText.score_sub = "%2.3f%%"%(overall_score*100.0)
 	$ScoreText.update()
 
-	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*4), "Early : Late", Color(0.95, 0.95, 1.0))
-	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*5), "%3d%% : %3d%%"%[notecount_early*100/notecount_total, notecount_late*100/notecount_total], Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*7), "Early : Late", Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*8), "%3d%% : %3d%%"%[notecount_early*100/notecount_total, notecount_late*100/notecount_total], Color(0.95, 0.95, 1.0))
 
 	var rect_songselect := Rect2(-100.0, 300.0, 400.0, 100.0)
 	draw_rect(rect_songselect, Color.red)

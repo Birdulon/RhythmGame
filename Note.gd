@@ -6,6 +6,7 @@ extends Node
 enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD}
 enum SlideType {CHORD, ARC_CW, ARC_ACW}
 const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
+const RELEASE_SCORE_TYPES := [NOTE_HOLD, NOTE_SLIDE, NOTE_TOUCH_HOLD]
 
 class NoteBase:
 	var time_hit: float
@@ -25,6 +26,7 @@ class NoteTap extends NoteBase:
 class NoteHold extends NoteBase:
 	var type := NOTE_HOLD
 	var time_release: float
+	var time_released := INF
 	var duration: float
 	var is_held: bool
 	func _init(time_hit: float, duration: float, column: int):
@@ -42,6 +44,8 @@ class NoteSlide extends NoteBase:
 	var column_release: int
 	var slide_type: int
 	var slide_id: int
+	var progress := INF
+	var missed_slide := false
 	var values: Dictionary
 
 	func _init(time_hit: float, duration: float, column: int, column_release: int, slide_type: int):

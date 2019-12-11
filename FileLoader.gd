@@ -114,3 +114,19 @@ func load_folder(folder):
 	var result = result_json.result
 	result.directory = folder
 	return result
+
+
+func load_ogg(filename) -> AudioStreamOGGVorbis:
+	var audiostream = AudioStreamOGGVorbis.new()
+	var oggfile = File.new()
+	oggfile.open(filename, File.READ)
+	audiostream.set_data(oggfile.get_buffer(oggfile.get_len()))
+	oggfile.close()
+	return audiostream
+
+func load_image(filename) -> ImageTexture:
+	var tex = ImageTexture.new()
+	var img = Image.new()
+	img.load(filename)
+	tex.create_from_image(img)
+	return tex
