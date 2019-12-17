@@ -2,24 +2,20 @@ extends Node2D
 
 # member variables
 var screen_height := 1080
-var x_margin := (1920 - screen_height)/2
+var x_margin := 0.0
+var y_margin := 0.0
 var screen_center := Vector2(1920/2, screen_height/2)
 
-func arc_point_list(center: Vector2, radius: float, angle_from:=0.0, angle_to:=360.0, points:=90) -> PoolVector2Array:
-	var point_list = PoolVector2Array()
-	for i in range(points):
-		var angle = deg2rad(angle_from + i * (angle_to - angle_from) / (points-1))
-#		point_list.push_back(center + Vector2(cos(angle), sin(angle)) * radius)
-		point_list.push_back(center + polar2cartesian(radius, angle))
-	return point_list
+func resize():
+	var screen_size = $"/root".get_visible_rect().size
+	screen_center = screen_size*0.5
+	position = screen_center
+	
+	screen_height = screen_size.y
+	x_margin = max((screen_size.x - screen_size.y)/2.0, 0.0)
+	y_margin = max((screen_size.y - screen_size.x)/2.0, 0.0)
 
-# Called when the node enters the scene tree for the first time.
-#func _ready():
-#	pass # Replace with function body.
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-#func _process(delta):
-#	pass
-
-
+func _ready():
+	$"/root".connect("size_changed", self, "resize")
+	resize()
 

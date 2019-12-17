@@ -17,6 +17,11 @@ const TOUCHBUTTON_MAX_DIST := 1.05
 const BUTTON_MIN_DIST := TOUCHBUTTON_MAX_DIST
 const BUTTON_MAX_DIST := 1.25
 
+func resize():
+	var screen_size = $"/root".get_visible_rect().size
+	rect_position = -screen_size*0.5
+	rect_size = screen_size
+
 func _init():
 	buttons_pressed.resize(Rules.COLS)
 	touchbuttons_pressed.resize(Rules.COLS)
@@ -28,6 +33,8 @@ func _ready():
 	set_process_unhandled_input(true)				# process user input
 	set_fingers(0)
 #	connect("button_pressed", self, "print_pressed")
+	$"/root".connect("size_changed", self, "resize")
+	resize()
 
 
 func print_pressed(col: int):

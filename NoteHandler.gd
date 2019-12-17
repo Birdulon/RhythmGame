@@ -1,4 +1,6 @@
-extends "res://main.gd"
+extends Node2D
+
+var screen_height := 1080
 
 # This script will draw all note events.
 signal finished_song(song_key, score_data)
@@ -537,6 +539,11 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
 	$meshinstance.set_texture(tex)
 
+func stop():
+	$"/root/main/music".stop()
+	$"/root/main/video".stop()
+#	running = false
+	next_note_to_load = 1000000  # Hacky but whatever
 
 func intro_click():
 	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_count_in)
@@ -656,7 +663,7 @@ func _process(delta):
 #	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and (time > 10.0) and not get_node("/root/main/video").is_playing():
 #		time = -10.0
 #		next_note_to_load = 0
-	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and not get_node("/root/main/music").is_playing():
+	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and not get_node("/root/main/music").is_playing() and (len(active_judgement_texts) < 1):
 		self.running = false
 		self.timers_set = false
 		emit_signal("finished_song", song_key, scores)

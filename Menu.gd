@@ -1,3 +1,4 @@
+tool
 extends Node2D
 
 var song_defs = {}
@@ -289,7 +290,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 			notecount_total += score  # Kinda redundant, will probably refactor eventually
 			note_count += score
 			note_score += score * judge_scores[j]
-		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y_row), "%2.2f%%"%(note_score/note_count*100.0), Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(x2+x_spacing*(len(judgestrs)+1), y_row), "%2.2f%%"%(note_score/max(note_count, 1)*100.0), Color(0.95, 0.95, 1.0))
 		total_score += note_score * notetype_weights[i]
 		total_scoremax += note_count * notetype_weights[i]
 
@@ -323,6 +324,17 @@ func _draw_score_screen(center: Vector2) -> Array:
 	else:
 		draw_rect(rect_save, Color.darkgray)
 		draw_string_centered(TitleFont, Vector2(x-210, 320), "Saved", Color(0.95, 0.95, 1.0))
+	return touchrects
+
+func _draw_gameplay(center: Vector2) -> Array:
+	var touchrects = []
+	var x = center.x
+	var y = center.y
+
+	var rect_songselect := Rect2(-960.0, 440.0, 100.0, 100.0)
+	draw_rect(rect_songselect, Color.red)
+	draw_string_centered(TitleFont, Vector2(-910, 470), "Stop", Color(0.95, 0.95, 1.0))
+	touchrects.append({rect=rect_songselect, action="stop"})
 	return touchrects
 
 
@@ -373,6 +385,7 @@ func _draw():
 				pass
 			MenuMode.GAMEPLAY:
 				GameTheme.set_screen_filter_alpha(0.0)
+				touch_rects[menu_mode] = _draw_gameplay(center)
 			MenuMode.SCORE_SCREEN:
 				GameTheme.set_screen_filter_alpha(1.0)
 				touch_rects[menu_mode] = _draw_score_screen(center)
@@ -401,6 +414,12 @@ func touch_select_chart(touchdict):
 	else:
 		self.selected_difficulty = touchdict.chart_idx
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
+
+func touch_gameplay(touchdict):
+	if touchdict.has("action"):
+		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		if touchdict.action == "stop":
+			$"/root/main/NoteHandler".stop()
 
 func touch_score_screen(touchdict):
 	if touchdict.has("next_menu"):
@@ -436,6 +455,10 @@ func _input(event):
 					for d in touch_rects[MenuMode.CHART_SELECT]:
 						if d.rect.has_point(pos):
 							touch_select_chart(d)
+				MenuMode.GAMEPLAY:
+					for d in touch_rects[MenuMode.GAMEPLAY]:
+						if d.rect.has_point(pos):
+							touch_gameplay(d)
 				MenuMode.SCORE_SCREEN:
 					for d in touch_rects[MenuMode.SCORE_SCREEN]:
 						if d.rect.has_point(pos):

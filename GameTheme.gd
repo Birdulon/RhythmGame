@@ -1,3 +1,4 @@
+tool
 extends Node
 
 var receptor_ring_radius := 460.0
