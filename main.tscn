@@ -62,7 +62,7 @@ __meta__ = {
 [node name="ScreenFilter" type="Node2D" parent="."]
 script = ExtResource( 3 )
 
-[node name="Receptors" type="Node2D" parent="."]
+[node name="Receptors" type="MeshInstance2D" parent="."]
 script = ExtResource( 4 )
 
 [node name="SkewSlider" type="HSlider" parent="Receptors"]
@@ -86,9 +86,8 @@ margin_right = 200.0
 margin_bottom = -84.0
 min_value = 3.0
 max_value = 72.0
-value = 8.0
+value = 36.0
 tick_count = 2
-ticks_on_borders = false
 
 [node name="NoteHandler" type="Node2D" parent="."]
 script = ExtResource( 5 )
@@ -105,6 +104,7 @@ material = SubResource( 1 )
 material = SubResource( 2 )
 
 [node name="Menu" type="Node2D" parent="."]
+visible = false
 script = ExtResource( 9 )
 
 [node name="ScoreText" type="Node2D" parent="Menu"]
