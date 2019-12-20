@@ -32,11 +32,20 @@ var GenreFont := preload("res://assets/MenuGenreFont.tres")
 var ScoreFont := preload("res://assets/MenuScoreFont.tres")
 var snd_interact := preload("res://assets/softclap.wav")
 
+var userroot := "user://" if OS.get_name() != "Android" else "/storage/emulated/0/RhythmGame/"
+# The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission("WRITE_EXTERNAL_STORAGE")
+# "/storage/emulated/0/Android/data/au.ufeff.rhythmgame/"
+# "/sdcard/Android/data/au.ufeff.rhythmgame/"
+
 func scan_library():
 	print("Scanning library")
-	var rootdir = "user://songs"
+	var rootdir = userroot + "songs"
 	var dir = Directory.new()
-	var err = dir.open(rootdir)
+	var err = dir.make_dir_recursive(rootdir)
+	if err != OK:
+		print("An error occurred while trying to create the songs directory: ", err)
+		return err
+	err = dir.open(rootdir)
 	if err == OK:
 		dir.list_dir_begin(true, true)
 		var key = dir.get_next()
@@ -60,9 +69,12 @@ func scan_library():
 		print("An error occurred when trying to access the songs directory: ", err)
 
 func save_score():
-	var rootdir = "user://scores"
+	var rootdir = userroot + "scores"
 	var dir = Directory.new()
-	dir.make_dir_recursive(rootdir)
+	var err = dir.make_dir_recursive(rootdir)
+	if err != OK:
+		print("An error occurred while trying to create the scores directory: ", err)
+		return err
 	var data = {}
 	data.score_data = scorescreen_score_data
 	data.song_key = scorescreen_song_key
@@ -72,7 +84,7 @@ func save_score():
 	# So uh. Can't zero-pad using the string.format() method. This sucks.
 	var dt = scorescreen_datetime
 	var filename = rootdir + "/%04d%02d%02dT%02d%02d%02d.json"%[dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
-	var err = file.open(filename, File.WRITE)
+	err = file.open(filename, File.WRITE)
 	if err != OK:
 		print(err)
 		return err
@@ -81,13 +93,17 @@ func save_score():
 	scorescreen_saved = true
 
 func load_score(filename):
-	var rootdir = "user://scores"
+	var rootdir = userroot + "scores"
 	var dir = Directory.new()
-	dir.make_dir_recursive(rootdir)
-	var file = File.new()
-	var err = file.open(rootdir + "/" + filename, File.READ)
+	var err = dir.make_dir_recursive(rootdir)
 	if err != OK:
-		print(err)
+		print("An error occurred while trying to create the scores directory: ", err)
+		return err
+
+	var file = File.new()
+	err = file.open(rootdir + "/" + filename, File.READ)
+	if err != OK:
+		print("An error occurred while trying to access the chosen score file: ", err)
 		return err
 	var result_json = JSON.parse(file.get_as_text())
 	file.close()
@@ -112,6 +128,8 @@ func load_score(filename):
 	set_menu_mode(MenuMode.SCORE_SCREEN)
 
 func _ready():
+	print("user:// root is: ", OS.get_user_data_dir())
+	print("Root for songs and scores is: ", userroot)
 	scan_library()
 	$"/root/main/NoteHandler".connect("finished_song", self, "finished_song")
 	load_score("20191211T234131.json")  # For testing purposes
