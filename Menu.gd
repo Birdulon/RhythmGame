@@ -443,6 +443,8 @@ func finished_song(song_key, score_data):
 
 
 func _input(event):
+	if !visible:
+		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			var pos = event.position - get_global_transform_with_canvas().get_origin()

@@ -1,22 +1,35 @@
-[gd_scene load_steps=17 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://video.gd" type="Script" id=2]
 [ext_resource path="res://ScreenFilter.gd" type="Script" id=3]
-[ext_resource path="res://Receptors.gd" type="Script" id=4]
-[ext_resource path="res://NoteHandler.gd" type="Script" id=5]
-[ext_resource path="res://assets/text-4k.png" type="Texture" id=6]
-[ext_resource path="res://shaders/notelines.shader" type="Shader" id=7]
-[ext_resource path="res://shaders/notemesh.shader" type="Shader" id=8]
-[ext_resource path="res://Menu.gd" type="Script" id=9]
-[ext_resource path="res://shaders/scoretext.tres" type="Material" id=10]
-[ext_resource path="res://ScoreText.gd" type="Script" id=11]
-[ext_resource path="res://Bezel.gd" type="Script" id=12]
-[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=13]
-[ext_resource path="res://InputHandler.gd" type="Script" id=14]
+[ext_resource path="res://shaders/receptors.shader" type="Shader" id=4]
+[ext_resource path="res://Receptors.gd" type="Script" id=5]
+[ext_resource path="res://NoteHandler.gd" type="Script" id=6]
+[ext_resource path="res://assets/text-4k.png" type="Texture" id=7]
+[ext_resource path="res://shaders/notelines.shader" type="Shader" id=8]
+[ext_resource path="res://shaders/notemesh.shader" type="Shader" id=9]
+[ext_resource path="res://Menu.gd" type="Script" id=10]
+[ext_resource path="res://shaders/scoretext.tres" type="Material" id=11]
+[ext_resource path="res://ScoreText.gd" type="Script" id=12]
+[ext_resource path="res://Bezel.gd" type="Script" id=13]
+[ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=14]
+[ext_resource path="res://InputHandler.gd" type="Script" id=15]
 
-[sub_resource type="ShaderMaterial" id=1]
-shader = ExtResource( 7 )
+[sub_resource type="ShaderMaterial" id=4]
+shader = ExtResource( 4 )
+shader_param/num_receptors = 8
+shader_param/line_color = Plane( 0, 0, 1, 1 )
+shader_param/dot_color = Plane( 0, 0, 1, 1 )
+shader_param/shadow_color = Plane( 0, 0, 0, 1 )
+shader_param/line_thickness = 0.006
+shader_param/dot_radius = 0.033
+shader_param/shadow_thickness = 0.01
+shader_param/shadow_thickness_taper = 0.33
+shader_param/px = 0.002
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = ExtResource( 8 )
 shader_param/line_color = Plane( 0.8, 0.8, 1, 0.8 )
 shader_param/line_color_double = Plane( 1, 1, 0.6, 0.9 )
 shader_param/dot_color = Plane( 1, 1, 1, 0.8 )
@@ -27,8 +40,8 @@ shader_param/dot_thickness = 0.033
 shader_param/dot_fullbright_thickness = 0.013
 shader_param/max_angle = 1.0708
 
-[sub_resource type="ShaderMaterial" id=2]
-shader = ExtResource( 8 )
+[sub_resource type="ShaderMaterial" id=3]
+shader = ExtResource( 9 )
 shader_param/bps = null
 shader_param/star_color = null
 shader_param/held_color = null
@@ -63,9 +76,11 @@ __meta__ = {
 script = ExtResource( 3 )
 
 [node name="Receptors" type="MeshInstance2D" parent="."]
-script = ExtResource( 4 )
+material = SubResource( 4 )
+script = ExtResource( 5 )
 
 [node name="SkewSlider" type="HSlider" parent="Receptors"]
+visible = false
 margin_left = -200.0
 margin_top = -30.0
 margin_right = 200.0
@@ -80,6 +95,7 @@ tick_count = 3
 ticks_on_borders = true
 
 [node name="VerticesSlider" type="HSlider" parent="Receptors"]
+visible = false
 margin_left = -200.0
 margin_top = -100.0
 margin_right = 200.0
@@ -88,40 +104,40 @@ min_value = 3.0
 max_value = 72.0
 value = 36.0
 tick_count = 2
+ticks_on_borders = true
 
 [node name="NoteHandler" type="Node2D" parent="."]
-script = ExtResource( 5 )
+script = ExtResource( 6 )
 
 [node name="SlideTrailHandler" type="Node2D" parent="NoteHandler"]
 
 [node name="JudgeText" type="MeshInstance2D" parent="NoteHandler"]
-texture = ExtResource( 6 )
+texture = ExtResource( 7 )
 
 [node name="notelines" type="MeshInstance2D" parent="NoteHandler"]
-material = SubResource( 1 )
-
-[node name="meshinstance" type="MeshInstance2D" parent="NoteHandler"]
 material = SubResource( 2 )
 
+[node name="meshinstance" type="MeshInstance2D" parent="NoteHandler"]
+material = SubResource( 3 )
+
 [node name="Menu" type="Node2D" parent="."]
-visible = false
-script = ExtResource( 9 )
+script = ExtResource( 10 )
 
 [node name="ScoreText" type="Node2D" parent="Menu"]
-material = ExtResource( 10 )
-script = ExtResource( 11 )
+material = ExtResource( 11 )
+script = ExtResource( 12 )
 
 [node name="Bezel" type="Node2D" parent="."]
-script = ExtResource( 12 )
+script = ExtResource( 13 )
 
 [node name="InputHandler" type="Label" parent="."]
 margin_left = -540.0
 margin_top = -540.0
 margin_right = 540.0
 margin_bottom = 540.0
-custom_fonts/font = ExtResource( 13 )
+custom_fonts/font = ExtResource( 14 )
 text = "Fingers on the screen:"
-script = ExtResource( 14 )
+script = ExtResource( 15 )
 __meta__ = {
 "_edit_lock_": true
 }

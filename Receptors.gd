@@ -1,9 +1,9 @@
 #tool
-extends Node2D
+extends MeshInstance2D
 
-var ring_px := 4
-var receptor_px := 24
-var shadow_px := 5
+var ring_px := 4  # Analogous to diameter
+var receptor_px := 24  # Diameter
+var shadow_px := 8  # Outer edge, analogous to radius
 var shadow_color := Color.black
 var center := Vector2(0.0, 0.0)
 
@@ -28,8 +28,11 @@ func make_ring_mesh(inner_vertices: int, thickness: float, radius: float, skew:=
 	# Outer polygon side-length = inner side-length / sin(inside angle/2)
 	# inside angle for a polygon is pi-tau/n. We already precalculated tau/n for other purposes.
 	var r2 = (radius + thickness*0.5)/sin((PI-angle_increment)/2)
+	var UV_r1 = r1/radius
+	var UV_r2 = r2/radius
 	
 	var vertex_list = PoolVector2Array()
+	var UV_list = PoolVector2Array()
 	var inner_list = PoolVector2Array()
 	var outer_list = PoolVector2Array()
 	for i in inner_vertices:
@@ -39,12 +42,16 @@ func make_ring_mesh(inner_vertices: int, thickness: float, radius: float, skew:=
 		vertex_list.push_back(polar2cartesian(r2, angle_o))
 		inner_list.push_back(vertex_list[-2])
 		outer_list.push_back(vertex_list[-1])
+		UV_list.push_back(polar2cartesian(UV_r1, angle_i))
+		UV_list.push_back(polar2cartesian(UV_r2, angle_o))
 	if repeat_start:
 		vertex_list.push_back(vertex_list[0])
 		vertex_list.push_back(vertex_list[1])
 		inner_list.push_back(vertex_list[0])
 		outer_list.push_back(vertex_list[1])
-	return [vertex_list, inner_list, outer_list]
+		UV_list.push_back(UV_list[0])
+		UV_list.push_back(UV_list[1])
+	return [vertex_list, inner_list, outer_list, UV_list]
 	
 func triangle_area(a: Vector2, b: Vector2, c: Vector2) -> float:
 	return 0.5 * abs((a.x-c.x)*(b.y-a.y) - (a.x-b.x)*(c.y-a.y))
@@ -58,7 +65,6 @@ func arc_point_list(center: Vector2, radius: float, angle_from:=0.0, angle_to:=3
 	var point_list = PoolVector2Array()
 	for i in range(points):
 		var angle = deg2rad(angle_from + i * (angle_to - angle_from) / (points-1))
-#		point_list.push_back(center + Vector2(cos(angle), sin(angle)) * radius)
 		point_list.push_back(center + polar2cartesian(radius, angle))
 	return point_list
 
@@ -67,42 +73,79 @@ func draw_old(circles:=true, shadows:=true):	# Receptor ring
 	var receptor_centers := arc_point_list(center, GameTheme.receptor_ring_radius, Rules.FIRST_COLUMN_ANGLE_DEG, Rules.FIRST_COLUMN_ANGLE_DEG+360.0-Rules.COLS_ANGLE_DEG, Rules.COLS)
 
 	if shadows:
-		#draw_polyline(receptor_circle, shadow_color, ring_px + shadow_px, true)
-		draw_polyline(receptor_circle, Color.darkblue, ring_px + shadow_px, true)
+		draw_polyline(receptor_circle, shadow_color, ring_px + shadow_px/2, true)
 		if circles:
 			for i in range(len(receptor_centers)):
-#				draw_circle(receptor_centers[i], (receptor_px + shadow_px)/2, shadow_color)
-				draw_circle(receptor_centers[i], (receptor_px + shadow_px)/2, Color.darkblue)
+				draw_circle(receptor_centers[i], receptor_px/2 + shadow_px, shadow_color)
 
 	draw_polyline(receptor_circle, GameTheme.receptor_color, ring_px, true)
 	if circles:
 		for i in range(len(receptor_centers)):
 			draw_circle(receptor_centers[i], receptor_px/2, GameTheme.receptor_color)
 
-
-func _draw():
-	draw_old(true, true)
-	var mesh_v = $VerticesSlider.value
-	var skew = $SkewSlider.value
-	var dbg_color = Color.red
-	var ring_thickness = receptor_px + shadow_px
-	var ring_vertices = make_ring_mesh(mesh_v, ring_thickness, GameTheme.receptor_ring_radius, skew)
-	var estimated_area = circumscribe_polygon_area(GameTheme.receptor_ring_radius+ring_thickness*0.5, mesh_v) - inscribe_polygon_area(GameTheme.receptor_ring_radius-ring_thickness*0.5, mesh_v)
-	var ideal_ring_area = PI * (pow(GameTheme.receptor_ring_radius+(receptor_px+shadow_px)/2, 2) - pow(GameTheme.receptor_ring_radius-(receptor_px+shadow_px)/2, 2))
-	
+func draw_tris():
+	var dbg_color = Color(1.0, 0.0, 0.0, 1.0)
 	draw_polyline(ring_vertices[0], dbg_color)
 	draw_polyline(ring_vertices[1], dbg_color)
 	draw_polyline(ring_vertices[2], dbg_color)
+
+var ring_vertices
+func update_ring_mesh():
+	var mesh_v = $VerticesSlider.value
+	var skew = $SkewSlider.value
+	var ring_thickness = receptor_px + shadow_px*2
+	ring_vertices = make_ring_mesh(mesh_v, ring_thickness, GameTheme.receptor_ring_radius, skew)
+	var temp_mesh = ArrayMesh.new()
+	var mesh_arrays = []
+	mesh_arrays.resize(Mesh.ARRAY_MAX)
+	mesh_arrays[Mesh.ARRAY_VERTEX] = ring_vertices[0]
+	mesh_arrays[Mesh.ARRAY_TEX_UV] = ring_vertices[3]
+#	mesh_arrays[Mesh.ARRAY_COLOR] = colors
+	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, mesh_arrays)
+	mesh = temp_mesh
+	
+
+func _draw():
+#	draw_old(true, true)
+#	draw_tris()
+	var mesh_v = $VerticesSlider.value
+	var skew = $SkewSlider.value
+	var ring_thickness = receptor_px + shadow_px*2
+	var estimated_area = circumscribe_polygon_area(GameTheme.receptor_ring_radius+ring_thickness*0.5, mesh_v) - inscribe_polygon_area(GameTheme.receptor_ring_radius-ring_thickness*0.5, mesh_v)
+	var ideal_ring_area = PI * (pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2) - pow(GameTheme.receptor_ring_radius-receptor_px/2-shadow_px, 2))
 	
 #	var l = len(ring_vertices)
 #	for i in l:
-##		estimated_area += triangle_area(ring_vertices[i], ring_vertices[(i+1)%l], ring_vertices[(i+2)%l])
-	var quad_area = 4*pow(GameTheme.receptor_ring_radius+(receptor_px+shadow_px)/2, 2)
+#		estimated_area += triangle_area(ring_vertices[i], ring_vertices[(i+1)%l], ring_vertices[(i+2)%l])
+	var quad_area = 4*pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2)
 	var fps = Performance.get_monitor(Performance.TIME_FPS)
 	$"/root/main/InputHandler".text = "Vertices: %d*2     Skew: %.3f\nArea: %.0f\n(%.0f%% ideal ring)\n(%.0f%% quad)\nFPS: %.0f"%[mesh_v, skew, estimated_area, 100.0*estimated_area/ideal_ring_area, 100.0*estimated_area/quad_area, fps]
-#	._draw()
+	
+	material.set_shader_param("dot_radius", 0.5*receptor_px/GameTheme.receptor_ring_radius)
+	material.set_shader_param("line_thickness", 0.5*ring_px/GameTheme.receptor_ring_radius)
+	material.set_shader_param("shadow_thickness", shadow_px/GameTheme.receptor_ring_radius)
+	material.set_shader_param("shadow_thickness_taper", -0.75)
+	material.set_shader_param("px", 0.5/GameTheme.receptor_ring_radius)
+
+func update_ring_mesh_1arg(arg1):
+	# Hack because signals can't discard arguments when connected to smaller slots :(
+	update_ring_mesh()
 
 func _ready():
+	var receptor_array_image := Image.new()
+	receptor_array_image.create(8, 8, false, Image.FORMAT_RH)
+	receptor_array_image.lock()
+	for i in Rules.COLS:
+		receptor_array_image.set_pixel(i%8, i/8, Color(GameTheme.RADIAL_COL_ANGLES[i], 0.0, 0.0))
+	receptor_array_image.unlock()
+	var receptor_data_tex = ImageTexture.new()
+	receptor_data_tex.create_from_image(receptor_array_image, 0)
+	set_texture(receptor_data_tex)
+	material.set_shader_param("num_receptors", Rules.COLS)
+	
+	update_ring_mesh()
+	$VerticesSlider.connect("value_changed", self, "update_ring_mesh_1arg")
+	$SkewSlider.connect("value_changed", self, "update_ring_mesh_1arg")
 	$"/root".connect("size_changed", self, "update")
 	
 func _process(delta):

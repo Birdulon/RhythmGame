@@ -8,7 +8,6 @@ func arc_point_list(center: Vector2, radius: float, angle_from:=0.0, angle_to:=3
 	var point_list = PoolVector2Array()
 	for i in range(points):
 		var angle = deg2rad(angle_from + i * (angle_to - angle_from) / (points-1))
-#		point_list.push_back(center + Vector2(cos(angle), sin(angle)) * radius)
 		point_list.push_back(center + polar2cartesian(radius, angle))
 	return point_list
 
