@@ -4,7 +4,7 @@ var touch_points = {} 								# dict containing all points touched on the screen
 var touch_positions = []							# array of above
 var fingers = 0 setget set_fingers					# setter for show fingers number on screen
 var txt_ball = preload("res://assets/ball.png")		# preload our ball texture
-var default_font = preload("res://assets/NotoSans.tres")	# point to godot standard font
+var default_font = preload("res://assets/NotoSans.tres")
 
 var buttons_pressed := PoolByteArray()
 var touchbuttons_pressed := PoolByteArray()
@@ -60,8 +60,7 @@ func _draw():
 func update_data():
 	touch_positions.clear()
 	for i in touch_points:
-		touch_positions.push_back(touch_points[i].position)
-
+		touch_positions.push_back(touch_points[i].position - rect_size/2)
 
 	var buttons_pressed_temp := []
 	var touchbuttons_pressed_temp := []
@@ -70,7 +69,6 @@ func update_data():
 		touchbuttons_pressed_temp.append(false)
 
 	for pos in touch_positions:
-		pos -= Vector2(960, 540)  # Change this if we move the node
 		var pol = cartesian2polar(pos.x, pos.y)
 		var dist = pol.x/GameTheme.receptor_ring_radius
 		var angle = rad2deg(pol.y)
