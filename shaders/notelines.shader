@@ -1,15 +1,16 @@
 shader_type canvas_item;
 render_mode blend_premul_alpha;
 
-uniform vec4 line_color = vec4(0.8, 0.8, 1.0, 0.8);
-uniform vec4 line_color_double = vec4(1.0, 1.0, 0.6, 0.9);
-uniform vec4 dot_color = vec4(1.0, 1.0, 1.0, 0.8);
+uniform vec4 line_color : hint_color = vec4(0.8, 0.8, 1.0, 0.8);
+uniform vec4 line_color_double : hint_color = vec4(1.0, 1.0, 0.6, 0.9);
+uniform vec4 dot_color : hint_color = vec4(1.0, 1.0, 1.0, 0.8);
 uniform float bps = 1.0;
 uniform float line_thickness = 0.012;
 uniform float line_thickness_min = 0.0;
 uniform float dot_thickness = 0.033;
 uniform float dot_fullbright_thickness = 0.013;
 uniform float max_angle = 1.0708; //3.14159*0.5; //radians(90.0);
+uniform float max_dist = 1.25;
 
 //void vertex() {
 //}
@@ -131,4 +132,8 @@ void fragment() {
 	COLOR.a = 0.0;
 //	COLOR.rgb = (line_color_double.rgb*line_double_alpha + line_color.rgb*line_alpha*(1.0-line_double_alpha))/(line_double_alpha + line_alpha*(1.0-line_double_alpha));
 //	COLOR.a = min(line_double_alpha + line_alpha*(1.0-line_double_alpha), 1.0);
+	if (dist > 1.0){
+		float fade = 1.0 - clamp((max_dist - dist)/(max_dist - 1.0), 0.0, 1.0);
+		COLOR.rgb = mix(COLOR.rgb, vec3(0.0), fade);
+	}
 }

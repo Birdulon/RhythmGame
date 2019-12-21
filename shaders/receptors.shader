@@ -2,9 +2,9 @@ shader_type canvas_item;
 render_mode blend_premul_alpha;
 
 uniform int num_receptors = 8;
-uniform vec4 line_color = vec4(0.0, 0.0, 1.0, 1.0);
-uniform vec4 dot_color = vec4(0.0, 0.0, 1.0, 1.0);
-uniform vec4 shadow_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform vec4 line_color : hint_color = vec4(0.0, 0.0, 1.0, 1.0);
+uniform vec4 dot_color : hint_color = vec4(0.0, 0.0, 1.0, 1.0);
+uniform vec4 shadow_color : hint_color = vec4(0.0, 0.0, 0.0, 1.0);
 //uniform float bps = 1.0;
 uniform float line_thickness = 0.006;
 uniform float dot_radius = 0.033;
