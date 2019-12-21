@@ -442,7 +442,6 @@ func _draw():
 	$notelines.set_texture(noteline_data_tex)
 
 	$meshinstance.set_mesh(mesh)
-#	draw_mesh(mesh, tex)
 
 	var textmesh := ArrayMesh.new()
 	for text in active_judgement_texts:
@@ -483,9 +482,8 @@ func set_time(seconds: float):
 	time_zero_msec = msecs - (seconds * 1000)
 	time = seconds
 	t = game_time(time)
-
-# Called when the node enters the scene tree for the first time.
-func _ready():
+	
+func make_noteline_mesh_old() -> ArrayMesh:
 	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
 	var vertex_array_playfield := PoolVector2Array([
@@ -498,7 +496,35 @@ func _ready():
 	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
 	arrays[Mesh.ARRAY_TEX_UV] = uv_array_playfield
 	mesh_playfield.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
-	$notelines.set_mesh(mesh_playfield)
+	return mesh_playfield
+
+func make_noteline_mesh(vertices := 32) -> ArrayMesh:
+	assert(vertices > 3)
+	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
+	var uv_array_playfield := PoolVector2Array([Vector2(0.0, 0.0)])
+	var vertex_array_playfield := PoolVector2Array([Vector2(0.0, 0.0)])
+	
+	var angle_increment = TAU/float(vertices)
+	# Outer polygon side-length = inner side-length / sin(inside angle/2)
+	# inside angle for a polygon is pi-tau/n. We already precalculated tau/n for other purposes.
+	var r = 0.5 * screen_height/sin((PI-angle_increment)/2)
+	var UV_r = rec_scale1/sin((PI-angle_increment)/2)
+	for i in vertices+1:
+		var angle = i * angle_increment
+		uv_array_playfield.append(polar2cartesian(UV_r, -angle))
+		vertex_array_playfield.append(polar2cartesian(r, angle))
+	
+	var mesh_playfield := ArrayMesh.new()
+	var arrays = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertex_array_playfield
+	arrays[Mesh.ARRAY_TEX_UV] = uv_array_playfield
+	mesh_playfield.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_FAN, arrays)
+	return mesh_playfield
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	$notelines.set_mesh(make_noteline_mesh())
 	$notelines.material.set_shader_param("bps", bpm/60.0)
 
 	noteline_array_image.create(16, 16, false, Image.FORMAT_RGBF)
