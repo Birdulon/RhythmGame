@@ -12,6 +12,11 @@ var tex_judgement_text := preload("res://assets/text-4k.png")
 var tex_slide_arrow := preload("res://assets/slide-arrow-4k.png")
 var slide_trail_shadermaterial := preload("res://shaders/slidetrail.tres")
 
+var SlideTrailHandler
+var JudgeText
+var notelines
+var meshinstance
+
 var snd_miss := preload("res://assets/miss.wav")
 var snd_clap := preload("res://assets/softclap.wav")
 var snd_count_in := snd_clap
@@ -439,14 +444,14 @@ func _draw():
 	noteline_data.unlock()
 	var noteline_data_tex = ImageTexture.new()
 	noteline_data_tex.create_from_image(noteline_data, 0)
-	$notelines.set_texture(noteline_data_tex)
+	notelines.set_texture(noteline_data_tex)
 
-	$meshinstance.set_mesh(mesh)
+	meshinstance.set_mesh(mesh)
 
 	var textmesh := ArrayMesh.new()
 	for text in active_judgement_texts:
 		make_judgement_text(textmesh, TextJudgement[text.judgement], text.col, (t-text.time)/GameTheme.judge_text_duration)
-	$JudgeText.set_mesh(textmesh)
+	JudgeText.set_mesh(textmesh)
 
 
 func _input(event):
@@ -482,7 +487,7 @@ func set_time(seconds: float):
 	time_zero_msec = msecs - (seconds * 1000)
 	time = seconds
 	t = game_time(time)
-	
+
 func make_noteline_mesh_old() -> ArrayMesh:
 	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
@@ -503,7 +508,7 @@ func make_noteline_mesh(vertices := 32) -> ArrayMesh:
 	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
 	var uv_array_playfield := PoolVector2Array([Vector2(0.0, 0.0)])
 	var vertex_array_playfield := PoolVector2Array([Vector2(0.0, 0.0)])
-	
+
 	var angle_increment = TAU/float(vertices)
 	# Outer polygon side-length = inner side-length / sin(inside angle/2)
 	# inside angle for a polygon is pi-tau/n. We already precalculated tau/n for other purposes.
@@ -513,7 +518,7 @@ func make_noteline_mesh(vertices := 32) -> ArrayMesh:
 		var angle = i * angle_increment
 		uv_array_playfield.append(polar2cartesian(UV_r, -angle))
 		vertex_array_playfield.append(polar2cartesian(r, angle))
-	
+
 	var mesh_playfield := ArrayMesh.new()
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -524,8 +529,14 @@ func make_noteline_mesh(vertices := 32) -> ArrayMesh:
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	$notelines.set_mesh(make_noteline_mesh())
-	$notelines.material.set_shader_param("bps", bpm/60.0)
+	SlideTrailHandler = $"Viewport/Center/SlideTrailHandler"
+	JudgeText = $"Viewport/Center/JudgeText"
+	notelines = $"Viewport/Center/notelines"
+	meshinstance = $"Viewport/Center/meshinstance"
+
+	notelines.set_mesh(make_noteline_mesh())
+	notelines.material.set_shader_param("bps", bpm/60.0)
+
 
 	noteline_array_image.create(16, 16, false, Image.FORMAT_RGBF)
 	noteline_array_image.fill(Color(0.0, 0.0, 0.0))
@@ -559,11 +570,11 @@ func load_track(data: Dictionary, difficulty_idx: int):
 		if note.type == Note.NOTE_SLIDE:
 			slide_trail_meshes[note.slide_id] = make_slide_trail_mesh(note)
 
-	$meshinstance.material.set_shader_param("star_color", GameTheme.COLOR_STAR)
-	$meshinstance.material.set_shader_param("held_color", GameTheme.COLOR_HOLD_HELD)
-	$meshinstance.material.set_shader_param("bps", bpm/60.0)
-	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
-	$meshinstance.set_texture(tex)
+	meshinstance.material.set_shader_param("star_color", GameTheme.COLOR_STAR)
+	meshinstance.material.set_shader_param("held_color", GameTheme.COLOR_HOLD_HELD)
+	meshinstance.material.set_shader_param("bps", bpm/60.0)
+	meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
+	meshinstance.set_texture(tex)
 
 func stop():
 	$"/root/main/music".stop()
@@ -596,8 +607,8 @@ func _process(delta):
 	if !running:
 		return
 
-	$meshinstance.material.set_shader_param("bps", bpm/60.0)
-	$notelines.material.set_shader_param("bps", bpm/60.0)
+	meshinstance.material.set_shader_param("bps", bpm/60.0)
+	notelines.material.set_shader_param("bps", bpm/60.0)
 
 	var t_old := game_time(time)
 #	time += delta
@@ -635,7 +646,7 @@ func _process(delta):
 		var note = active_notes[i]
 		if note.time_death < t:
 			if note.type == Note.NOTE_SLIDE:
-				$SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
+				SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
 				slide_trail_mesh_instances.erase(note.slide_id)
 				var idx = active_slide_trails.find(note)
 				if idx >= 0:
@@ -681,7 +692,7 @@ func _process(delta):
 			meshi.material.set_shader_param("trail_progress", 0.0)
 			meshi.set_texture(tex_slide_arrow)
 			slide_trail_mesh_instances[note.slide_id] = meshi
-			$SlideTrailHandler.add_child(meshi)
+			SlideTrailHandler.add_child(meshi)
 
 		next_note_to_load += 1
 
@@ -695,5 +706,6 @@ func _process(delta):
 		emit_signal("finished_song", song_key, scores)
 
 	# Redraw
-	$meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
+	meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
 	update()
+	$Painter.update()

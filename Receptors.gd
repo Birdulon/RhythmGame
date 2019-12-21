@@ -30,7 +30,7 @@ func make_ring_mesh(inner_vertices: int, thickness: float, radius: float, skew:=
 	var r2 = (radius + thickness*0.5)/sin((PI-angle_increment)/2)
 	var UV_r1 = r1/radius
 	var UV_r2 = r2/radius
-	
+
 	var vertex_list = PoolVector2Array()
 	var UV_list = PoolVector2Array()
 	var inner_list = PoolVector2Array()
@@ -52,7 +52,7 @@ func make_ring_mesh(inner_vertices: int, thickness: float, radius: float, skew:=
 		UV_list.push_back(UV_list[0])
 		UV_list.push_back(UV_list[1])
 	return [vertex_list, inner_list, outer_list, UV_list]
-	
+
 func triangle_area(a: Vector2, b: Vector2, c: Vector2) -> float:
 	return 0.5 * abs((a.x-c.x)*(b.y-a.y) - (a.x-b.x)*(c.y-a.y))
 
@@ -91,8 +91,8 @@ func draw_tris():
 
 var ring_vertices
 func update_ring_mesh():
-	var mesh_v = $VerticesSlider.value
-	var skew = $SkewSlider.value
+	var mesh_v = $"../InputHandler/VerticesSlider".value
+	var skew = $"../InputHandler/SkewSlider".value
 	var ring_thickness = receptor_px + shadow_px*2
 	ring_vertices = make_ring_mesh(mesh_v, ring_thickness, GameTheme.receptor_ring_radius, skew)
 	var temp_mesh = ArrayMesh.new()
@@ -103,24 +103,24 @@ func update_ring_mesh():
 #	mesh_arrays[Mesh.ARRAY_COLOR] = colors
 	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, mesh_arrays)
 	mesh = temp_mesh
-	
+
 
 func _draw():
 #	draw_old(true, true)
 #	draw_tris()
-	var mesh_v = $VerticesSlider.value
-	var skew = $SkewSlider.value
+	var mesh_v = $"../InputHandler/VerticesSlider".value
+	var skew = $"../InputHandler/SkewSlider".value
 	var ring_thickness = receptor_px + shadow_px*2
 	var estimated_area = circumscribe_polygon_area(GameTheme.receptor_ring_radius+ring_thickness*0.5, mesh_v) - inscribe_polygon_area(GameTheme.receptor_ring_radius-ring_thickness*0.5, mesh_v)
 	var ideal_ring_area = PI * (pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2) - pow(GameTheme.receptor_ring_radius-receptor_px/2-shadow_px, 2))
-	
+
 #	var l = len(ring_vertices)
 #	for i in l:
 #		estimated_area += triangle_area(ring_vertices[i], ring_vertices[(i+1)%l], ring_vertices[(i+2)%l])
 	var quad_area = 4*pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2)
 	var fps = Performance.get_monitor(Performance.TIME_FPS)
 	$"/root/main/InputHandler".text = "Vertices: %d*2     Skew: %.3f\nArea: %.0f\n(%.0f%% ideal ring)\n(%.0f%% quad)\nFPS: %.0f"%[mesh_v, skew, estimated_area, 100.0*estimated_area/ideal_ring_area, 100.0*estimated_area/quad_area, fps]
-	
+
 	material.set_shader_param("dot_radius", 0.5*receptor_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_thickness", 0.5*ring_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("shadow_thickness", shadow_px/GameTheme.receptor_ring_radius)
@@ -142,12 +142,12 @@ func _ready():
 	receptor_data_tex.create_from_image(receptor_array_image, 0)
 	set_texture(receptor_data_tex)
 	material.set_shader_param("num_receptors", Rules.COLS)
-	
+
 	update_ring_mesh()
-	$VerticesSlider.connect("value_changed", self, "update_ring_mesh_1arg")
-	$SkewSlider.connect("value_changed", self, "update_ring_mesh_1arg")
+	$"../InputHandler/VerticesSlider".connect("value_changed", self, "update_ring_mesh_1arg")
+	$"../InputHandler/SkewSlider".connect("value_changed", self, "update_ring_mesh_1arg")
 	$"/root".connect("size_changed", self, "update")
-	
+
 func _process(delta):
 	if not Engine.editor_hint:
 		update()
