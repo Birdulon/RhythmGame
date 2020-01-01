@@ -133,7 +133,7 @@ func update_ring_mesh_1arg(arg1):
 
 func _ready():
 	var receptor_array_image := Image.new()
-	receptor_array_image.create(8, 8, false, Image.FORMAT_RH)
+	receptor_array_image.create(8, 8, false, Image.FORMAT_RF)
 	receptor_array_image.lock()
 	for i in Rules.COLS:
 		receptor_array_image.set_pixel(i%8, i/8, Color(GameTheme.RADIAL_COL_ANGLES[i], 0.0, 0.0))

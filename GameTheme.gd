@@ -81,11 +81,13 @@ func set_screen_filter_alpha(alpha: float):
 		screen_filter = Color(screen_filter.r, screen_filter.g, screen_filter.b, new_alpha)
 		emit_signal("screen_filter_changed")
 
+var radial_values_initialized := false
 func init_radial_values():
 	for i in range(Rules.COLS):
 		var angle = deg2rad(fposmod(Rules.FIRST_COLUMN_ANGLE_DEG + (i * Rules.COLS_ANGLE_DEG), 360.0))
 		RADIAL_COL_ANGLES.push_back(angle)
 		RADIAL_UNIT_VECTORS.push_back(Vector2(cos(angle), sin(angle)))
+	radial_values_initialized = true
 
 
 func color_array_text(alpha: float) -> PoolColorArray:
