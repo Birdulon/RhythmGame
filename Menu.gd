@@ -1,5 +1,6 @@
 #tool
-extends Node2D
+#extends Node2D
+extends Control
 
 var song_defs = {}
 var song_images = {}
@@ -203,7 +204,7 @@ func _draw_song_select(center: Vector2) -> Array:
 		var subsize = size * scales[0]
 		var gx = center.x - (subsize + spacer_x) * selected_song_delta
 		var genre = genres.keys()[g]
-		draw_string_centered(GenreFont, Vector2(0, gy), genre)
+		draw_string_centered(GenreFont, Vector2(center.x, gy), genre)
 		var songslist = genres[genre]
 		var s = len(songslist)
 		var key = songslist[selected_song_vis % s]
@@ -239,7 +240,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 		touchrects.append({rect=r, chart_idx=diff})
 		x += size + spacer_x
 	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+64), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
-	touchrects.append({rect=Rect2(-450.0, 150.0, 900.0, 300.0), chart_idx=-1})
+	touchrects.append({rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1})
 	return touchrects
 
 func _draw_score_screen(center: Vector2) -> Array:
@@ -329,19 +330,19 @@ func _draw_score_screen(center: Vector2) -> Array:
 	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*7), "Early : Late", Color(0.95, 0.95, 1.0))
 	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*8), "%3d%% : %3d%%"%[notecount_early*100/notecount_total, notecount_late*100/notecount_total], Color(0.95, 0.95, 1.0))
 
-	var rect_songselect := Rect2(-100.0, 300.0, 400.0, 100.0)
+	var rect_songselect := Rect2(x-100.0, y+660.0, 400.0, 100.0)
 	draw_rect(rect_songselect, Color.red)
-	draw_string_centered(TitleFont, Vector2(x+100, 320), "Song Select", Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x+100, y+680), "Song Select", Color(0.95, 0.95, 1.0))
 	touchrects.append({rect=rect_songselect, next_menu=MenuMode.SONG_SELECT})
 
-	var rect_save := Rect2(-300.0, 300.0, 180.0, 100.0)
+	var rect_save := Rect2(x-300.0, y+660.0, 180.0, 100.0)
 	if not scorescreen_saved:
 		draw_rect(rect_save, Color.blue)
-		draw_string_centered(TitleFont, Vector2(x-210, 320), "Save", Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(x-210, y+680), "Save", Color(0.95, 0.95, 1.0))
 		touchrects.append({rect=rect_save, action="save"})
 	else:
 		draw_rect(rect_save, Color.darkgray)
-		draw_string_centered(TitleFont, Vector2(x-210, 320), "Saved", Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(x-210, y+680), "Saved", Color(0.95, 0.95, 1.0))
 	return touchrects
 
 func _draw_gameplay(center: Vector2) -> Array:
@@ -349,9 +350,9 @@ func _draw_gameplay(center: Vector2) -> Array:
 	var x = center.x
 	var y = center.y
 
-	var rect_songselect := Rect2(-960.0, 440.0, 100.0, 100.0)
+	var rect_songselect := Rect2(x-960.0, y+440.0, 100.0, 100.0)
 	draw_rect(rect_songselect, Color.red)
-	draw_string_centered(TitleFont, Vector2(-910, 470), "Stop", Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, center+Vector2(-910, 470), "Stop", Color(0.95, 0.95, 1.0))
 	touchrects.append({rect=rect_songselect, action="stop"})
 	return touchrects
 
@@ -360,15 +361,16 @@ func _draw():
 	var songs = len(song_defs)
 	var size = 216
 	var outline_px = 3
-	var center = Vector2(0.0, -160.0)
+	var center = Vector2(540.0, 540.0-160.0)  # Vector2(0.0, -160.0)
 	touch_rects = []
+	$ScoreText.hide()
 	for i in MenuMode:
 		touch_rects.append([])
 
 	if menu_mode_prev_fade_timer > 0.0:
 		var progress = 1.0 - menu_mode_prev_fade_timer/menu_mode_prev_fade_timer_duration
-		var center_prev = lerp(center, Vector2(0.0, 900.0), progress)
-		var center_next = lerp(Vector2(0.0, -900.0), center, progress)
+		var center_prev = lerp(center, center+Vector2(0.0, 900.0), progress)
+		var center_next = lerp(center+Vector2(0.0, -900.0), center, progress)
 		match menu_mode_prev:
 			MenuMode.SONG_SELECT:
 				_draw_song_select(center_prev)
@@ -391,6 +393,7 @@ func _draw():
 				GameTheme.set_screen_filter_alpha(1.0 - progress)
 			MenuMode.SCORE_SCREEN:
 				_draw_score_screen(center_next)
+				$ScoreText.show()
 	else:
 		match menu_mode:
 			MenuMode.SONG_SELECT:
@@ -407,6 +410,7 @@ func _draw():
 			MenuMode.SCORE_SCREEN:
 				GameTheme.set_screen_filter_alpha(1.0)
 				touch_rects[menu_mode] = _draw_score_screen(center)
+				$ScoreText.show()
 
 func set_menu_mode(mode):
 	menu_mode_prev = menu_mode

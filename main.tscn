@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=2]
+[gd_scene load_steps=23 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://video.gd" type="Script" id=2]
@@ -17,6 +17,7 @@
 [ext_resource path="res://Bezel.gd" type="Script" id=15]
 [ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=16]
 [ext_resource path="res://InputHandler.gd" type="Script" id=17]
+[ext_resource path="res://assets/test/TIT FOR TAT.avi" type="VideoStream" id=18]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 4 )
@@ -30,14 +31,14 @@ shader_param/shadow_thickness = 0.01
 shader_param/shadow_thickness_taper = 0.33
 shader_param/px = 0.002
 
-[sub_resource type="ShaderMaterial" id=3]
+[sub_resource type="ShaderMaterial" id=2]
 shader = ExtResource( 9 )
 shader_param/bps = null
 shader_param/star_color = null
 shader_param/held_color = null
 shader_param/screen_size = null
 
-[sub_resource type="ShaderMaterial" id=2]
+[sub_resource type="ShaderMaterial" id=3]
 shader = ExtResource( 10 )
 shader_param/line_color = Color( 0.8, 0.8, 1, 0.8 )
 shader_param/line_color_double = Color( 1, 1, 0.6, 0.9 )
@@ -59,6 +60,18 @@ script = ExtResource( 1 )
 __meta__ = {
 "_edit_horizontal_guides_": [  ],
 "_edit_vertical_guides_": [  ]
+}
+
+[node name="VideoPlayer" type="VideoPlayer" parent="."]
+visible = false
+margin_left = -640.0
+margin_top = -360.0
+margin_right = 640.0
+margin_bottom = 360.0
+stream = ExtResource( 18 )
+volume_db = -80.0
+__meta__ = {
+"_edit_use_anchors_": false
 }
 
 [node name="music" type="AudioStreamPlayer" parent="."]
@@ -105,17 +118,26 @@ scale = Vector2( 0.5, 0.5 )
 texture = ExtResource( 8 )
 
 [node name="meshinstance" type="MeshInstance2D" parent="NoteHandler/Viewport/Center"]
-material = SubResource( 3 )
+material = SubResource( 2 )
 
 [node name="notelines" type="MeshInstance2D" parent="NoteHandler/Viewport/Center"]
-material = SubResource( 2 )
+material = SubResource( 3 )
 
 [node name="Painter" type="Node2D" parent="NoteHandler"]
 material = SubResource( 4 )
 script = ExtResource( 11 )
 
-[node name="Menu" type="Node2D" parent="."]
+[node name="Menu" type="Control" parent="."]
+margin_left = -540.0
+margin_top = -540.0
+margin_right = 540.0
+margin_bottom = 540.0
+rect_pivot_offset = Vector2( 540, 540 )
+rect_clip_content = true
 script = ExtResource( 12 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="ScoreText" type="Node2D" parent="Menu"]
 material = ExtResource( 13 )
@@ -132,37 +154,40 @@ margin_bottom = 540.0
 custom_fonts/font = ExtResource( 16 )
 text = "Fingers on the screen:"
 script = ExtResource( 17 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="VerticesSlider" type="HSlider" parent="InputHandler"]
-margin_left = 10.0
-margin_top = 280.0
-margin_right = 310.0
-margin_bottom = 296.0
-min_value = 3.0
-max_value = 72.0
-value = 36.0
-tick_count = 2
-ticks_on_borders = true
-
-[node name="SkewSlider" type="HSlider" parent="InputHandler"]
-margin_left = 10.0
-margin_top = 310.0
-margin_right = 310.0
-margin_bottom = 320.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-max_value = 0.5
-step = 0.01
-tick_count = 3
-ticks_on_borders = true
+[node name="Label" type="Label" parent="InputHandler"]
+margin_top = 136.0
+margin_right = 116.0
+margin_bottom = 150.0
+text = "Subsampling (X, Y)"
 
 [node name="SSXSlider" type="HSlider" parent="InputHandler"]
 margin_left = 10.0
-margin_top = 400.0
+margin_top = 160.0
 margin_right = 310.0
-margin_bottom = 410.0
+margin_bottom = 156.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+min_value = 0.1
+max_value = 2.0
+step = 0.01
+value = 1.0
+tick_count = 3
+ticks_on_borders = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SSYSlider" type="HSlider" parent="InputHandler"]
+margin_left = 10.0
+margin_top = 176.0
+margin_right = 310.0
+margin_bottom = 186.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
@@ -174,18 +199,12 @@ value = 1.0
 tick_count = 3
 ticks_on_borders = true
 
-[node name="SSYSlider" type="HSlider" parent="InputHandler"]
-margin_left = 10.0
-margin_top = 430.0
-margin_right = 310.0
-margin_bottom = 440.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-min_value = 0.1
-max_value = 2.0
-step = 0.01
-value = 1.0
-tick_count = 3
-ticks_on_borders = true
+[node name="VsyncButton" type="CheckButton" parent="InputHandler"]
+margin_left = 4.0
+margin_top = 90.0
+margin_right = 121.0
+margin_bottom = 130.0
+text = "Vsync"
+__meta__ = {
+"_edit_use_anchors_": false
+}

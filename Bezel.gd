@@ -12,12 +12,12 @@ func arc_point_list(center: Vector2, radius: float, angle_from:=0.0, angle_to:=3
 	return point_list
 
 func _draw():
-	var bezel_colors := PoolColorArray([GameTheme.bezel_color if not Engine.editor_hint else Color.red])
+	var bezel_colors := PoolColorArray([GameTheme.bezel_color])
 	var bezel_points: PoolVector2Array
-	
+
 	var screen_size = $"/root".get_visible_rect().size
 	var screen_height = 1080 # min(screen_size.x, screen_size.y)
-	
+
 	var screen_height2 = screen_height/2.0
 
 #	draw_rect(Rect2(-screen_height2, -screen_height2, -x_margin, screen_height), GameTheme.bezel_color)

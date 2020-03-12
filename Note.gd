@@ -86,6 +86,7 @@ class NoteSlide extends NoteBase:
 			Note.SlideType.ARC_ACW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
 				return polar2cartesian(GameTheme.receptor_ring_radius, circle_angle)
+		return Vector2(0.0, 0.0)
 
 	func get_angle(progress: float) -> float:
 		match slide_type:
@@ -97,6 +98,7 @@ class NoteSlide extends NoteBase:
 			Note.SlideType.ARC_ACW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
 				return circle_angle - PI/2.0
+		return 0.0
 
 	func get_slide_length() -> float:
 		# Return unit-circle (r=1) length of slide trail
@@ -107,6 +109,7 @@ class NoteSlide extends NoteBase:
 				return fposmod(GameTheme.RADIAL_COL_ANGLES[column_release] - GameTheme.RADIAL_COL_ANGLES[column], TAU)
 			Note.SlideType.ARC_ACW:
 				return fposmod(GameTheme.RADIAL_COL_ANGLES[column] - GameTheme.RADIAL_COL_ANGLES[column_release], TAU)
+		return 0.0
 
 
 

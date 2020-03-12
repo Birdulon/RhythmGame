@@ -34,8 +34,11 @@ func _ready():
 	set_fingers(0)
 #	connect("button_pressed", self, "print_pressed")
 	$"/root".connect("size_changed", self, "resize")
+	$VsyncButton.connect("toggled", self, "update_vsync")
 	resize()
 
+func update_vsync(setting: bool):
+	OS.vsync_enabled = setting
 
 func print_pressed(col: int):
 	print("Pressed %d"%col)

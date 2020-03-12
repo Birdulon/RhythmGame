@@ -1,4 +1,4 @@
-#tool
+tool
 extends MeshInstance2D
 
 var ring_px := 4  # Analogous to diameter
@@ -6,6 +6,9 @@ var receptor_px := 24  # Diameter
 var shadow_px := 8  # Outer edge, analogous to radius
 var shadow_color := Color.black
 var center := Vector2(0.0, 0.0)
+
+var ring_vertex_count := 36
+var ring_skew := 0.0
 
 func make_ring_mesh(inner_vertices: int, thickness: float, radius: float, skew:=0.5, repeat_start:=true):
 	# This makes a trianglestrip around the ring, consisting of chords on the inside and tangents on the outside.
@@ -91,10 +94,8 @@ func draw_tris():
 
 var ring_vertices
 func update_ring_mesh():
-	var mesh_v = $"../InputHandler/VerticesSlider".value
-	var skew = $"../InputHandler/SkewSlider".value
 	var ring_thickness = receptor_px + shadow_px*2
-	ring_vertices = make_ring_mesh(mesh_v, ring_thickness, GameTheme.receptor_ring_radius, skew)
+	ring_vertices = make_ring_mesh(ring_vertex_count, ring_thickness, GameTheme.receptor_ring_radius, ring_skew)
 	var temp_mesh = ArrayMesh.new()
 	var mesh_arrays = []
 	mesh_arrays.resize(Mesh.ARRAY_MAX)
@@ -108,18 +109,16 @@ func update_ring_mesh():
 func _draw():
 #	draw_old(true, true)
 #	draw_tris()
-	var mesh_v = $"../InputHandler/VerticesSlider".value
-	var skew = $"../InputHandler/SkewSlider".value
+	var mesh_v = ring_vertex_count
 	var ring_thickness = receptor_px + shadow_px*2
 	var estimated_area = circumscribe_polygon_area(GameTheme.receptor_ring_radius+ring_thickness*0.5, mesh_v) - inscribe_polygon_area(GameTheme.receptor_ring_radius-ring_thickness*0.5, mesh_v)
 	var ideal_ring_area = PI * (pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2) - pow(GameTheme.receptor_ring_radius-receptor_px/2-shadow_px, 2))
 
-#	var l = len(ring_vertices)
-#	for i in l:
-#		estimated_area += triangle_area(ring_vertices[i], ring_vertices[(i+1)%l], ring_vertices[(i+2)%l])
 	var quad_area = 4*pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2)
 	var fps = Performance.get_monitor(Performance.TIME_FPS)
-	$"/root/main/InputHandler".text = "Vertices: %d*2     Skew: %.3f\nArea: %.0f\n(%.0f%% ideal ring)\n(%.0f%% quad)\nFPS: %.0f"%[mesh_v, skew, estimated_area, 100.0*estimated_area/ideal_ring_area, 100.0*estimated_area/quad_area, fps]
+	var audio_latency = Performance.get_monitor(Performance.AUDIO_OUTPUT_LATENCY)
+#	$"/root/main/InputHandler".text = "Vertices: %d*2     Skew: %.3f\nArea: %.0f\n(%.0f%% ideal ring)\n(%.0f%% quad)\nFPS: %.0f"%[mesh_v, skew, estimated_area, 100.0*estimated_area/ideal_ring_area, 100.0*estimated_area/quad_area, fps]
+	$"/root/main/InputHandler".text = "FPS: %.0f\nAudio Latency: %.2fms"%[fps, audio_latency*1000]
 
 	material.set_shader_param("dot_radius", 0.5*receptor_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_thickness", 0.5*ring_px/GameTheme.receptor_ring_radius)
@@ -127,8 +126,13 @@ func _draw():
 	material.set_shader_param("shadow_thickness_taper", -0.75)
 	material.set_shader_param("px", 0.5/GameTheme.receptor_ring_radius)
 
-func update_ring_mesh_1arg(arg1):
-	# Hack because signals can't discard arguments when connected to smaller slots :(
+func set_ring_vertex_count(num: int):
+	assert(num > 3)
+	ring_vertex_count = num
+	update_ring_mesh()
+
+func set_ring_skew(skew: int):
+	ring_skew = skew
 	update_ring_mesh()
 
 func _ready():
@@ -144,8 +148,8 @@ func _ready():
 	material.set_shader_param("num_receptors", Rules.COLS)
 
 	update_ring_mesh()
-	$"../InputHandler/VerticesSlider".connect("value_changed", self, "update_ring_mesh_1arg")
-	$"../InputHandler/SkewSlider".connect("value_changed", self, "update_ring_mesh_1arg")
+#	$"../InputHandler/VerticesSlider".connect("value_changed", self, "set_ring_vertex_count")
+#	$"../InputHandler/SkewSlider".connect("value_changed", self, "set_ring_skew")
 	$"/root".connect("size_changed", self, "update")
 
 func _process(delta):

@@ -575,6 +575,7 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	meshinstance.material.set_shader_param("bps", bpm/60.0)
 	meshinstance.material.set_shader_param("screen_size", get_viewport().get_size())
 	meshinstance.set_texture(tex)
+	initialise_scores()  # Remove old score
 
 func stop():
 	$"/root/main/music".stop()
@@ -620,12 +621,12 @@ func _process(delta):
 		for i in [-4.0, -3.0, -2.0, -1.0]:
 			var delay := real_time(i) - time
 			var timer = Timer.new()
+			add_child(timer)
 			timer.set_one_shot(false)
 #			timer.set_timer_process_mode(Timer.TIMER_PROCESS_FIXED)
 			timer.set_wait_time(delay)
 			timer.connect("timeout", self, "intro_click")
 			timer.start()
-			add_child(timer)
 			timer.connect("timeout", timer, "queue_free")
 
 #	if (t_old < 0) and (t >= 0):

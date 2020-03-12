@@ -69,7 +69,7 @@ var screen_filter_min_alpha := 0.2
 var screen_filter := Color(0.0, 0.0, 0.0, screen_filter_min_alpha)
 signal screen_filter_changed()
 var receptor_color := Color.blue
-var bezel_color := Color.black
+var bezel_color := Color.black if not Engine.editor_hint else Color.red
 
 var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
 var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
