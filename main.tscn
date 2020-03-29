@@ -198,6 +198,21 @@ step = 0.01
 value = 1.0
 tick_count = 3
 ticks_on_borders = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="FilterSlider" type="HSlider" parent="InputHandler"]
+margin_left = 16.0
+margin_top = 400.0
+margin_right = 316.0
+margin_bottom = 416.0
+max_value = 1.0
+step = 0.01
+value = 0.2
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="VsyncButton" type="CheckButton" parent="InputHandler"]
 margin_left = 4.0

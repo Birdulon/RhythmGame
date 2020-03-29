@@ -35,10 +35,14 @@ func _ready():
 #	connect("button_pressed", self, "print_pressed")
 	$"/root".connect("size_changed", self, "resize")
 	$VsyncButton.connect("toggled", self, "update_vsync")
+	$FilterSlider.connect("value_changed", self, "update_filter")
 	resize()
 
 func update_vsync(setting: bool):
 	OS.vsync_enabled = setting
+
+func update_filter(alpha: float):
+	GameTheme.screen_filter_min_alpha = alpha
 
 func print_pressed(col: int):
 	print("Pressed %d"%col)

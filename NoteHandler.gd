@@ -646,16 +646,21 @@ func _process(delta):
 	for i in range(len(active_notes)-1, -1, -1):
 		var note = active_notes[i]
 		if note.time_death < t:
-			if note.type == Note.NOTE_SLIDE:
-				SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
-				slide_trail_mesh_instances.erase(note.slide_id)
-				var idx = active_slide_trails.find(note)
-				if idx >= 0:
-					active_slide_trails.remove(idx)
-					active_judgement_texts.append({col=note.column_release, judgement="MISS", time=t})
-					scores[-Note.NOTE_SLIDE]["MISS"] += 1
-					note.missed_slide = true
-					SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement["MISS"], db_judgement["MISS"])
+			match note.type:
+				Note.NOTE_HOLD:
+					scores[-Note.NOTE_HOLD][3] += 1
+					active_judgement_texts.append({col=note.column, judgement=3, time=t})
+					SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[3], db_judgement[3])
+				Note.NOTE_SLIDE:
+					SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
+					slide_trail_mesh_instances.erase(note.slide_id)
+					var idx = active_slide_trails.find(note)
+					if idx >= 0:
+						active_slide_trails.remove(idx)
+						active_judgement_texts.append({col=note.column_release, judgement="MISS", time=t})
+						scores[-Note.NOTE_SLIDE]["MISS"] += 1
+						note.missed_slide = true
+						SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement["MISS"], db_judgement["MISS"])
 			active_notes.remove(i)
 		elif note.time_activated == INF:
 			if ((t-note.time_hit) > miss_time) and not note.missed:

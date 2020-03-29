@@ -33,41 +33,14 @@ var GenreFont := preload("res://assets/MenuGenreFont.tres")
 var ScoreFont := preload("res://assets/MenuScoreFont.tres")
 var snd_interact := preload("res://assets/softclap.wav")
 
-var userroot := "user://" if OS.get_name() != "Android" else "/storage/emulated/0/RhythmGame/"
-# The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission("WRITE_EXTERNAL_STORAGE")
-# "/storage/emulated/0/Android/data/au.ufeff.rhythmgame/"
-# "/sdcard/Android/data/au.ufeff.rhythmgame/"
+var userroot : String = FileLoader.userroot
 
 func scan_library():
-	print("Scanning library")
-	var rootdir = userroot + "songs"
-	var dir = Directory.new()
-	var err = dir.make_dir_recursive(rootdir)
-	if err != OK:
-		print("An error occurred while trying to create the songs directory: ", err)
-		return err
-	err = dir.open(rootdir)
-	if err == OK:
-		dir.list_dir_begin(true, true)
-		var key = dir.get_next()
-		while (key != ""):
-			if dir.current_is_dir():
-				if dir.file_exists(key + "/song.json"):
-					song_defs[key] = FileLoader.load_folder("%s/%s" % [rootdir, key])
-					print("Loaded song directory: %s" % key)
-					song_images[key] = FileLoader.load_image("%s/%s/%s" % [rootdir, key, song_defs[key]["tile_filename"]])
-					if song_defs[key]["genre"] in genres:
-						genres[song_defs[key]["genre"]].append(key)
-					else:
-						genres[song_defs[key]["genre"]] = [key]
-				else:
-					print("Found non-song directory: " + key)
-			else:
-				print("Found file: " + key)
-			key = dir.get_next()
-		dir.list_dir_end()
-	else:
-		print("An error occurred when trying to access the songs directory: ", err)
+	var results = FileLoader.scan_library()
+	song_defs = results.song_defs
+	song_images = results.song_images
+	genres = results.genres
+
 
 func save_score():
 	var rootdir = userroot + "scores"

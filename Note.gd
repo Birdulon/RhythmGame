@@ -3,44 +3,70 @@ extends Node
 
 #class_name Note
 
-enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD}
+enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD, NOTE_ROLL}
 enum SlideType {CHORD, ARC_CW, ARC_ACW}
 const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
-const RELEASE_SCORE_TYPES := [NOTE_HOLD, NOTE_SLIDE, NOTE_TOUCH_HOLD]
+const RELEASE_SCORE_TYPES := [NOTE_HOLD, NOTE_SLIDE, NOTE_TOUCH_HOLD, NOTE_ROLL]
+const NOTE_TAP1 = 0
 
 class NoteBase:
-	var time_hit: float
+	var time_hit: float setget set_time_hit
 	var time_death: float
 	var column: int
 	var double_hit := false
 	var time_activated := INF
 	var missed := false
 
+	func set_time_hit(value: float):
+		time_hit = value
+		time_death = time_hit + DEATH_DELAY
+
 class NoteTap extends NoteBase:
 	var type := NOTE_TAP
 	func _init(time_hit: float, column: int):
 		self.time_hit = time_hit
-		self.time_death = time_hit + DEATH_DELAY
 		self.column = column
 
-class NoteHold extends NoteBase:
-	var type := NOTE_HOLD
-	var time_release: float
+class NoteHoldBase extends NoteBase:
+	var time_release: float setget set_time_release
 	var time_released := INF
-	var duration: float
+	var duration: float setget set_duration
 	var is_held: bool
 	func _init(time_hit: float, duration: float, column: int):
 		self.time_hit = time_hit
 		self.duration = duration
-		self.time_release = time_hit + duration
-		self.time_death = time_release + DEATH_DELAY
 		self.column = column
 		self.is_held = false
 
+	func set_time_hit(value: float):
+		time_hit = value
+		time_release = time_hit + duration
+		time_death = time_release + DEATH_DELAY
+
+	func set_time_release(value: float):
+		time_release = value
+		time_death = time_release + DEATH_DELAY
+		duration = time_release - time_hit
+
+	func set_duration(value: float):
+		duration = value
+		time_release = time_hit + duration
+		time_death = time_release + DEATH_DELAY
+
+class NoteHold extends NoteHoldBase:
+	var type := NOTE_HOLD
+	func _init(time_hit: float, duration: float, column: int).(time_hit, duration, column):
+		pass
+
+class NoteRoll extends NoteHoldBase:
+	var type := NOTE_ROLL
+	func _init(time_hit: float, duration: float, column: int).(time_hit, duration, column):
+		pass
+
 class NoteSlide extends NoteBase:
 	var type := NOTE_SLIDE
-	var time_release: float
-	var duration: float
+	var time_release: float setget set_time_release
+	var duration: float setget set_duration
 	var column_release: int
 	var slide_type: int
 	var slide_id: int
@@ -58,6 +84,21 @@ class NoteSlide extends NoteBase:
 		self.slide_type = slide_type
 		self.values = {}
 		update_slide_variables()
+
+	func set_time_hit(value: float):
+		time_hit = value
+		time_release = time_hit + duration
+		time_death = time_release + DEATH_DELAY
+
+	func set_time_release(value: float):
+		time_release = value
+		time_death = time_release + DEATH_DELAY
+		duration = time_release - time_hit
+
+	func set_duration(value: float):
+		duration = value
+		time_release = time_hit + duration
+		time_death = time_release + DEATH_DELAY
 
 	func update_slide_variables():
 		match slide_type:
