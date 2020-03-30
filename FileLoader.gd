@@ -6,7 +6,7 @@ var userroot := "user://" if OS.get_name() != "Android" else "/storage/emulated/
 # "/storage/emulated/0/Android/data/au.ufeff.rhythmgame/"
 # "/sdcard/Android/data/au.ufeff.rhythmgame/"
 
-func directory_list(directory: String, hidden: bool) -> Dictionary:
+func directory_list(directory: String, hidden: bool, sort:=true) -> Dictionary:
 	# Sadly there's no filelist sugar so we make our own
 	var output = {folders=[], files=[], err=OK}
 	var dir = Directory.new()
@@ -27,6 +27,22 @@ func directory_list(directory: String, hidden: bool) -> Dictionary:
 			output['files'].append(item)
 		item = dir.get_next()
 	dir.list_dir_end()
+
+	if sort:
+		output.folders.sort()
+		output.files.sort()
+	# Maybe convert the Arrays to PoolStringArrays?
+	return output
+
+func find_by_extensions(array, extensions) -> Dictionary:
+	# Both args can be Array or PoolStringArray
+	var output = {}
+	for ext in extensions:
+		output[ext] = []
+	for string in array:
+		for ext in extensions:
+			if string.ends_with(ext):
+				output[ext].append(string)
 	return output
 
 func scan_library():
@@ -49,6 +65,7 @@ func scan_library():
 	dir.open(rootdir)
 	for key in songslist.folders:
 		if dir.file_exists(key + "/song.json"):
+			# Our format
 			song_defs[key] = FileLoader.load_folder("%s/%s" % [rootdir, key])
 			print("Loaded song directory: %s" % key)
 			song_images[key] = FileLoader.load_image("%s/%s/%s" % [rootdir, key, song_defs[key]["tile_filename"]])
@@ -57,7 +74,15 @@ func scan_library():
 			else:
 				genres[song_defs[key]["genre"]] = [key]
 		else:
-			print("Found non-song directory: " + key)
+			var step_files = find_by_extensions(directory_list(rootdir + '/' + key, false).files, ['.sm'])
+			if len(step_files['.sm']) > 0:
+				var sm_filename = step_files['.sm'][0]
+				print(sm_filename)
+				var thing = SM.load_file(rootdir + '/' + key + '/' + sm_filename)
+				print(thing)
+				pass
+			else:
+				print("Found non-song directory: " + key)
 	for file in songslist.files:
 		print("Found file: " + file)
 
@@ -166,17 +191,17 @@ class SM:
 		'#CREDIT': 'chart_author',
 		'#BANNER': 'image_banner',
 		'#BACKGROUND': 'image_background',
-		'#LYRICSPATH': '',
+#		'#LYRICSPATH': '',
 		'#CDTITLE': 'image_cd_title',
 		'#MUSIC': 'audio_filelist',
 		'#OFFSET': 'audio_offsets',
 		'#SAMPLESTART': 'audio_preview_times',
 		'#SAMPLELENGTH': 'audio_preview_times',
-		'#SELECTABLE': '',
+#		'#SELECTABLE': '',
 		'#BPMS': 'bpm_values',
-		'#STOPS': '',
-		'#BGCHANGES': '',
-		'#KEYSOUNDS': '',
+#		'#STOPS': '',
+#		'#BGCHANGES': '',
+#		'#KEYSOUNDS': '',
 	}
 
 	static func load_chart(lines):
@@ -235,17 +260,21 @@ class SM:
 							notes.append(Note.make_tap(time, col))
 						'2':  # Hold
 							ongoing_holds[col] = len(notes)
-							notes.append(Note.make_tap(time, col))
+							notes.append(Note.make_hold(time, 0.0, col))
+							num_holds += 1
 						'4':  # Roll
 							ongoing_holds[col] = len(notes)
-							notes.append(Note.make_tap(time, col))
+							notes.append(Note.make_roll(time, 0.0, col))
+							num_rolls += 1
 						'3':  # End Hold/Roll
 							assert(ongoing_holds.has(col))
 							notes[ongoing_holds[col]].set_time_release(time)
+							ongoing_holds.erase(col)
 						'M':  # Mine
 							num_mines += 1
 							pass
 		metadata['num_notes'] = num_notes
+		metadata['num_taps'] = num_notes - num_jumps
 		metadata['num_jumps'] = num_jumps
 		metadata['num_hands'] = num_hands
 		metadata['num_holds'] = num_holds
@@ -264,7 +293,7 @@ class SM:
 		var length = file.get_len()
 		var lines = [[]]  # First list will be header, then every subsequent one is a chart
 		while (file.get_position() < (length-1)):  # Could probably replace this with file.eof_reached()
-			var line : String = file.read_line()
+			var line : String = file.get_line()
 			if line.begins_with('#NOTES'):  # Split to a new list for each chart definition
 				lines.append([])
 			lines[-1].append(line)
@@ -275,12 +304,14 @@ class SM:
 			var tokens = line.rstrip(';').split(':')
 			if TAG_TRANSLATIONS.has(tokens[0]):
 				metadata[TAG_TRANSLATIONS[tokens[0]]] = tokens[1]
+			elif len(tokens) >= 2:
+				metadata[tokens[0]] = tokens[1]
 		var charts = []
 
 		for i in range(1, len(lines)):
 			charts.append(load_chart(lines[i]))
 
-		return charts
+		return [metadata, charts]
 
 
 class Test:

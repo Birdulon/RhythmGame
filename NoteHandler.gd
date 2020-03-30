@@ -648,9 +648,10 @@ func _process(delta):
 		if note.time_death < t:
 			match note.type:
 				Note.NOTE_HOLD:
-					scores[-Note.NOTE_HOLD][3] += 1
-					active_judgement_texts.append({col=note.column, judgement=3, time=t})
-					SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[3], db_judgement[3])
+					if note.is_held:  # Held too long
+						scores[-Note.NOTE_HOLD][3] += 1
+						active_judgement_texts.append({col=note.column, judgement=3, time=t})
+						SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[3], db_judgement[3])
 				Note.NOTE_SLIDE:
 					SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
 					slide_trail_mesh_instances.erase(note.slide_id)
