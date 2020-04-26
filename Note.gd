@@ -7,7 +7,6 @@ enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD, 
 enum SlideType {CHORD, ARC_CW, ARC_ACW}
 const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
 const RELEASE_SCORE_TYPES := [NOTE_HOLD, NOTE_SLIDE, NOTE_TOUCH_HOLD, NOTE_ROLL]
-const NOTE_TAP1 = 0
 
 class NoteBase:
 	var time_hit: float setget set_time_hit

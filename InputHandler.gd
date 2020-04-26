@@ -51,6 +51,10 @@ func print_pressed(col: int):
 ##########################################################################
 # draw fingers points on screen
 func _draw():
+	var fps = Performance.get_monitor(Performance.TIME_FPS)
+	var audio_latency = Performance.get_monitor(Performance.AUDIO_OUTPUT_LATENCY)
+	set_text("FPS: %.0f\nAudio Latency: %.2fms"%[fps, audio_latency*1000])
+
 	# draw points
 	for i in touch_points:
 		var point = touch_points[i]
@@ -63,6 +67,9 @@ func _draw():
 #		for i in range(len(touch_positions)-1):
 #			# Draw line
 #			draw_line(touch_positions[i], touch_positions[i+1], Color(1,1,1,1))
+
+func _process(delta):
+	update()
 
 func update_data():
 	touch_positions.clear()
@@ -119,7 +126,7 @@ func _input(event):
 # write how many fingers are tapping the screen
 func set_fingers(value):
 	fingers = max(value, 0)
-	set_text("Fingers: %d" % fingers)
+#	set_text("Fingers: %d" % fingers)
 
 func set_button_state(index: int, state: bool):
 	var new_state = int(state)

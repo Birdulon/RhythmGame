@@ -106,7 +106,7 @@ func _ready():
 	print("Root for songs and scores is: ", userroot)
 	scan_library()
 	$"/root/main/NoteHandler".connect("finished_song", self, "finished_song")
-	load_score("20191211T234131.json")  # For testing purposes
+#	load_score("20191211T234131.json")  # For testing purposes
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -202,6 +202,7 @@ func _draw_song_select(center: Vector2) -> Array:
 	return touchrects
 
 func _draw_chart_select(center: Vector2) -> Array:
+	# Select difficulty for chosen song
 	var size = 192
 	var spacer_x = 12
 	var touchrects = []
@@ -214,6 +215,20 @@ func _draw_chart_select(center: Vector2) -> Array:
 		x += size + spacer_x
 	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+64), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
 	touchrects.append({rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1})
+
+
+	# TODO: This is relatively expensive so we probably want to calculate this stuff once instead of every frame
+	var all_notes = FileLoader.SRT.load_file(song_defs[song_key].directory + "/" + song_defs[song_key].chart_filelist[selected_difficulty])
+	var note_counts = {Note.NOTE_TAP: 0, Note.NOTE_HOLD: 0, Note.NOTE_SLIDE: 0}
+	for note in all_notes:
+		note_counts[note.type] += 1
+
+	var notestrs = ["Taps:", "Holds:", "Slides:"]
+	var notetypes = [0, 1, 2]
+	for i in len(notestrs):
+		draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+128+i*50), notestrs[i], Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+128+i*50), str(note_counts[notetypes[i]]), Color(0.95, 0.95, 1.0))
+
 	return touchrects
 
 func _draw_score_screen(center: Vector2) -> Array:

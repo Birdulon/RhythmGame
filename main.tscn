@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://video.gd" type="Script" id=2]
@@ -17,7 +17,6 @@
 [ext_resource path="res://Bezel.gd" type="Script" id=15]
 [ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=16]
 [ext_resource path="res://InputHandler.gd" type="Script" id=17]
-[ext_resource path="res://assets/test/TIT FOR TAT.avi" type="VideoStream" id=18]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 4 )
@@ -62,18 +61,6 @@ __meta__ = {
 "_edit_vertical_guides_": [  ]
 }
 
-[node name="VideoPlayer" type="VideoPlayer" parent="."]
-visible = false
-margin_left = -640.0
-margin_top = -360.0
-margin_right = 640.0
-margin_bottom = 360.0
-stream = ExtResource( 18 )
-volume_db = -80.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
 [node name="music" type="AudioStreamPlayer" parent="."]
 
 [node name="video" type="VideoPlayer" parent="."]
@@ -92,6 +79,7 @@ __meta__ = {
 }
 
 [node name="ScreenFilter" type="Node2D" parent="."]
+visible = false
 script = ExtResource( 3 )
 
 [node name="Receptors" type="MeshInstance2D" parent="."]
@@ -152,7 +140,8 @@ margin_top = -540.0
 margin_right = 540.0
 margin_bottom = 540.0
 custom_fonts/font = ExtResource( 16 )
-text = "Fingers on the screen:"
+text = "FPS:
+Audio Latency:"
 script = ExtResource( 17 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -163,6 +152,9 @@ margin_top = 136.0
 margin_right = 116.0
 margin_bottom = 150.0
 text = "Subsampling (X, Y)"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="SSXSlider" type="HSlider" parent="InputHandler"]
 margin_left = 10.0
@@ -202,11 +194,20 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Label2" type="Label" parent="InputHandler"]
+margin_top = 200.0
+margin_right = 133.0
+margin_bottom = 214.0
+text = "Screen Filter Opacity"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="FilterSlider" type="HSlider" parent="InputHandler"]
 margin_left = 16.0
-margin_top = 400.0
+margin_top = 218.0
 margin_right = 316.0
-margin_bottom = 416.0
+margin_bottom = 234.0
 max_value = 1.0
 step = 0.01
 value = 0.2

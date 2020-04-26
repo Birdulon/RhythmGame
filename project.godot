@@ -35,6 +35,7 @@ SFXPlayer="*res://SFXPlayer.gd"
 
 [debug]
 
+settings/fps/force_fps=120
 gdscript/warnings/unused_variable=false
 gdscript/warnings/shadowed_variable=false
 gdscript/warnings/unused_argument=false
@@ -47,7 +48,6 @@ gdscript/warnings/integer_division=false
 window/size/width=1920
 window/size/height=1080
 window/size/fullscreen=true
-window/vsync/use_vsync=false
 window/handheld/orientation="sensor"
 window/stretch/mode="2d"
 window/stretch/aspect="keep_height"
@@ -60,6 +60,6 @@ singletons_disabled=[  ]
 [rendering]
 
 vram_compression/import_etc=true
-environment/default_clear_color=Color( 0, 0, 0, 1 )
+environment/default_clear_color=Color( 0.16, 0.16, 0.16, 1 )
 quality/filters/msaa=1
 environment/default_environment="res://default_env.tres"
