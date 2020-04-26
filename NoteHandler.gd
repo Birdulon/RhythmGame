@@ -376,6 +376,7 @@ func touchbutton_released(col):
 		check_hold_release(col)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
+var arr_div := Vector3(2.0, float(Rules.COLS), TAU)
 func _draw():
 	var mesh := ArrayMesh.new()
 	var noteline_data : Image = noteline_array_image.get_rect(Rect2(0, 0, 16, 16))
@@ -386,7 +387,13 @@ func _draw():
 	for note in active_notes:
 		var position : float = (t+GameTheme.note_forecast_beats-note.time_hit)/GameTheme.note_forecast_beats
 		var scale := 1.0
-		noteline_data.set_pixel(i%16, i/16, Color(position, note.column, GameTheme.RADIAL_COL_ANGLES[note.column]))
+		noteline_data.set_pixel(
+			i%16, i/16, Color(
+				position/arr_div.x,
+				note.column/arr_div.y,
+				GameTheme.RADIAL_COL_ANGLES[note.column]/arr_div.z
+			)
+		)
 		i += 1
 		if position < GameTheme.INNER_NOTE_CIRCLE_RATIO:
 			scale *= position/GameTheme.INNER_NOTE_CIRCLE_RATIO
@@ -536,6 +543,7 @@ func _ready():
 
 	notelines.set_mesh(make_noteline_mesh())
 	notelines.material.set_shader_param("bps", bpm/60.0)
+	notelines.material.set_shader_param("array_postmul", arr_div)
 
 
 	noteline_array_image.create(16, 16, false, Image.FORMAT_RGBF)

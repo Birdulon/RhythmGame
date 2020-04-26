@@ -115,7 +115,6 @@ func _draw():
 	var ideal_ring_area = PI * (pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2) - pow(GameTheme.receptor_ring_radius-receptor_px/2-shadow_px, 2))
 
 	var quad_area = 4*pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2)
-#	$"/root/main/InputHandler".text = "Vertices: %d*2     Skew: %.3f\nArea: %.0f\n(%.0f%% ideal ring)\n(%.0f%% quad)\nFPS: %.0f"%[mesh_v, skew, estimated_area, 100.0*estimated_area/ideal_ring_area, 100.0*estimated_area/quad_area, fps]
 
 	material.set_shader_param("dot_radius", 0.5*receptor_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_thickness", 0.5*ring_px/GameTheme.receptor_ring_radius)
@@ -133,16 +132,8 @@ func set_ring_skew(skew: int):
 	update_ring_mesh()
 
 func set_receptor_positions(skew:=0.0):
-	var receptor_array_image := Image.new()
-	receptor_array_image.create(8, 8, false, Image.FORMAT_RF)
-	receptor_array_image.lock()
-	for i in Rules.COLS:
-		receptor_array_image.set_pixel(i%8, i/8, Color(GameTheme.RADIAL_COL_ANGLES[i]+skew, 0.0, 0.0))
-	receptor_array_image.unlock()
-	var receptor_data_tex = ImageTexture.new()
-	receptor_data_tex.create_from_image(receptor_array_image, 0)
-	set_texture(receptor_data_tex)
 	material.set_shader_param("num_receptors", Rules.COLS)
+	material.set_shader_param("receptor_offset", PI/Rules.COLS)
 
 func _ready():
 	set_receptor_positions()
@@ -151,7 +142,8 @@ func _ready():
 #	$"../InputHandler/SkewSlider".connect("value_changed", self, "set_ring_skew")
 	$"/root".connect("size_changed", self, "update")
 
-func _process(delta):
-	if not Engine.editor_hint:
-		set_receptor_positions(sin(OS.get_ticks_msec()*0.001*0.0125*PI)*PI)
-		update()
+#func _process(delta):
+#	pass
+#	if not Engine.editor_hint:
+#		set_receptor_positions(sin(OS.get_ticks_msec()*0.001*0.0125*PI)*PI)
+#		update()

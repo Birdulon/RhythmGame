@@ -1,7 +1,11 @@
 shader_type canvas_item;
 render_mode blend_premul_alpha;
 
+const float TAU = 6.283185307;
+const float PI = 3.1415926536;
+
 uniform int num_receptors = 8;
+uniform float receptor_offset = 0.0;
 uniform vec4 line_color : hint_color = vec4(0.0, 0.0, 1.0, 1.0);
 uniform vec4 dot_color : hint_color = vec4(0.0, 0.0, 1.0, 1.0);
 uniform vec4 shadow_color : hint_color = vec4(0.0, 0.0, 0.0, 1.0);
@@ -16,8 +20,8 @@ uniform float px = 0.002;  // Represents 1px in UV space, for AA purposes
 //}
 
 float angle_diff(float a, float b) {
-	float d = mod((a - b), 6.28318);
-	if (d > 3.14159) d = 6.28318 - d;
+	float d = mod((a - b), TAU);
+	if (d > PI) d = TAU - d;
 	return d;
 }
 
@@ -42,9 +46,8 @@ void fragment() {
 	}
 	
 	// Iterate over all the receptors and check distance to them
-	for (int i=0; i<num_receptors; i++){
-		lowp float rads = texelFetch(TEXTURE, ivec2(i%8, i/8), 0).x;
-
+	float receptor_spacing = TAU/float(num_receptors);
+	for (float rads=receptor_offset; rads<TAU; rads+=receptor_spacing){
 		// Check for dot distance
 		vec2 uv = vec2(cos(rads), -sin(rads));
 		float dist2 = distance(UV, uv);
