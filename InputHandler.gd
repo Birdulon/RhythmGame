@@ -30,7 +30,8 @@ func _init():
 		touchbuttons_pressed[i] = 0
 
 func _ready():
-	set_process_unhandled_input(true)				# process user input
+	Input.set_use_accumulated_input(false)  # Gotta go fast
+	set_process_unhandled_input(true)  # process user input
 	set_fingers(0)
 #	connect("button_pressed", self, "print_pressed")
 	$"/root".connect("size_changed", self, "resize")

@@ -19,6 +19,21 @@ var judge_text_size2 := 0.5*judge_text_size/cos(JUDGE_TEXT_ANG2)
 
 var judge_text_duration := 2.0
 
+
+# UV vertex arrays for our sprites
+# tap/star/arrow are 4-vertex 2-triangle simple squares
+# hold is 8-vertex 6-triangle to enable stretching in the middle
+const UV_ARRAY_TAP := PoolVector2Array([Vector2(0, 0.5), Vector2(0.5, 0.5), Vector2(0, 1), Vector2(0.5, 1)])
+const UV_ARRAY_HOLD := PoolVector2Array([
+	Vector2(0.5, 0.5), Vector2(1, 0.5), Vector2(0.5, 0.75), Vector2(1, 0.75),
+	Vector2(0.5, 0.75), Vector2(1, 0.75), Vector2(0.5, 1), Vector2(1, 1)
+	])
+const UV_ARRAY_STAR := PoolVector2Array([Vector2(0.5, 0), Vector2(1, 0), Vector2(0.5, 0.5), Vector2(1, 0.5)])
+const UV_ARRAY_ARROW := PoolVector2Array([Vector2(0, 0), Vector2(0.5, 0), Vector2(0, 0.5), Vector2(0.5, 0.5)])
+# Slide trail arrow. Single tri.
+const UV_ARRAY_SLIDE_ARROW := PoolVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(0, 1)])
+const UV_ARRAY_SLIDE_ARROW2 := PoolVector2Array([Vector2(1, 1), Vector2(0, 1), Vector2(1, 0)])
+
 # Color definitions
 const COLOR_TAP := Color(1, 0.15, 0.15, 1)
 const COLOR_TAP2 := Color(0.75, 0.5, 0, 1)  # High-score taps ("breaks" in maimai)
@@ -71,6 +86,8 @@ signal screen_filter_changed()
 var receptor_color := Color.blue
 var bezel_color := Color.black if not Engine.editor_hint else Color.red
 
+var slide_trail_alpha := 0.88
+
 var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
 var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
 
@@ -99,5 +116,13 @@ func color_array_tap(alpha: float, double:=false) -> PoolColorArray:
 		return COLOR_ARRAY_DOUBLE_4 if double else COLOR_ARRAY_TAP
 	else:
 		var col := COLOR_DOUBLE if double else COLOR_TAP
+		var color = Color(col.r, col.g, col.b, alpha)
+		return PoolColorArray([color, color, color, color])
+
+func color_array_star(alpha: float, double:=false) -> PoolColorArray:
+	if alpha >= 1.0:
+		return COLOR_ARRAY_DOUBLE_4 if double else COLOR_ARRAY_STAR
+	else:
+		var col := COLOR_DOUBLE if double else COLOR_STAR
 		var color = Color(col.r, col.g, col.b, alpha)
 		return PoolColorArray([color, color, color, color])

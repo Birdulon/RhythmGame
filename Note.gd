@@ -3,10 +3,15 @@ extends Node
 
 #class_name Note
 
-enum {NOTE_TAP, NOTE_HOLD, NOTE_SLIDE, NOTE_ARROW, NOTE_TOUCH, NOTE_TOUCH_HOLD, NOTE_ROLL}
+enum {NOTE_TAP, NOTE_HOLD, NOTE_STAR=2, NOTE_SLIDE=-2, NOTE_TOUCH=3, NOTE_TOUCH_HOLD=4, NOTE_ARROW, NOTE_ROLL}
 enum SlideType {CHORD, ARC_CW, ARC_ACW}
 const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
-const RELEASE_SCORE_TYPES := [NOTE_HOLD, NOTE_SLIDE, NOTE_TOUCH_HOLD, NOTE_ROLL]
+const RELEASE_SCORE_TYPES := {
+	NOTE_HOLD: -NOTE_HOLD,
+	NOTE_SLIDE: NOTE_SLIDE,
+	NOTE_TOUCH_HOLD: -NOTE_TOUCH_HOLD,
+	NOTE_ROLL: -NOTE_ROLL
+}
 
 class NoteBase:
 	var time_hit: float setget set_time_hit
@@ -21,14 +26,27 @@ class NoteBase:
 		time_hit = value
 		time_death = time_hit + DEATH_DELAY
 
-class NoteTap extends NoteBase:
-	var type := NOTE_TAP
+class NoteHittableBase extends NoteBase:
+	const hittable := true
+
+class NoteTapBase extends NoteHittableBase:
 	func _init(time_hit: float, column: int, is_break:=false):
 		self.time_hit = time_hit
 		self.column = column
 		self.is_break = is_break
 
-class NoteHoldBase extends NoteBase:
+class NoteTap extends NoteTapBase:
+	var type := NOTE_TAP
+	func _init(time_hit: float, column: int, is_break:=false).(time_hit, column, is_break):
+		pass
+
+class NoteStar extends NoteTapBase:  # Fancy charts have naked slides which necessitates separation of Star and Slide :(
+	var type := NOTE_STAR
+	var duration := 1.0  # This is required for the spin speed
+	func _init(time_hit: float, column: int, is_break:=false).(time_hit, column, is_break):
+		pass
+
+class NoteHoldBase extends NoteHittableBase:
 	var time_release: float setget set_time_release
 	var time_released := INF
 	var duration: float setget set_duration
@@ -64,7 +82,8 @@ class NoteRoll extends NoteHoldBase:
 	func _init(time_hit: float, column: int, duration: float).(time_hit, column, duration):
 		pass
 
-class NoteSlide extends NoteBase:
+class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necessitates separation of Star and Slide :(
+	const hittable := false
 	var type := NOTE_SLIDE
 	var time_release: float setget set_time_release
 	var duration: float setget set_duration
@@ -75,8 +94,8 @@ class NoteSlide extends NoteBase:
 	var missed_slide := false
 	var values: Dictionary
 
-	func _init(time_hit: float, column: int, duration: float, column_release: int, slide_type: int):
-		self.time_hit = time_hit
+	func _init(time_hit: float, column: int, duration:=0.0, column_release:=0, slide_type:=0):
+		self.time_hit = time_hit  # The hit doesn't actually count for anything
 		self.column = column
 		self.duration = duration
 		self.time_release = time_hit + duration
@@ -164,17 +183,18 @@ static func make_touch_hold(time_hit: float, duration: float, location: Vector2)
 	var time_release := time_hit + duration
 	return {type=NOTE_TOUCH_HOLD, time_hit=time_hit, time_release=time_release, time_death=time_release+DEATH_DELAY, location=location, double_hit=false}
 
-static func process_note_list(note_array: Array):
+static func process_note_list(note_array: Array, check_doubles:=true):
 	# Preprocess double hits, assign Slide IDs
 	# If this were performance-critical, we'd single iterate it
 	# It's not though, so we lay it out simply
 	var slide_id := 0
 	if len(note_array):
 		# Doubles
-		for i in len(note_array)-1:
-			if note_array[i].time_hit == note_array[i+1].time_hit:
-				note_array[i].double_hit = true
-				note_array[i+1].double_hit = true
+		if check_doubles:
+			for i in len(note_array)-1:
+				if note_array[i].time_hit == note_array[i+1].time_hit:
+					note_array[i].double_hit = true
+					note_array[i+1].double_hit = true
 		# Slides
 		for i in len(note_array):
 			if note_array[i].type == NOTE_SLIDE:

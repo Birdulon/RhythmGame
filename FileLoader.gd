@@ -108,7 +108,7 @@ class SRT:
 		var notes = []
 		var beats_per_measure := 4
 		var length = file.get_len()
-		var slide_idxs = {}
+		var slide_ids = {}
 		while (file.get_position() < (length-2)):
 			var noteline = file.get_csv_line()
 			var time_hit := (float(noteline[0]) + (float(noteline[1]))-1.0) * beats_per_measure
@@ -125,16 +125,15 @@ class SRT:
 					notes.push_back(Note.NoteTap.new(time_hit, column, true))
 				ID_SLIDE_END:
 					# id2 is slide ID
-					if id2 in slide_idxs:
-						notes[slide_idxs[id2]].column_release = column
-						notes[slide_idxs[id2]].update_slide_variables()
+					if id2 in slide_ids:
+						slide_ids[id2].column_release = column
+						slide_ids[id2].update_slide_variables()
 				_:
 					if id2 == 0:
 						notes.push_back(Note.NoteTap.new(time_hit, column))
 					else:
 						# id2 is slide ID, id3 is slide pattern
 						# In order to properly declare the slide, we need the paired endcap which may not be the next note
-						slide_idxs[id2] = len(notes)
 						var slide_type = Note.SlideType.CHORD
 						match id3:
 							ID3_SLIDE_CHORD:
@@ -145,7 +144,12 @@ class SRT:
 								slide_type = Note.SlideType.ARC_ACW
 							_:
 								print("Unknown slide type: ", id3)
-						notes.push_back(Note.NoteSlide.new(time_hit, column, duration, -1, slide_type))
+						var note = Note.NoteStar.new(time_hit, column)
+						note.duration = duration
+						notes.push_back(note)
+						var slide = Note.NoteSlide.new(time_hit, column, duration, -1, slide_type)
+						notes.push_back(slide)
+						slide_ids[id2] = slide
 		return notes
 
 
@@ -206,6 +210,11 @@ class RGT:
 	static func parse_rgts(lines):
 		var notes = []
 		var slide_ids = {}
+		var slide_stars = {}  # Multiple stars might link to one star. We only care about linking for the spin speed.
+		var last_star = []
+		for i in Rules.COLS:
+			last_star.append(null)
+
 		for line in lines:
 			if len(line) < 4:  # shortest legal line would be like '1:1t'
 				continue
@@ -228,19 +237,41 @@ class RGT:
 						var duration = float(n)
 						note_hits.append(Note.NoteHold.new(time, column, duration))
 					's':  # slide star
+						var star = Note.NoteStar.new(time, column)
+						note_hits.append(star)
+						last_star[column] = star
 						var slide_type = n[0]  # numeric digit, left as str just in case
 						var slide_id = int(n.substr(1))
-#						var note = Note.NoteSlide.new(time, column)
-#						if slide_id > 0:
-#							slide_ids[slide_id] = note
+						if slide_id > 0:
+							slide_stars[slide_id] = star
+							var slide = Note.NoteSlide.new(time, column)
+							slide_ids[slide_id] = slide
+							note_nonhits.append(slide)
 					'e':  # slide end
 						var slide_type = n[0]  # numeric digit, left as str just in case
 						var slide_id = int(n.substr(1))
+						if slide_id in slide_ids:  # Classic slide end
+							slide_ids[slide_id].time_release = time
+							if slide_id in slide_stars:
+								slide_stars[slide_id].duration = slide_ids[slide_id].duration  # Should probably recalc in case start time is different but w/e
+							slide_ids[slide_id].column_release = column
+							slide_ids[slide_id].slide_type = SLIDE_TYPES[slide_type]
+							slide_ids[slide_id].update_slide_variables()
+						else:  # Naked slide start
+							if last_star[column] != null:
+								slide_stars[slide_id] = last_star[column]
+							else:
+								print_debug('Naked slide with no prior star in column!')
+							var note = Note.NoteSlide.new(time, column)
+							slide_ids[slide_id] = note
+							note_nonhits.append(note)
 					'x':  # not sure
 						pass
 
 			if len(note_hits) > 1:
-				pass  # Set multihit on each one
+				for note in note_hits:  # Set multihit on each one
+					note.double_hit = true
+			notes += note_hits + note_nonhits
 		return notes
 
 

@@ -219,9 +219,10 @@ func _draw_chart_select(center: Vector2) -> Array:
 
 	# TODO: This is relatively expensive so we probably want to calculate this stuff once instead of every frame
 	var all_notes = FileLoader.SRT.load_file(song_defs[song_key].directory + "/" + song_defs[song_key].chart_filelist[selected_difficulty])
-	var note_counts = {Note.NOTE_TAP: 0, Note.NOTE_HOLD: 0, Note.NOTE_SLIDE: 0}
+	var note_counts = {Note.NOTE_TAP: 0, Note.NOTE_HOLD: 0, Note.NOTE_STAR: 0}
 	for note in all_notes:
-		note_counts[note.type] += 1
+		if note.type in note_counts:
+			note_counts[note.type] += 1
 
 	var notestrs = ["Taps:", "Holds:", "Slides:"]
 	var notetypes = [0, 1, 2]
