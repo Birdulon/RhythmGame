@@ -120,9 +120,9 @@ class SRT:
 
 			match id:
 				ID_HOLD:
-					notes.push_back(Note.make_hold(time_hit, duration, column))
+					notes.push_back(Note.NoteHold.new(time_hit, column, duration))
 				ID_BREAK:
-					notes.push_back(Note.make_break(time_hit, column))
+					notes.push_back(Note.NoteTap.new(time_hit, column, true))
 				ID_SLIDE_END:
 					# id2 is slide ID
 					if id2 in slide_idxs:
@@ -130,7 +130,7 @@ class SRT:
 						notes[slide_idxs[id2]].update_slide_variables()
 				_:
 					if id2 == 0:
-						notes.push_back(Note.make_tap(time_hit, column))
+						notes.push_back(Note.NoteTap.new(time_hit, column))
 					else:
 						# id2 is slide ID, id3 is slide pattern
 						# In order to properly declare the slide, we need the paired endcap which may not be the next note
@@ -145,13 +145,103 @@ class SRT:
 								slide_type = Note.SlideType.ARC_ACW
 							_:
 								print("Unknown slide type: ", id3)
-						notes.push_back(Note.NoteSlide.new(time_hit, duration, column, -1, slide_type))
+						notes.push_back(Note.NoteSlide.new(time_hit, column, duration, -1, slide_type))
 		return notes
 
 
-class SRB:
-	static func load_file(filename):
-		pass
+class RGT:
+	# RhythmGameText formats
+	# .rgts - simplified format cutting out redundant data, should be easy to write charts in
+	# .rgtx - a lossless representation of MM in-memory format
+	# .rgtm - a collection of rgts charts, with a [title] at the start of each one
+	enum Format{RGTS, RGTX, RGTM}
+	const EXTENSIONS = {
+		'rgts': Format.RGTS,
+		'rgtx': Format.RGTX,
+		'rgtm': Format.RGTM,
+	}
+	const NOTE_TYPES = {
+		't': Note.NOTE_TAP,
+		'h': Note.NOTE_HOLD,
+		's': Note.NOTE_SLIDE,
+		'e': Note.NOTE_SLIDE,
+		'b': Note.NOTE_TAP  # Break
+	}
+	const SLIDE_TYPES = {
+		'0': null,  # Seems to be used for stars without slides attached
+		'1': Note.SlideType.CHORD,
+		'2': Note.SlideType.ARC_ACW,  # From Cirno master
+		'3': Note.SlideType.ARC_CW,  # From Cirno master
+		'4': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'5': Note.SlideType.CHORD,  # Probably some weird loop etc.
+	}
+	static func load_file(filename: String):
+		var extension = filename.rsplit('.', false, 1)[1]
+		if not EXTENSIONS.has(extension):
+			return -1
+		var format = EXTENSIONS[extension]
+		var file := File.new()
+		var err := file.open(filename, File.READ)
+		if err != OK:
+			print(err)
+			return err
+		var length = file.get_len()
+		var lines = [[]]
+		while (file.get_position() < (length-1)):  # Could probably replace this with file.eof_reached()
+			var line : String = file.get_line()
+			if line.begins_with('['):  # Split to a new list for each chart definition
+				lines.append([])
+			lines[-1].append(line)
+		file.close()
+
+		match format:
+			Format.RGTS:
+				pass
+			Format.RGTX:
+				pass
+			Format.RGTM:
+				pass
+		return format
+
+	static func parse_rgts(lines):
+		var notes = []
+		var slide_ids = {}
+		for line in lines:
+			if len(line) < 4:  # shortest legal line would be like '1:1t'
+				continue
+			var s = line.split(':')
+			var time = float(s[0])
+			var note_hits = []
+			var note_nonhits = []
+			for i in range(1, len(s)):
+				var n = s[i]
+				var column = n[0]
+				var ntype = n[1]
+				n = n.substr(2)
+
+				match ntype:
+					't':  # tap
+						note_hits.append(Note.NoteTap.new(time, column))
+					'b':  # break
+						note_hits.append(Note.NoteTap.new(time, column, true))
+					'h':  # hold
+						var duration = float(n)
+						note_hits.append(Note.NoteHold.new(time, column, duration))
+					's':  # slide star
+						var slide_type = n[0]  # numeric digit, left as str just in case
+						var slide_id = int(n.substr(1))
+#						var note = Note.NoteSlide.new(time, column)
+#						if slide_id > 0:
+#							slide_ids[slide_id] = note
+					'e':  # slide end
+						var slide_type = n[0]  # numeric digit, left as str just in case
+						var slide_id = int(n.substr(1))
+					'x':  # not sure
+						pass
+
+			if len(note_hits) > 1:
+				pass  # Set multihit on each one
+		return notes
 
 
 class SM:
@@ -257,14 +347,14 @@ class SM:
 				for col in len(line):
 					match line[col]:
 						'1':
-							notes.append(Note.make_tap(time, col))
+							notes.append(Note.NoteTap.new(time, col))
 						'2':  # Hold
 							ongoing_holds[col] = len(notes)
-							notes.append(Note.make_hold(time, 0.0, col))
+							notes.append(Note.NoteHold.new(time, col, 0.0))
 							num_holds += 1
 						'4':  # Roll
 							ongoing_holds[col] = len(notes)
-							notes.append(Note.make_roll(time, 0.0, col))
+							notes.append(Note.NoteRoll.new(time, col, 0.0))
 							num_rolls += 1
 						'3':  # End Hold/Roll
 							assert(ongoing_holds.has(col))
@@ -318,33 +408,33 @@ class Test:
 	static func stress_pattern():
 		var notes = []
 		for bar in range(8):
-			notes.push_back(Note.make_hold(bar*4, 1, bar%8))
+			notes.push_back(Note.NoteHold.new(bar*4, bar%8, 1))
 			for i in range(1, 8):
-				notes.push_back(Note.make_tap(bar*4 + (i/2.0), (bar + i)%8))
-			notes.push_back(Note.make_tap(bar*4 + (7/2.0), (bar + 3)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + (i/2.0), (bar + i)%8))
+			notes.push_back(Note.NoteTap.new(bar*4 + (7/2.0), (bar + 3)%8))
 		for bar in range(8, 16):
-			notes.push_back(Note.make_hold(bar*4, 2, bar%8))
+			notes.push_back(Note.NoteHold.new(bar*4, bar%8, 2))
 			for i in range(1, 8):
-				notes.push_back(Note.make_tap(bar*4 + (i/2.0), (bar + i)%8))
-				notes.push_back(Note.make_tap(bar*4 + ((i+0.5)/2.0), (bar + i)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + (i/2.0), (bar + i)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + ((i+0.5)/2.0), (bar + i)%8))
 				notes.push_back(Note.make_slide(bar*4 + ((i+1)/2.0), 1, (bar + i)%8, 0))
 		for bar in range(16, 24):
-			notes.push_back(Note.make_hold(bar*4, 2, bar%8))
-			notes.push_back(Note.make_hold(bar*4, 1, (bar+1)%8))
+			notes.push_back(Note.NoteHold.new(bar*4, bar%8, 2))
+			notes.push_back(Note.NoteHold.new(bar*4, (bar+1)%8, 1))
 			for i in range(2, 8):
-				notes.push_back(Note.make_tap(bar*4 + (i/2.0), (bar + i)%8))
-				notes.push_back(Note.make_hold(bar*4 + ((i+1)/2.0), 0.5, (bar + i)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + (i/2.0), (bar + i)%8))
+				notes.push_back(Note.NoteHold.new(bar*4 + ((i+1)/2.0), (bar + i)%8, 0.5))
 		for bar in range(24, 32):
-			notes.push_back(Note.make_hold(bar*4, 1, bar%8))
+			notes.push_back(Note.NoteHold.new(bar*4, bar%8, 1))
 			for i in range(1, 32):
-				notes.push_back(Note.make_tap(bar*4 + (i/8.0), (bar + i)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + (i/8.0), (bar + i)%8))
 				if (i%2) > 0:
-					notes.push_back(Note.make_tap(bar*4 + (i/8.0), (bar + i + 4)%8))
+					notes.push_back(Note.NoteTap.new(bar*4 + (i/8.0), (bar + i + 4)%8))
 		for bar in range(32, 48):
-			notes.push_back(Note.make_hold(bar*4, 1, bar%8))
+			notes.push_back(Note.NoteHold.new(bar*4, bar%8, 1))
 			for i in range(1, 32):
-				notes.push_back(Note.make_tap(bar*4 + (i/8.0), (bar + i)%8))
-				notes.push_back(Note.make_tap(bar*4 + (i/8.0), (bar + i + 3)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + (i/8.0), (bar + i)%8))
+				notes.push_back(Note.NoteTap.new(bar*4 + (i/8.0), (bar + i + 3)%8))
 		return notes
 
 func load_folder(folder):

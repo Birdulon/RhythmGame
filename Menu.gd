@@ -254,7 +254,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 
 	draw_songtile(song_key, Vector2(x_songtile-size/2.0, y), size, false, selected_difficulty, 3)
 	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
-	var notestrs = ["Taps:", "Holds Hit:", "Released:", "Slides Hit:", "Slid:"]
+	var notestrs = ["Taps:", "Holds Hit:", "Released:", "Stars:", "Slides:"]
 	var notetypes = [0, 1, -1, 2, -2]
 	var note_spacing = [0.0, 1.25, 2.25, 3.5, 4.5]
 	var judgestrs = Array(Rules.JUDGEMENT_STRINGS + ["Miss"])

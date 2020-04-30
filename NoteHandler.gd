@@ -422,7 +422,13 @@ func _draw():
 				var position_rel : float = (t+GameTheme.note_forecast_beats-note.time_release)/GameTheme.note_forecast_beats
 				if position_rel > 0:
 					var note_rel_center := (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position_rel * GameTheme.receptor_ring_radius)
-					noteline_data.set_pixel(j%16, 15, Color(position_rel, note.column, GameTheme.RADIAL_COL_ANGLES[note.column]))
+					noteline_data.set_pixel(
+						j%16, 15, Color(
+							position_rel/arr_div.x,
+							note.column/arr_div.y,
+							GameTheme.RADIAL_COL_ANGLES[note.column]/arr_div.z
+						)
+					)
 					j += 1
 				if position_rel < GameTheme.INNER_NOTE_CIRCLE_RATIO:
 					position_rel = GameTheme.INNER_NOTE_CIRCLE_RATIO
@@ -711,10 +717,6 @@ func _process(delta):
 
 		next_note_to_load += 1
 
-	# DEBUG: Reset after all notes are done
-#	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and (time > 10.0) and not get_node("/root/main/video").is_playing():
-#		time = -10.0
-#		next_note_to_load = 0
 	if (len(active_notes) < 1) and (next_note_to_load >= len(all_notes)) and not get_node("/root/main/music").is_playing() and (len(active_judgement_texts) < 1):
 		self.running = false
 		self.timers_set = false

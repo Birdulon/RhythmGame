@@ -45,7 +45,7 @@ gdscript/warnings/integer_division=false
 
 [display]
 
-window/size/width=1920
+window/size/width=1080
 window/size/height=1080
 window/size/fullscreen=true
 window/handheld/orientation="sensor"

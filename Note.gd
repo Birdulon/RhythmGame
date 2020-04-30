@@ -15,6 +15,7 @@ class NoteBase:
 	var double_hit := false
 	var time_activated := INF
 	var missed := false
+	var is_break := false
 
 	func set_time_hit(value: float):
 		time_hit = value
@@ -22,19 +23,20 @@ class NoteBase:
 
 class NoteTap extends NoteBase:
 	var type := NOTE_TAP
-	func _init(time_hit: float, column: int):
+	func _init(time_hit: float, column: int, is_break:=false):
 		self.time_hit = time_hit
 		self.column = column
+		self.is_break = is_break
 
 class NoteHoldBase extends NoteBase:
 	var time_release: float setget set_time_release
 	var time_released := INF
 	var duration: float setget set_duration
 	var is_held: bool
-	func _init(time_hit: float, duration: float, column: int):
+	func _init(time_hit: float, column: int, duration: float):
 		self.time_hit = time_hit
-		self.duration = duration
 		self.column = column
+		self.duration = duration
 		self.is_held = false
 
 	func set_time_hit(value: float):
@@ -54,12 +56,12 @@ class NoteHoldBase extends NoteBase:
 
 class NoteHold extends NoteHoldBase:
 	var type := NOTE_HOLD
-	func _init(time_hit: float, duration: float, column: int).(time_hit, duration, column):
+	func _init(time_hit: float, column: int, duration: float).(time_hit, column, duration):
 		pass
 
 class NoteRoll extends NoteHoldBase:
 	var type := NOTE_ROLL
-	func _init(time_hit: float, duration: float, column: int).(time_hit, duration, column):
+	func _init(time_hit: float, column: int, duration: float).(time_hit, column, duration):
 		pass
 
 class NoteSlide extends NoteBase:
@@ -73,12 +75,12 @@ class NoteSlide extends NoteBase:
 	var missed_slide := false
 	var values: Dictionary
 
-	func _init(time_hit: float, duration: float, column: int, column_release: int, slide_type: int):
+	func _init(time_hit: float, column: int, duration: float, column_release: int, slide_type: int):
 		self.time_hit = time_hit
+		self.column = column
 		self.duration = duration
 		self.time_release = time_hit + duration
 		self.time_death = time_release + DEATH_DELAY
-		self.column = column
 		self.column_release = column_release
 		self.slide_type = slide_type
 		self.values = {}
@@ -152,22 +154,8 @@ class NoteSlide extends NoteBase:
 		return 0.0
 
 
-
-static func make_tap(time_hit: float, column: int) -> NoteTap:
-#	return {type=NOTE_TAP, time_hit=time_hit, time_death=time_hit+DEATH_DELAY, column=column, double_hit=false}
-	return NoteTap.new(time_hit, column)
-
-static func make_break(time_hit: float, column: int): # -> Dictionary:
-#	return {type=NOTE_TAP, time_hit=time_hit, time_death=time_hit+DEATH_DELAY, column=column, double_hit=false}
-	return NoteTap.new(time_hit, column)
-
-static func make_hold(time_hit: float, duration: float, column: int) -> NoteHold:
-#	var time_release := time_hit + duration
-#	return {type=NOTE_HOLD, time_hit=time_hit, time_release=time_release, time_death=time_release+DEATH_DELAY, column=column, double_hit=false}
-	return NoteHold.new(time_hit, duration, column)
-
 static func make_slide(time_hit: float, duration: float, column: int, column_release: int, slide_type:=SlideType.CHORD) -> NoteSlide:
-	return NoteSlide.new(time_hit, duration, column, column_release, slide_type)
+	return NoteSlide.new(time_hit, column, duration, column_release, slide_type)
 
 static func make_touch(time_hit: float, location: Vector2) -> Dictionary:
 	return {type=NOTE_TOUCH, time_hit=time_hit, time_death=time_hit+DEATH_DELAY, location=location, double_hit=false}
