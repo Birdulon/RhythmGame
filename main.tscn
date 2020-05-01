@@ -1,27 +1,27 @@
 [gd_scene load_steps=23 format=2]
 
-[ext_resource path="res://main.gd" type="Script" id=1]
-[ext_resource path="res://video.gd" type="Script" id=2]
-[ext_resource path="res://ScreenFilter.gd" type="Script" id=3]
+[ext_resource path="res://scripts/main.gd" type="Script" id=1]
+[ext_resource path="res://scripts/video.gd" type="Script" id=2]
+[ext_resource path="res://scripts/ScreenFilter.gd" type="Script" id=3]
 [ext_resource path="res://shaders/receptors.shader" type="Shader" id=4]
-[ext_resource path="res://Receptors.gd" type="Script" id=5]
-[ext_resource path="res://NoteHandler.gd" type="Script" id=6]
-[ext_resource path="res://NoteViewport.gd" type="Script" id=7]
+[ext_resource path="res://scripts/Receptors.gd" type="Script" id=5]
+[ext_resource path="res://scripts/NoteHandler.gd" type="Script" id=6]
+[ext_resource path="res://scripts/NoteViewport.gd" type="Script" id=7]
 [ext_resource path="res://assets/text-4k.png" type="Texture" id=8]
 [ext_resource path="res://shaders/notemesh.shader" type="Shader" id=9]
 [ext_resource path="res://shaders/notelines.shader" type="Shader" id=10]
-[ext_resource path="res://NotePainter.gd" type="Script" id=11]
-[ext_resource path="res://Menu.gd" type="Script" id=12]
+[ext_resource path="res://scripts/NotePainter.gd" type="Script" id=11]
+[ext_resource path="res://scripts/Menu.gd" type="Script" id=12]
 [ext_resource path="res://shaders/scoretext.tres" type="Material" id=13]
-[ext_resource path="res://ScoreText.gd" type="Script" id=14]
-[ext_resource path="res://Bezel.gd" type="Script" id=15]
+[ext_resource path="res://scripts/ScoreText.gd" type="Script" id=14]
+[ext_resource path="res://scripts/Bezel.gd" type="Script" id=15]
 [ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=16]
-[ext_resource path="res://InputHandler.gd" type="Script" id=17]
+[ext_resource path="res://scripts/InputHandler.gd" type="Script" id=17]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 4 )
 shader_param/num_receptors = 8
-shader_param/receptor_offset = 0.0
+shader_param/receptor_offset = 0.392699
 shader_param/line_color = Color( 0, 0, 1, 1 )
 shader_param/dot_color = Color( 0, 0, 1, 1 )
 shader_param/shadow_color = Color( 0, 0, 0, 1 )

@@ -27,11 +27,11 @@ channel_disable_time=5.0
 
 [autoload]
 
-Note="*res://Note.gd"
-Rules="*res://Rules.gd"
-FileLoader="*res://FileLoader.gd"
-GameTheme="*res://GameTheme.gd"
-SFXPlayer="*res://SFXPlayer.gd"
+Note="*res://scripts/Note.gd"
+Rules="*res://scripts/Rules.gd"
+FileLoader="*res://scripts/FileLoader.gd"
+GameTheme="*res://scripts/GameTheme.gd"
+SFXPlayer="*res://scripts/SFXPlayer.gd"
 
 [debug]
 
