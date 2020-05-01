@@ -1,10 +1,10 @@
 #extends Object
 extends Node
 
-var userroot := "user://" if OS.get_name() != "Android" else "/storage/emulated/0/RhythmGame/"
-# The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission("WRITE_EXTERNAL_STORAGE")
-# "/storage/emulated/0/Android/data/au.ufeff.rhythmgame/"
-# "/sdcard/Android/data/au.ufeff.rhythmgame/"
+var userroot := 'user://' if OS.get_name() != 'Android' else '/storage/emulated/0/RhythmGame/'
+# The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission('WRITE_EXTERNAL_STORAGE')
+# '/storage/emulated/0/Android/data/au.ufeff.rhythmgame/'
+# '/sdcard/Android/data/au.ufeff.rhythmgame/'
 
 func directory_list(directory: String, hidden: bool, sort:=true) -> Dictionary:
 	# Sadly there's no filelist sugar so we make our own
@@ -34,57 +34,79 @@ func directory_list(directory: String, hidden: bool, sort:=true) -> Dictionary:
 	# Maybe convert the Arrays to PoolStringArrays?
 	return output
 
-func find_by_extensions(array, extensions) -> Dictionary:
+func find_by_extensions(array, extensions=null) -> Dictionary:
 	# Both args can be Array or PoolStringArray
+	# If extensions omitted, do all extensions
 	var output = {}
-	for ext in extensions:
-		output[ext] = []
-	for string in array:
+	if extensions:
 		for ext in extensions:
-			if string.ends_with(ext):
-				output[ext].append(string)
+			output[ext] = []
+		for filename in array:
+			for ext in extensions:
+				if filename.ends_with(ext):
+					output[ext].append(filename)
+	else:
+		for filename in array:
+			var ext = filename.rsplit('.', false, 1)[1]
+			if ext in output:
+				output[ext].append(filename)
+			else:
+				output[ext] = [filename]
 	return output
 
 func scan_library():
-	print("Scanning library")
-	var rootdir = userroot + "songs"
+	print('Scanning library')
+	var rootdir = userroot + 'songs'
 	var dir = Directory.new()
 	var err = dir.make_dir_recursive(rootdir)
 	if err != OK:
-		print_debug("An error occurred while trying to create the songs directory: ", err)
+		print_debug('An error occurred while trying to create the songs directory: ', err)
 		return err
 
 	var songslist = directory_list(rootdir, false)
 	if songslist.err != OK:
-		print("An error occurred when trying to access the songs directory: ", songslist.err)
+		print('An error occurred when trying to access the songs directory: ', songslist.err)
 		return songslist.err
 
 	var song_defs = {}
+	var collections = {}
 	var song_images = {}
 	var genres = {}
 	dir.open(rootdir)
 	for key in songslist.folders:
-		if dir.file_exists(key + "/song.json"):
+		if dir.file_exists(key + '/song.json'):
 			# Our format
-			song_defs[key] = FileLoader.load_folder("%s/%s" % [rootdir, key])
-			print("Loaded song directory: %s" % key)
-			song_images[key] = FileLoader.load_image("%s/%s/%s" % [rootdir, key, song_defs[key]["tile_filename"]])
-			if song_defs[key]["genre"] in genres:
-				genres[song_defs[key]["genre"]].append(key)
+			song_defs[key] = FileLoader.load_folder('%s/%s' % [rootdir, key])
+			print('Loaded song directory: %s' % key)
+			song_images[key] = FileLoader.load_image('%s/%s/%s' % [rootdir, key, song_defs[key]['tile_filename']])
+			if song_defs[key]['genre'] in genres:
+				genres[song_defs[key]['genre']].append(key)
 			else:
-				genres[song_defs[key]["genre"]] = [key]
+				genres[song_defs[key]['genre']] = [key]
+		elif dir.file_exists(key + '/collection.json'):
+			var collection = FileLoader.load_folder('%s/%s' % [rootdir, key], 'collection')
+			collections[key] = collection
+			var base_dict = {}  # Top level of the collection dict contains defaults for every song in it
+			for key in collection.keys():
+				if key != 'songs':
+					base_dict[key] = collection[key]
+			for song in collection['songs']:
+				var song_def = base_dict.duplicate()
+				song_defs[key] = song_def
+				for key in song.keys():
+					song_def[key] = song[key]
 		else:
-			var step_files = find_by_extensions(directory_list(rootdir + '/' + key, false).files, ['.sm'])
-			if len(step_files['.sm']) > 0:
-				var sm_filename = step_files['.sm'][0]
+			var files_by_ext = find_by_extensions(directory_list(rootdir + '/' + key, false).files)
+			if 'sm' in files_by_ext:
+				var sm_filename = files_by_ext['sm'][0]
 				print(sm_filename)
 				var thing = SM.load_file(rootdir + '/' + key + '/' + sm_filename)
 				print(thing)
 				pass
 			else:
-				print("Found non-song directory: " + key)
+				print('Found non-song directory: ' + key)
 	for file in songslist.files:
-		print("Found file: " + file)
+		print('Found file: ' + file)
 
 	return {song_defs=song_defs, song_images=song_images, genres=genres}
 
@@ -143,7 +165,7 @@ class SRT:
 							ID3_SLIDE_ARC_ACW:
 								slide_type = Note.SlideType.ARC_ACW
 							_:
-								print("Unknown slide type: ", id3)
+								print('Unknown slide type: ', id3)
 						var note = Note.NoteStar.new(time_hit, column)
 						note.duration = duration
 						notes.push_back(note)
@@ -167,7 +189,7 @@ class RGT:
 	const NOTE_TYPES = {
 		't': Note.NOTE_TAP,
 		'h': Note.NOTE_HOLD,
-		's': Note.NOTE_SLIDE,
+		's': Note.NOTE_STAR,
 		'e': Note.NOTE_SLIDE,
 		'b': Note.NOTE_TAP  # Break
 	}
@@ -178,7 +200,18 @@ class RGT:
 		'3': Note.SlideType.ARC_CW,  # From Cirno master
 		'4': Note.SlideType.CHORD,  # Probably some weird loop etc.
 		'5': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'6': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'7': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'8': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'9': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'a': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'b': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'c': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'd': Note.SlideType.CHORD_TRIPLE,  # Triple cone. Spreads out to the adjacent receptors of the target.
+		'e': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'f': Note.SlideType.CHORD,  # Probably some weird loop etc.
 	}
+
 	static func load_file(filename: String):
 		var extension = filename.rsplit('.', false, 1)[1]
 		if not EXTENSIONS.has(extension):
@@ -190,22 +223,35 @@ class RGT:
 			print(err)
 			return err
 		var length = file.get_len()
+		var chart_ids = []
 		var lines = [[]]
+		# This loop will segment the lines as if the file were RGTM
 		while (file.get_position() < (length-1)):  # Could probably replace this with file.eof_reached()
 			var line : String = file.get_line()
 			if line.begins_with('['):  # Split to a new list for each chart definition
+				chart_ids.append(line.lstrip('[').rstrip(']'))
 				lines.append([])
-			lines[-1].append(line)
+			elif !line.empty():
+				lines[-1].append(line)
 		file.close()
 
 		match format:
 			Format.RGTS:
-				pass
+				var notes = parse_rgts(lines[0])
+				return notes
 			Format.RGTX:
-				pass
+				var notes = parse_rgtx(lines[0])
+				return notes
 			Format.RGTM:
-				pass
+				lines.pop_front()  # Anything before the first [header] is meaningless
+				var charts = []
+				for c in lines:
+					charts.append(parse_rgts(c))
+				return [chart_ids, charts]
 		return format
+
+	static func parse_rgtx(lines):
+		return []  # To be implemented later
 
 	static func parse_rgts(lines):
 		var notes = []
@@ -240,7 +286,7 @@ class RGT:
 						var star = Note.NoteStar.new(time, column)
 						note_hits.append(star)
 						last_star[column] = star
-						var slide_type = n[0]  # numeric digit, left as str just in case
+						var slide_type = n[0]  # hex digit
 						var slide_id = int(n.substr(1))
 						if slide_id > 0:
 							slide_stars[slide_id] = star
@@ -468,18 +514,19 @@ class Test:
 				notes.push_back(Note.NoteTap.new(bar*4 + (i/8.0), (bar + i + 3)%8))
 		return notes
 
-func load_folder(folder):
+
+func load_folder(folder, filename='song'):
 	var file = File.new()
-	var err = file.open("%s/song.json" % folder, File.READ)
+	var err = file.open('%s/%s.json' % [folder, filename], File.READ)
 	if err != OK:
 		print(err)
 		return err
 	var result_json = JSON.parse(file.get_as_text())
 	file.close()
 	if result_json.error != OK:
-		print("Error: ", result_json.error)
-		print("Error Line: ", result_json.error_line)
-		print("Error String: ", result_json.error_string)
+		print('Error: ', result_json.error)
+		print('Error Line: ', result_json.error_line)
+		print('Error String: ', result_json.error_string)
 		return result_json.error
 	var result = result_json.result
 	result.directory = folder

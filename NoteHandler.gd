@@ -238,7 +238,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 			colors[i*3+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
 
 	match note.slide_type:
-		Note.SlideType.CHORD:
+		Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:  # Will need to split off triple at some point
 			var angle : float = note.get_angle(0)
 			var uv1o : Vector2 = polar2cartesian(size, angle)
 			var uv2o : Vector2 = polar2cartesian(size, angle+PI/2.0)

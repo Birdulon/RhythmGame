@@ -4,7 +4,7 @@ extends Node
 #class_name Note
 
 enum {NOTE_TAP, NOTE_HOLD, NOTE_STAR=2, NOTE_SLIDE=-2, NOTE_TOUCH=3, NOTE_TOUCH_HOLD=4, NOTE_ARROW, NOTE_ROLL}
-enum SlideType {CHORD, ARC_CW, ARC_ACW}
+enum SlideType {CHORD, ARC_CW, ARC_ACW, CHORD_TRIPLE}
 const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
 const RELEASE_SCORE_TYPES := {
 	NOTE_HOLD: -NOTE_HOLD,
@@ -122,7 +122,7 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 
 	func update_slide_variables():
 		match slide_type:
-			Note.SlideType.CHORD:
+			Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:
 				values.start = GameTheme.RADIAL_UNIT_VECTORS[column] * GameTheme.receptor_ring_radius
 				values.end = GameTheme.RADIAL_UNIT_VECTORS[column_release] * GameTheme.receptor_ring_radius
 				values.angle = (values.end - values.start).angle()
@@ -139,7 +139,7 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 
 	func get_position(progress: float) -> Vector2:
 		match slide_type:
-			Note.SlideType.CHORD:
+			Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:
 				return lerp(values.start, values.end, progress)
 			Note.SlideType.ARC_CW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
@@ -151,7 +151,7 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 
 	func get_angle(progress: float) -> float:
 		match slide_type:
-			Note.SlideType.CHORD:
+			Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:
 				return values.angle
 			Note.SlideType.ARC_CW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
@@ -164,7 +164,7 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 	func get_slide_length() -> float:
 		# Return unit-circle (r=1) length of slide trail
 		match slide_type:
-			Note.SlideType.CHORD:
+			Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:
 				return 2*abs(sin((GameTheme.RADIAL_COL_ANGLES[column_release] - GameTheme.RADIAL_COL_ANGLES[column])/2))
 			Note.SlideType.ARC_CW:
 				return fposmod(GameTheme.RADIAL_COL_ANGLES[column_release] - GameTheme.RADIAL_COL_ANGLES[column], TAU)
