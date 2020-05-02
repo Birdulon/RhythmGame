@@ -34,6 +34,7 @@ var touch_rects = []
 
 var TitleFont := preload('res://assets/MenuTitleFont.tres')
 var GenreFont := preload('res://assets/MenuGenreFont.tres')
+var DiffNumFont := preload('res://assets/MenuDiffNumberFont.tres')
 var ScoreFont := preload('res://assets/MenuScoreFont.tres')
 var snd_interact := preload('res://assets/softclap.wav')
 
@@ -107,7 +108,7 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 #	draw_texture_rect(song_images[song_key], rect, false)
 	draw_texture_rect(Library.get_song_tile_texture(song_key), rect, false)
 	# Draw track difficulty rating
-	draw_string_centered(GenreFont, Vector2(position.x+size-24, position.y+size-56), song_defs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], 0), diff_color)
+	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), song_defs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], 0), diff_color)
 	if title_text:
 		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), song_defs[song_key]['title'], Color(0.95, 0.95, 1.0))
 	return rect
@@ -118,11 +119,11 @@ func diffstr(difficulty: float):
 
 
 func _draw_song_select(center: Vector2) -> Array:
-	var size = 216
+	var size = 128
 	var spacer_x = 12
 	var spacer_y = 64
-	var sel_scales := [1.0, 0.8, 0.64, 0.512, 0.4096]
-	var bg_scales := [0.64, 0.64, 0.64, 0.512, 0.4096]
+	var sel_scales := [1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096]
+	var bg_scales := [0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var gy := center.y -250
 	var touchrects := []
 
