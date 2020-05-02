@@ -30,6 +30,7 @@ channel_disable_time=5.0
 Note="*res://scripts/Note.gd"
 Rules="*res://scripts/Rules.gd"
 FileLoader="*res://scripts/FileLoader.gd"
+Library="*res://scripts/Library.gd"
 GameTheme="*res://scripts/GameTheme.gd"
 SFXPlayer="*res://scripts/SFXPlayer.gd"
 

@@ -54,6 +54,7 @@ func find_by_extensions(array, extensions=null) -> Dictionary:
 				output[ext] = [filename]
 	return output
 
+const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R']
 func scan_library():
 	print('Scanning library')
 	var rootdir = userroot + 'songs'
@@ -83,6 +84,12 @@ func scan_library():
 				genres[song_defs[key]['genre']].append(key)
 			else:
 				genres[song_defs[key]['genre']] = [key]
+			if typeof(song_defs[key]['chart_difficulties']) == TYPE_ARRAY:
+				var diffs = song_defs[key]['chart_difficulties']
+				var chart_difficulties = {}
+				for i in min(len(diffs), len(default_difficulty_keys)):
+					chart_difficulties[default_difficulty_keys[i]] = diffs[i]
+				song_defs[key]['chart_difficulties'] = chart_difficulties
 		elif dir.file_exists(key + '/collection.json'):
 			var collection = FileLoader.load_folder('%s/%s' % [rootdir, key], 'collection')
 			collections[key] = collection
@@ -90,11 +97,17 @@ func scan_library():
 			for key in collection.keys():
 				if key != 'songs':
 					base_dict[key] = collection[key]
-			for song in collection['songs']:
+			for song_key in collection['songs'].keys():
+				var song_dict = collection['songs'][song_key]
 				var song_def = base_dict.duplicate()
-				song_defs[key] = song_def
-				for key in song.keys():
-					song_def[key] = song[key]
+				song_defs[song_key] = song_def
+				for key in song_dict.keys():
+					song_def[key] = song_dict[key]
+				song_images[song_key] = FileLoader.load_image('%s/%s/%s.png' % [rootdir, key, song_key])
+				if song_defs[song_key]['genre'] in genres:
+					genres[song_defs[song_key]['genre']].append(song_key)
+				else:
+					genres[song_defs[song_key]['genre']] = [song_key]
 		else:
 			var files_by_ext = find_by_extensions(directory_list(rootdir + '/' + key, false).files)
 			if 'sm' in files_by_ext:
@@ -244,10 +257,10 @@ class RGT:
 				return notes
 			Format.RGTM:
 				lines.pop_front()  # Anything before the first [header] is meaningless
-				var charts = []
-				for c in lines:
-					charts.append(parse_rgts(c))
-				return [chart_ids, charts]
+				var charts = {}
+				for i in len(lines):
+					charts[chart_ids[i]] = parse_rgts(lines[i])
+				return charts
 		return format
 
 	static func parse_rgtx(lines):
@@ -531,6 +544,30 @@ func load_folder(folder, filename='song'):
 	var result = result_json.result
 	result.directory = folder
 	return result
+
+func load_filelist(filelist: Array):
+	var charts = {}
+	var key := 1
+	for filename in filelist:
+		var extension: String = filename.rsplit('.', true, 1)[-1]
+		match extension:
+			'rgtm':  # multiple charts
+				var res = RGT.load_file(filename)
+				for key in res:
+					charts[key] = res[key]
+			'rgts', 'rgtx':  # single chart
+				charts[key] = RGT.load_file(filename)
+				key += 1
+			'srt':  # maimai, single chart
+				charts[key] = SRT.load_file(filename)
+				key += 1
+			'sm':  # Stepmania, multiple charts
+				var res = SM.load_file(filename)
+				for key in res:
+					charts[key] = res[key]
+			_:
+				pass
+	return charts
 
 
 func load_ogg(filename) -> AudioStreamOGGVorbis:

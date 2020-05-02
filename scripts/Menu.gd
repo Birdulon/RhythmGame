@@ -111,8 +111,8 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	var diff = selected_song - (selected_song_vis + selected_song_delta)
-	selected_song_speed = sign(diff)*ease(abs(diff), 2)*10
-	selected_song_delta += selected_song_speed * delta
+	selected_song_speed = ease(abs(diff), 1)*10
+	selected_song_delta += sign(diff) * selected_song_speed * delta
 	if selected_song_delta > 0.5:
 		selected_song_delta -= 1.0
 		selected_song_vis += 1
@@ -139,9 +139,9 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	draw_rect(Rect2(position.x - outline_px, position.y - outline_px, size + outline_px*2, size + outline_px*2), diff_color)
 	draw_texture_rect(song_images[song_key], rect, false)
 	# Draw track difficulty rating
-	draw_string_centered(GenreFont, Vector2(position.x+size-24, position.y+size-56), diffstr(song_defs[song_key]["chart_difficulties"][difficulty]), diff_color)
+	draw_string_centered(GenreFont, Vector2(position.x+size-24, position.y+size-56), song_defs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], 0), diff_color)
 	if title_text:
-		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), song_defs[song_key]["title"], Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), song_defs[song_key]['title'], Color(0.95, 0.95, 1.0))
 	return rect
 
 func diffstr(difficulty: float):
@@ -155,7 +155,7 @@ func _draw_song_select(center: Vector2) -> Array:
 	var spacer_y = 64
 	var sel_scales := [1.0, 0.8, 0.64, 0.512, 0.4096]
 	var bg_scales := [0.64, 0.64, 0.64, 0.512, 0.4096]
-	var gy := center.y
+	var gy := center.y -250
 	var touchrects := []
 
 	for g in len(genres):
