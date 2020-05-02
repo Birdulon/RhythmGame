@@ -1,10 +1,25 @@
 #extends Object
 extends Node
 
-var userroot := 'user://' if OS.get_name() != 'Android' else '/storage/emulated/0/RhythmGame/'
+const ERROR_CODES := [
+	'OK', 'FAILED', 'ERR_UNAVAILABLE', 'ERR_UNCONFIGURED', 'ERR_UNAUTHORIZED', 'ERR_PARAMETER_RANGE_ERROR',
+	'ERR_OUT_OF_MEMORY', 'ERR_FILE_NOT_FOUND', 'ERR_FILE_BAD_DRIVE', 'ERR_FILE_BAD_PATH','ERR_FILE_NO_PERMISSION',
+	'ERR_FILE_ALREADY_IN_USE', 'ERR_FILE_CANT_OPEN', 'ERR_FILE_CANT_WRITE', 'ERR_FILE_CANT_READ', 'ERR_FILE_UNRECOGNIZED',
+	'ERR_FILE_CORRUPT', 'ERR_FILE_MISSING_DEPENDENCIES', 'ERR_FILE_EOF', 'ERR_CANT_OPEN', 'ERR_CANT_CREATE', 'ERR_QUERY_FAILED',
+	'ERR_ALREADY_IN_USE', 'ERR_LOCKED', 'ERR_TIMEOUT', 'ERR_CANT_CONNECT', 'ERR_CANT_RESOLVE', 'ERR_CONNECTION_ERROR',
+	'ERR_CANT_ACQUIRE_RESOURCE', 'ERR_CANT_FORK', 'ERR_INVALID_DATA', 'ERR_INVALID_PARAMETER', 'ERR_ALREADY_EXISTS',
+	'ERR_DOES_NOT_EXIST', 'ERR_DATABASE_CANT_READ', 'ERR_DATABASE_CANT_WRITE', 'ERR_COMPILATION_FAILED', 'ERR_METHOD_NOT_FOUND',
+	'ERR_LINK_FAILED', 'ERR_SCRIPT_FAILED', 'ERR_CYCLIC_LINK', 'ERR_INVALID_DECLARATION', 'ERR_DUPLICATE_SYMBOL',
+	'ERR_PARSE_ERROR', 'ERR_BUSY', 'ERR_SKIP', 'ERR_HELP', 'ERR_BUG'
+]
+
+var userroot := OS.get_user_data_dir().rstrip('/')+'/' if OS.get_name() != 'Android' else '/storage/emulated/0/RhythmGame/'
+var PATHS := [userroot]
 # The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission('WRITE_EXTERNAL_STORAGE')
 # '/storage/emulated/0/Android/data/au.ufeff.rhythmgame/'
 # '/sdcard/Android/data/au.ufeff.rhythmgame/'
+func _ready() -> void:
+	print('Library paths: ', PATHS)
 
 func directory_list(directory: String, hidden: bool, sort:=true) -> Dictionary:
 	# Sadly there's no filelist sugar so we make our own
@@ -79,7 +94,7 @@ func scan_library():
 			# Our format
 			song_defs[key] = FileLoader.load_folder('%s/%s' % [rootdir, key])
 			print('Loaded song directory: %s' % key)
-			song_images[key] = FileLoader.load_image('%s/%s/%s' % [rootdir, key, song_defs[key]['tile_filename']])
+#			song_images[key] = FileLoader.load_image('%s/%s' % [key, song_defs[key]['tile_filename']])
 			if song_defs[key]['genre'] in genres:
 				genres[song_defs[key]['genre']].append(key)
 			else:
@@ -90,24 +105,29 @@ func scan_library():
 				for i in min(len(diffs), len(default_difficulty_keys)):
 					chart_difficulties[default_difficulty_keys[i]] = diffs[i]
 				song_defs[key]['chart_difficulties'] = chart_difficulties
+
 		elif dir.file_exists(key + '/collection.json'):
-			var collection = FileLoader.load_folder('%s/%s' % [rootdir, key], 'collection')
+			var dir_collection = '%s/%s' % [rootdir, key]
+			var collection = FileLoader.load_folder(dir_collection, 'collection')
 			collections[key] = collection
-			var base_dict = {}  # Top level of the collection dict contains defaults for every song in it
+			var base_dict = {'filepath': key+'/'}  # Top level of the collection dict contains defaults for every song in it
 			for key in collection.keys():
 				if key != 'songs':
 					base_dict[key] = collection[key]
 			for song_key in collection['songs'].keys():
 				var song_dict = collection['songs'][song_key]
 				var song_def = base_dict.duplicate()
-				song_defs[song_key] = song_def
 				for key in song_dict.keys():
 					song_def[key] = song_dict[key]
-				song_images[song_key] = FileLoader.load_image('%s/%s/%s.png' % [rootdir, key, song_key])
+				Library.add_song(song_key, song_def)
+				# Legacy compat stuff
+				song_defs[song_key] = song_def
+#				song_images[song_key] = FileLoader.load_image('%s/%s/%s.png' % [rootdir, key, song_key])
 				if song_defs[song_key]['genre'] in genres:
 					genres[song_defs[song_key]['genre']].append(song_key)
 				else:
 					genres[song_defs[song_key]['genre']] = [song_key]
+
 		else:
 			var files_by_ext = find_by_extensions(directory_list(rootdir + '/' + key, false).files)
 			if 'sm' in files_by_ext:
@@ -545,11 +565,12 @@ func load_folder(folder, filename='song'):
 	result.directory = folder
 	return result
 
-func load_filelist(filelist: Array):
+func load_filelist(filelist: Array, directory=''):
 	var charts = {}
 	var key := 1
 	for filename in filelist:
 		var extension: String = filename.rsplit('.', true, 1)[-1]
+		filename = directory.rstrip('/') + '/' + filename
 		match extension:
 			'rgtm':  # multiple charts
 				var res = RGT.load_file(filename)
@@ -570,7 +591,7 @@ func load_filelist(filelist: Array):
 	return charts
 
 
-func load_ogg(filename) -> AudioStreamOGGVorbis:
+func direct_load_ogg(filename) -> AudioStreamOGGVorbis:
 	var audiostream = AudioStreamOGGVorbis.new()
 	var oggfile = File.new()
 	oggfile.open(filename, File.READ)
@@ -578,9 +599,74 @@ func load_ogg(filename) -> AudioStreamOGGVorbis:
 	oggfile.close()
 	return audiostream
 
-func load_image(filename) -> ImageTexture:
-	var tex = ImageTexture.new()
-	var img = Image.new()
+var fallback_audiostream = AudioStreamOGGVorbis.new()
+func load_ogg(filename) -> AudioStreamOGGVorbis:
+	var file = File.new()
+	for root in PATHS:
+		var filename1 = root + filename
+		if file.file_exists(filename1):
+			return direct_load_ogg(filename1)
+	return fallback_audiostream
+
+func direct_load_image(filename) -> ImageTexture:
+	var tex := ImageTexture.new()
+	var img := Image.new()
 	img.load(filename)
 	tex.create_from_image(img)
 	return tex
+
+var fallback_texture := ImageTexture.new()
+func load_image(filename) -> ImageTexture:
+	var file = File.new()
+	for root in PATHS:
+		var filename1 = root + filename
+		if file.file_exists(filename1):
+			return direct_load_image(filename1)
+	print('File not found: ', filename)
+	return fallback_texture
+
+
+func init_directory(directory: String):
+	var dir = Directory.new()
+	var err = dir.make_dir_recursive(directory)
+	if err != OK:
+		print('An error occurred while trying to create the scores directory: ', err, ERROR_CODES[err])
+	return err
+
+func save_json(filename: String, data: Dictionary):
+	filename = userroot + filename
+	var dir = filename.rsplit('/', true, 1)[0]
+	var err = FileLoader.init_directory(dir)
+	if err != OK:
+		print('Error making directory for JSON file: ', err, ERROR_CODES[err])
+		return err
+	var json = JSON.print(data)
+	var file = File.new()
+	err = file.open(filename, File.WRITE)
+	if err != OK:
+		print('Error saving JSON file: ', err, ERROR_CODES[err])
+		return err
+	file.store_string(json)
+	file.close()
+	return OK
+
+func load_json(filename: String):
+	var file = File.new()
+	var err
+	for root in PATHS:
+		var filename1 = root + filename
+		if file.file_exists(filename1):
+			err = file.open(filename1, File.READ)
+			if err != OK:
+				print('An error occurred while trying to open file: ', filename1, err, ERROR_CODES[err])
+				continue  # return err
+			var result_json = JSON.parse(file.get_as_text())
+			file.close()
+			if result_json.error != OK:
+				print('Error: ', result_json.error)
+				print('Error Line: ', result_json.error_line)
+				print('Error String: ', result_json.error_string)
+				return result_json.error
+			return result_json.result
+	print('File not found in any libraries: ', filename)
+	return ERR_FILE_NOT_FOUND

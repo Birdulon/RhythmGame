@@ -575,7 +575,7 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	bpm = data.bpm_values[0]
 	sync_offset_audio = data.audio_offsets[0]
 	sync_offset_video = data.video_offsets[0]
-	var audiostream = FileLoader.load_ogg(data.directory + '/' + data.audio_filelist[0])
+	var audiostream = FileLoader.direct_load_ogg(data.directory + '/' + data.audio_filelist[0])
 	var videostream = load(data.directory + '/' + data.video_filelist[0])
 
 	MusicPlayer.set_stream(audiostream)

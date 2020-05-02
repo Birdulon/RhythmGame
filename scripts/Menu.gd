@@ -37,60 +37,26 @@ var GenreFont := preload('res://assets/MenuGenreFont.tres')
 var ScoreFont := preload('res://assets/MenuScoreFont.tres')
 var snd_interact := preload('res://assets/softclap.wav')
 
-var userroot : String = FileLoader.userroot
-
 func scan_library():
 	var results = FileLoader.scan_library()
 	song_defs = results.song_defs
 	song_images = results.song_images
 	genres = results.genres
 
-
-func save_score():
-	var rootdir = userroot + 'scores'
-	var dir = Directory.new()
-	var err = dir.make_dir_recursive(rootdir)
-	if err != OK:
-		print('An error occurred while trying to create the scores directory: ', err)
-		return err
-	var data = {}
-	data.score_data = scorescreen_score_data
-	data.song_key = scorescreen_song_key
-	var json = JSON.print(data)
-	var file = File.new()
-#	var filename = rootdir + '/{year}{month}{day}T{hour}{minute}{second}.json'.format(scorescreen_datetime)
-	# So uh. Can't zero-pad using the string.format() method. This sucks.
+func save_score() -> int:
+	var data = {'score_data': scorescreen_score_data, 'song_key': scorescreen_song_key}
 	var dt = scorescreen_datetime
-	var filename = rootdir + '/%04d%02d%02dT%02d%02d%02d.json'%[dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
-	err = file.open(filename, File.WRITE)
-	if err != OK:
-		print(err)
-		return err
-	file.store_string(json)
-	file.close()
-	scorescreen_saved = true
+	var filename = 'scores/%04d%02d%02dT%02d%02d%02d.json'%[dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+	var err = FileLoader.save_json(filename, data)
+	if err == OK:
+		scorescreen_saved = true
+	return err
 
 func load_score(filename):
-	var rootdir = userroot + 'scores'
-	var dir = Directory.new()
-	var err = dir.make_dir_recursive(rootdir)
-	if err != OK:
-		print('An error occurred while trying to create the scores directory: ', err)
-		return err
-
-	var file = File.new()
-	err = file.open(rootdir + '/' + filename, File.READ)
-	if err != OK:
-		print('An error occurred while trying to access the chosen score file: ', err)
-		return err
-	var result_json = JSON.parse(file.get_as_text())
-	file.close()
-	if result_json.error != OK:
-		print('Error: ', result_json.error)
-		print('Error Line: ', result_json.error_line)
-		print('Error String: ', result_json.error_string)
-		return result_json.error
-	var result = result_json.result
+	var result = FileLoader.load_json('scores/%s'%filename)
+	if not (result is Dictionary):
+		print('An error occurred while trying to access the chosen score file: ', result)
+		return result
 	var data = {}
 	for key in result.score_data:
 		var value = {}
@@ -106,11 +72,8 @@ func load_score(filename):
 	set_menu_mode(MenuMode.SCORE_SCREEN)
 
 func _ready():
-	print('user:// root is: ', OS.get_user_data_dir())
-	print('Root for songs and scores is: ', userroot)
 	scan_library()
 	NoteHandler.connect('finished_song', self, 'finished_song')
-#	load_score('20191211T234131.json')  # For testing purposes
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -141,7 +104,8 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	var diff_color := GameTheme.COLOR_DIFFICULTY[difficulty*2]
 	var rect := Rect2(position.x, position.y, size, size)
 	draw_rect(Rect2(position.x - outline_px, position.y - outline_px, size + outline_px*2, size + outline_px*2), diff_color)
-	draw_texture_rect(song_images[song_key], rect, false)
+#	draw_texture_rect(song_images[song_key], rect, false)
+	draw_texture_rect(Library.get_song_tile_texture(song_key), rect, false)
 	# Draw track difficulty rating
 	draw_string_centered(GenreFont, Vector2(position.x+size-24, position.y+size-56), song_defs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], 0), diff_color)
 	if title_text:

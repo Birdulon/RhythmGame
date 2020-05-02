@@ -9,9 +9,9 @@ class MultilangStr:
 	var en := '' setget set_english
 	func _init(native='', translit='', english=''):
 		self.n = native
-		if not translit.empty():
+		if translit and not translit.empty():
 			self.tl = translit
-		if not english.empty:
+		if english and not english.empty():
 			self.en = english
 #	func get_native() -> String:
 #		return n
@@ -39,6 +39,7 @@ class Song:
 	var bpm_values: Array
 	var dynamic_bpm: bool
 	var genre: String
+	var filepath: String  # For now this excludes the 'songs/' bit.
 	var tile_filename: String
 	var audio_filelist: Array
 	var video_filelist: Array
@@ -64,6 +65,7 @@ class Song:
 		if 'bpm' in values:
 			BPM = values['bpm']
 
+		filepath = values.get('filepath', '')
 		tile_filename = values.get('tile_filename', '%s.png'%values.get('index', 'tile'))
 		audio_filelist = values.get('audio_filelist', ['%s.ogg'%values.get('index', 'audio')])
 		video_filelist = values.get('video_filelist', ['%s.webm'%values.get('index', 'video')])
@@ -92,18 +94,29 @@ class Song:
 
 
 var all_songs = {}
-var genre_ids = {}
-var genre_titles = []
-var genre_songs = []
+var genre_ids = {}  # String: int
+var genre_titles = []  # Strings
+var genre_songs = []  # Dictionaries of key: Song
 
 var tile_tex_cache = {}  # We'll need some way of managing this later since holding all the tiles in memory might be expensive
 var charts_cache = {}
+
+func add_song(key: String, data: Dictionary):
+	if not data.has('index'):
+		data['index'] = key
+	var song = Song.new(data)
+	all_songs[key] = song
+	if not genre_ids.has(song.genre):
+		genre_ids[song.genre] = len(genre_titles)
+		genre_titles.append(song.genre)
+		genre_songs.append({})
+	genre_songs[genre_ids[song.genre]][key] = song
 
 func get_song_tile_texture(song_key):
 	if song_key in tile_tex_cache:
 		return tile_tex_cache[song_key]
 	elif song_key in all_songs:
-		tile_tex_cache[song_key] = load(all_songs[song_key].tile_filename)
+		tile_tex_cache[song_key] = FileLoader.load_image('songs/' + all_songs[song_key].filepath.rstrip('/') + '/' + all_songs[song_key].tile_filename)
 		return tile_tex_cache[song_key]
 	else:
 		print_debug('Invalid song_key: ', song_key)
@@ -112,7 +125,7 @@ func get_song_charts(song_key):
 	if song_key in charts_cache:
 		return charts_cache[song_key]
 	elif song_key in all_songs:
-		charts_cache[song_key] = FileLoader.load_filelist(all_songs[song_key].chart_filelist)
+		charts_cache[song_key] = FileLoader.load_filelist(all_songs[song_key].chart_filelist, all_songs[song_key].filepath)
 		return charts_cache[song_key]
 	else:
 		print_debug('Invalid song_key: ', song_key)
