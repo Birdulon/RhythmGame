@@ -4,7 +4,7 @@ extends Node
 var receptor_ring_radius := 460.0
 var note_forecast_beats := 2.0  # Notes start to appear this many beats before you need to tap them
 const INNER_NOTE_CIRCLE_RATIO := 0.3  # Notes under this far from the center will zoom into existence
-const SLIDE_DELAY := 0.5  # Time in beats between the tap of the star and the start of the visual slide
+const SLIDE_DELAY := 0.5  #0.125  #0.5  # Time in beats between the tap of the star and the start of the visual slide
 
 var sprite_size := 128
 var sprite_size2 := sprite_size/2

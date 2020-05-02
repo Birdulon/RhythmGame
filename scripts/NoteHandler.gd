@@ -565,21 +565,19 @@ func _ready():
 	InputHandler.connect('button_released', self, 'button_released')
 	InputHandler.connect('touchbutton_released', self, 'touchbutton_released')
 
-func load_track(data: Dictionary, difficulty_idx: int):
+func load_track(song_key: String, difficulty_idx: int):
+	self.song_key = song_key
 	set_time(-3.0)
 	active_notes = []
 	all_notes = []
 	next_note_to_load = 0
-	self.song_key = data.directory.rsplit('/', true, 1)[1]
-	all_notes = FileLoader.SRT.load_file(data.directory + '/' + data.chart_filelist[difficulty_idx])
-	bpm = data.bpm_values[0]
+	all_notes = Library.get_song_charts(song_key).values()[difficulty_idx]
+	var data = Library.all_songs[song_key]
+	bpm = data.BPM
 	sync_offset_audio = data.audio_offsets[0]
 	sync_offset_video = data.video_offsets[0]
-	var audiostream = FileLoader.direct_load_ogg(data.directory + '/' + data.audio_filelist[0])
-	var videostream = load(data.directory + '/' + data.video_filelist[0])
-
-	MusicPlayer.set_stream(audiostream)
-	VideoPlayer.set_stream(videostream)
+	MusicPlayer.set_stream(FileLoader.load_ogg('songs/' + data.filepath.rstrip('/') + '/' + data.audio_filelist[0]))
+	VideoPlayer.set_stream(FileLoader.load_video('songs/' + data.filepath.rstrip('/') + '/' + data.video_filelist[0]))
 	VideoPlayer.update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
 #	all_notes = FileLoader.Test.stress_pattern()
 
@@ -648,11 +646,11 @@ func _process(delta):
 			timer.connect('timeout', timer, 'queue_free')
 
 	var vt_delta := time - video_start_time()
-	if (0.0 <= vt_delta) and (vt_delta < 1.0) and not VideoPlayer.is_playing():
+	if (0.0 <= vt_delta) and (vt_delta < 3.0) and not VideoPlayer.is_playing():
 		VideoPlayer.play()
 		VideoPlayer.set_stream_position(vt_delta)
 	var at_delta := time - audio_start_time()
-	if (0.0 <= at_delta) and (at_delta < 1.0) and not MusicPlayer.is_playing():
+	if (0.0 <= at_delta) and (at_delta < 3.0) and not MusicPlayer.is_playing():
 #		MusicPlayer.play()
 #		MusicPlayer.seek(at_delta)
 		MusicPlayer.play(at_delta)

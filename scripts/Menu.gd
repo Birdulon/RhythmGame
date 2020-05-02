@@ -93,7 +93,7 @@ func _process(delta):
 	if (menu_mode == MenuMode.GAMEPLAY) and (menu_mode_prev_fade_timer <= 0.0) and not NoteHandler.running:
 		var songslist = genres[genres.keys()[selected_genre]]
 		var song_key = songslist[selected_song % len(songslist)]
-		NoteHandler.load_track(song_defs[song_key], selected_difficulty)
+		NoteHandler.load_track(song_key, selected_difficulty)
 		NoteHandler.running = true
 
 func draw_string_centered(font, position, string, color := Color.white):
@@ -187,7 +187,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 
 
 	# TODO: This is relatively expensive so we probably want to calculate this stuff once instead of every frame
-	var all_notes = FileLoader.SRT.load_file(song_defs[song_key].directory + '/' + song_defs[song_key].chart_filelist[selected_difficulty])
+	var all_notes = Library.get_song_charts(song_key).values()[selected_difficulty]
 	var note_counts = {Note.NOTE_TAP: 0, Note.NOTE_HOLD: 0, Note.NOTE_STAR: 0}
 	for note in all_notes:
 		if note.type in note_counts:

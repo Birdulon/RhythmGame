@@ -69,11 +69,13 @@ class Song:
 		tile_filename = values.get('tile_filename', '%s.png'%values.get('index', 'tile'))
 		audio_filelist = values.get('audio_filelist', ['%s.ogg'%values.get('index', 'audio')])
 		video_filelist = values.get('video_filelist', ['%s.webm'%values.get('index', 'video')])
+		audio_offsets = values.get('audio_filelist', [240.0/BPM])
+		video_offsets = values.get('video_filelist', [240.0/BPM])
 		video_dimensions = values.get('video_dimensions', [1.0, 1.0])
 		audio_preview_times = values.get('video_dimensions', [1.0, 1.0])
 		genre = values.get('genre', 'None')
 
-		chart_filelist = values.get('chart_filelist', ['%s.rtgm'%values.get('index', 'charts')])
+		chart_filelist = values.get('chart_filelist', ['%s.rgtm'%values.get('index', 'charts')])
 
 		var diffs = values['chart_difficulties']
 		match typeof(diffs):
@@ -125,7 +127,7 @@ func get_song_charts(song_key):
 	if song_key in charts_cache:
 		return charts_cache[song_key]
 	elif song_key in all_songs:
-		charts_cache[song_key] = FileLoader.load_filelist(all_songs[song_key].chart_filelist, all_songs[song_key].filepath)
+		charts_cache[song_key] = FileLoader.load_filelist(all_songs[song_key].chart_filelist, 'songs/'+all_songs[song_key].filepath)
 		return charts_cache[song_key]
 	else:
 		print_debug('Invalid song_key: ', song_key)

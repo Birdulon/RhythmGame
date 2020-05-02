@@ -14,7 +14,7 @@ const ERROR_CODES := [
 ]
 
 var userroot := OS.get_user_data_dir().rstrip('/')+'/' if OS.get_name() != 'Android' else '/storage/emulated/0/RhythmGame/'
-var PATHS := [userroot]
+var PATHS := [userroot, '/media/fridge-q/Games/Other/maimai Finale/decoded/RhythmGameCharts/slow_userdir/']  # Temporary hardcoded testing
 # The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission('WRITE_EXTERNAL_STORAGE')
 # '/storage/emulated/0/Android/data/au.ufeff.rhythmgame/'
 # '/sdcard/Android/data/au.ufeff.rhythmgame/'
@@ -286,6 +286,7 @@ class RGT:
 	static func parse_rgtx(lines):
 		return []  # To be implemented later
 
+	const beats_per_measure = 4.0  # TODO: Bit of an ugly hack, need to revisit this later
 	static func parse_rgts(lines):
 		var notes = []
 		var slide_ids = {}
@@ -298,12 +299,12 @@ class RGT:
 			if len(line) < 4:  # shortest legal line would be like '1:1t'
 				continue
 			var s = line.split(':')
-			var time = float(s[0])
+			var time = float(s[0]) * beats_per_measure
 			var note_hits = []
 			var note_nonhits = []
 			for i in range(1, len(s)):
 				var n = s[i]
-				var column = n[0]
+				var column = int(n[0])
 				var ntype = n[1]
 				n = n.substr(2)
 
@@ -313,7 +314,7 @@ class RGT:
 					'b':  # break
 						note_hits.append(Note.NoteTap.new(time, column, true))
 					'h':  # hold
-						var duration = float(n)
+						var duration = float(n) * beats_per_measure
 						note_hits.append(Note.NoteHold.new(time, column, duration))
 					's':  # slide star
 						var star = Note.NoteStar.new(time, column)
@@ -571,6 +572,12 @@ func load_filelist(filelist: Array, directory=''):
 	for filename in filelist:
 		var extension: String = filename.rsplit('.', true, 1)[-1]
 		filename = directory.rstrip('/') + '/' + filename
+		var file = File.new()
+		for root in PATHS:
+			var filename1 = root + filename
+			if file.file_exists(filename1):
+				filename = filename1
+				break
 		match extension:
 			'rgtm':  # multiple charts
 				var res = RGT.load_file(filename)
@@ -607,6 +614,15 @@ func load_ogg(filename) -> AudioStreamOGGVorbis:
 		if file.file_exists(filename1):
 			return direct_load_ogg(filename1)
 	return fallback_audiostream
+
+var fallback_videostream = VideoStreamWebm.new()
+func load_video(filename):
+	var file = File.new()
+	for root in PATHS:
+		var filename1 = root + filename
+		if file.file_exists(filename1):
+			return load(filename1)
+	return fallback_videostream
 
 func direct_load_image(filename) -> ImageTexture:
 	var tex := ImageTexture.new()
