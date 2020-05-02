@@ -12,6 +12,14 @@ var tex_judgement_text := preload('res://assets/text-4k.png')
 var tex_slide_arrow := preload('res://assets/slide-arrow-4k.png')
 var slide_trail_shadermaterial := preload('res://shaders/slidetrail.tres')
 
+export var MusicPlayerPath := @'/root/main/music'
+export var VideoPlayerPath := @'/root/main/video'
+export var InputHandlerPath := @'/root/main/InputHandler'
+onready var MusicPlayer := get_node(MusicPlayerPath)
+onready var VideoPlayer := get_node(VideoPlayerPath)
+onready var InputHandler := get_node(InputHandlerPath)
+
+onready var Painter = $Painter
 onready var SlideTrailHandler = $'Viewport/Center/SlideTrailHandler'
 onready var JudgeText = $'Viewport/Center/JudgeText'
 onready var notelines = $'Viewport/Center/notelines'
@@ -372,10 +380,10 @@ func check_hold_release(col):
 func button_released(col):
 	# We only care about hold release.
 	# For that particular case, we want both to be unheld.
-	if $'/root/main/InputHandler'.touchbuttons_pressed[col] == 0:
+	if InputHandler.touchbuttons_pressed[col] == 0:
 		check_hold_release(col)
 func touchbutton_released(col):
-	if $'/root/main/InputHandler'.buttons_pressed[col] == 0:
+	if InputHandler.buttons_pressed[col] == 0:
 		check_hold_release(col)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
@@ -552,10 +560,10 @@ func _ready():
 	noteline_array_image.fill(Color(0.0, 0.0, 0.0))
 	# Format: first 15 rows are for hit events, last row is for releases only (no ring glow)
 
-	$'/root/main/InputHandler'.connect('button_pressed', self, 'button_pressed')
-	$'/root/main/InputHandler'.connect('touchbutton_pressed', self, 'touchbutton_pressed')
-	$'/root/main/InputHandler'.connect('button_released', self, 'button_released')
-	$'/root/main/InputHandler'.connect('touchbutton_released', self, 'touchbutton_released')
+	InputHandler.connect('button_pressed', self, 'button_pressed')
+	InputHandler.connect('touchbutton_pressed', self, 'touchbutton_pressed')
+	InputHandler.connect('button_released', self, 'button_released')
+	InputHandler.connect('touchbutton_released', self, 'touchbutton_released')
 
 func load_track(data: Dictionary, difficulty_idx: int):
 	set_time(-3.0)
@@ -570,9 +578,9 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	var audiostream = FileLoader.load_ogg(data.directory + '/' + data.audio_filelist[0])
 	var videostream = load(data.directory + '/' + data.video_filelist[0])
 
-	$'/root/main/music'.set_stream(audiostream)
-	$'/root/main/video'.set_stream(videostream)
-	$'/root/main/video'.update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
+	MusicPlayer.set_stream(audiostream)
+	VideoPlayer.set_stream(videostream)
+	VideoPlayer.update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
 #	all_notes = FileLoader.Test.stress_pattern()
 
 	Note.process_note_list(all_notes)
@@ -588,8 +596,8 @@ func load_track(data: Dictionary, difficulty_idx: int):
 	initialise_scores()  # Remove old score
 
 func stop():
-	$'/root/main/music'.stop()
-	$'/root/main/video'.stop()
+	MusicPlayer.stop()
+	VideoPlayer.stop()
 #	running = false
 	next_note_to_load = 1000000  # Hacky but whatever
 
@@ -639,17 +647,15 @@ func _process(delta):
 			timer.start()
 			timer.connect('timeout', timer, 'queue_free')
 
-#	if (t_old < 0) and (t >= 0):
-#		get_node('/root/main/video').play()
 	var vt_delta := time - video_start_time()
-	if (0.0 <= vt_delta) and (vt_delta < 1.0) and not get_node('/root/main/video').is_playing():
-		get_node('/root/main/video').play()
-		get_node('/root/main/video').set_stream_position(vt_delta)
+	if (0.0 <= vt_delta) and (vt_delta < 1.0) and not VideoPlayer.is_playing():
+		VideoPlayer.play()
+		VideoPlayer.set_stream_position(vt_delta)
 	var at_delta := time - audio_start_time()
-	if (0.0 <= at_delta) and (at_delta < 1.0) and not get_node('/root/main/music').is_playing():
-#		get_node('/root/main/music').play()
-#		get_node('/root/main/music').seek(at_delta)
-		get_node('/root/main/music').play(at_delta)
+	if (0.0 <= at_delta) and (at_delta < 1.0) and not MusicPlayer.is_playing():
+#		MusicPlayer.play()
+#		MusicPlayer.seek(at_delta)
+		MusicPlayer.play(at_delta)
 
 	# Clean out expired notes
 	var miss_time: float = Rules.JUDGEMENT_TIMES_POST[-1] * bpm/60.0
@@ -714,8 +720,8 @@ func _process(delta):
 
 	if (
 		next_note_to_load >= len(all_notes)
-		and not get_node('/root/main/video').is_playing()
-		and not get_node('/root/main/music').is_playing()
+		and not VideoPlayer.is_playing()
+		and not MusicPlayer.is_playing()
 		and active_notes.empty()
 		and active_judgement_texts.empty()
 		and slide_trail_mesh_instances.empty()
@@ -727,4 +733,4 @@ func _process(delta):
 	# Redraw
 	meshinstance.material.set_shader_param('screen_size', get_viewport().get_size())
 	update()
-	$Painter.update()
+	Painter.update()
