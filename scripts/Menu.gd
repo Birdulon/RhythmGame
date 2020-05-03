@@ -105,7 +105,7 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	# Draw track difficulty rating
 	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), Library.all_songs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], '0'), diff_color)
 	if title_text:
-		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), Library.all_songs[song_key].title.n, Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), Library.all_songs[song_key].title.n, diff_color.lightened(0.33))
 	return rect
 
 func diffstr(difficulty: float):
@@ -117,6 +117,7 @@ func _draw_song_select(center: Vector2) -> Array:
 	var size = 128
 	var spacer_x = 12
 	var spacer_y = 64
+	var title_spacer_y = 48
 	var sel_scales := [1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var bg_scales := [0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var gy := center.y -300
@@ -142,7 +143,7 @@ func _draw_song_select(center: Vector2) -> Array:
 		var gx = center.x - (subsize + spacer_x) * selected_song_delta
 		var songslist = Library.genre_songs[g].keys()
 		var genre_str = genres.keys()[g] + ' (%d)'%len(songslist)
-		draw_string_centered(GenreFont, Vector2(center.x, gy), genre_str)
+		draw_string_centered(GenreFont, Vector2(center.x, gy), genre_str, Color.aqua)
 		var s = len(songslist)
 		var key = songslist[selected_song_vis % s]
 		var y = gy + spacer_y
@@ -162,7 +163,7 @@ func _draw_song_select(center: Vector2) -> Array:
 			subsize = size * scales[-i]
 			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x - subsize, y), subsize)
 			touchrects.append({rect=r, song_idx=selected_song_vis-i, genre_idx=g})
-		gy += size*base_scales[0] + (spacer_y * (2 if selected else 1))
+		gy += size*base_scales[0] + spacer_y + (title_spacer_y if selected else 0)
 	return touchrects
 
 func _draw_chart_select(center: Vector2) -> Array:
