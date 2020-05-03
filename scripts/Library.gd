@@ -49,7 +49,7 @@ class Song:
 	var audio_preview_times: Array
 	var video_dimensions: Array
 	var chart_difficulties: Dictionary
-	const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R']
+	const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R', '宴']
 
 	func _init(values: Dictionary):
 		title = MultilangStr.new(values.get('title', ''), values.get('title_transliteration', ''), values.get('title_english', ''))
@@ -69,8 +69,8 @@ class Song:
 		tile_filename = values.get('tile_filename', '%s.png'%values.get('index', 'tile'))
 		audio_filelist = values.get('audio_filelist', ['%s.ogg'%values.get('index', 'audio')])
 		video_filelist = values.get('video_filelist', ['%s.webm'%values.get('index', 'video')])
-		audio_offsets = values.get('audio_filelist', [240.0/BPM])
-		video_offsets = values.get('video_filelist', [240.0/BPM])
+		audio_offsets = values.get('audio_filelist', [0.0, 240.0/BPM])
+		video_offsets = values.get('video_filelist', [0.0, 240.0/BPM])
 		video_dimensions = values.get('video_dimensions', [1.0, 1.0])
 		audio_preview_times = values.get('video_dimensions', [1.0, 1.0])
 		genre = values.get('genre', 'None')

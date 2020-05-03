@@ -57,7 +57,7 @@ window/stretch/aspect="keep_height"
 
 [gdnative]
 
-singletons=[ "res://addons/videodecoder.gdnlib" ]
+singletons=[  ]
 singletons_disabled=[  ]
 
 [rendering]

@@ -6,8 +6,6 @@ var NoteHandlerPath := @'/root/main/NoteHandler'
 onready var NoteHandler := get_node(NoteHandlerPath)
 onready var ScoreText := $ScoreText
 
-var song_defs = {}
-var song_images = {}
 var genres = {}
 
 enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
@@ -40,8 +38,6 @@ var snd_interact := preload('res://assets/softclap.wav')
 
 func scan_library():
 	var results = FileLoader.scan_library()
-	song_defs = results.song_defs
-	song_images = results.song_images
 	genres = results.genres
 
 func save_score() -> int:
@@ -105,12 +101,11 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	var diff_color := GameTheme.COLOR_DIFFICULTY[difficulty*2]
 	var rect := Rect2(position.x, position.y, size, size)
 	draw_rect(Rect2(position.x - outline_px, position.y - outline_px, size + outline_px*2, size + outline_px*2), diff_color)
-#	draw_texture_rect(song_images[song_key], rect, false)
 	draw_texture_rect(Library.get_song_tile_texture(song_key), rect, false)
 	# Draw track difficulty rating
-	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), song_defs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], 0), diff_color)
+	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), Library.all_songs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], '0'), diff_color)
 	if title_text:
-		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), song_defs[song_key]['title'], Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), Library.all_songs[song_key].title.n, Color(0.95, 0.95, 1.0))
 	return rect
 
 func diffstr(difficulty: float):
@@ -145,9 +140,9 @@ func _draw_song_select(center: Vector2) -> Array:
 
 		var subsize = size * scales[0]
 		var gx = center.x - (subsize + spacer_x) * selected_song_delta
-		var genre = genres.keys()[g]
-		draw_string_centered(GenreFont, Vector2(center.x, gy), genre)
-		var songslist = genres[genre]
+		var songslist = Library.genre_songs[g].keys()
+		var genre_str = genres.keys()[g] + ' (%d)'%len(songslist)
+		draw_string_centered(GenreFont, Vector2(center.x, gy), genre_str)
 		var s = len(songslist)
 		var key = songslist[selected_song_vis % s]
 		var y = gy + spacer_y
@@ -182,7 +177,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 		var r = draw_songtile(song_key, Vector2(x, center.y), size, false, diff, (9 if diff == selected_difficulty else 3))
 		touchrects.append({rect=r, chart_idx=diff})
 		x += size + spacer_x
-	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+64), song_defs[song_key]['title'], Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+64), Library.all_songs[song_key].title.n, Color(0.95, 0.95, 1.0))
 	touchrects.append({rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1})
 
 
@@ -223,7 +218,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var judgement_text_height = 64 * judgement_text_scale
 
 	draw_songtile(song_key, Vector2(x_songtile-size/2.0, y), size, false, selected_difficulty, 3)
-	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), song_defs[song_key]['title'], Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), Library.all_songs[song_key].title.n, Color(0.95, 0.95, 1.0))
 	var notestrs = ['Taps:', 'Holds Hit:', 'Released:', 'Stars:', 'Slides:']
 	var notetypes = [0, 1, -1, 2, -2]
 	var note_spacing = [0.0, 1.25, 2.25, 3.5, 4.5]
@@ -316,7 +311,7 @@ func _draw_gameplay(center: Vector2) -> Array:
 
 
 func _draw():
-	var songs = len(song_defs)
+	var songs = len(Library.all_songs)
 	var size = 216
 	var outline_px = 3
 	var center = Vector2(540.0, 540.0-160.0)  # Vector2(0.0, -160.0)

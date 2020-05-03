@@ -622,6 +622,9 @@ func load_video(filename):
 		var filename1 = root + filename
 		if file.file_exists(filename1):
 			return load(filename1)
+#			var videostream = VideoStreamGDNative.new()
+#			videostream.set_file(filename1)
+#			return videostream
 	return fallback_videostream
 
 func direct_load_image(filename) -> ImageTexture:

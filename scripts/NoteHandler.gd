@@ -576,8 +576,9 @@ func load_track(song_key: String, difficulty_idx: int):
 	bpm = data.BPM
 	sync_offset_audio = data.audio_offsets[0]
 	sync_offset_video = data.video_offsets[0]
+	var videostream = FileLoader.load_video('songs/' + data.filepath.rstrip('/') + '/' + data.video_filelist[0])
 	MusicPlayer.set_stream(FileLoader.load_ogg('songs/' + data.filepath.rstrip('/') + '/' + data.audio_filelist[0]))
-	VideoPlayer.set_stream(FileLoader.load_video('songs/' + data.filepath.rstrip('/') + '/' + data.video_filelist[0]))
+	VideoPlayer.set_stream(videostream)
 	VideoPlayer.update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
 #	all_notes = FileLoader.Test.stress_pattern()
 
@@ -634,7 +635,7 @@ func _process(delta):
 
 	if (not timers_set) and (t > -5.0):
 		timers_set = true
-		for i in [-4.0, -3.0, -2.0, -1.0]:
+		for i in [-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]:
 			var delay := real_time(i) - time
 			var timer = Timer.new()
 			add_child(timer)
