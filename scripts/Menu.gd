@@ -267,7 +267,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 		total_score += note_score * notetype_weights[i]
 		total_scoremax += note_count * notetype_weights[i]
 
-	var overall_score = total_score/total_scoremax
+	var overall_score = total_score/max(total_scoremax, 1.0)
 	var score_idx = 0
 	for cutoff in Rules.SCORE_CUTOFFS:
 		if overall_score >= cutoff:
@@ -313,6 +313,7 @@ func _draw_gameplay(center: Vector2) -> Array:
 
 func _draw():
 	var songs = len(Library.all_songs)
+	var score_screen_filter_alpha := 0.65
 	var size = 216
 	var outline_px = 3
 	var center = Vector2(540.0, 540.0-160.0)  # Vector2(0.0, -160.0)
@@ -333,7 +334,7 @@ func _draw():
 			MenuMode.OPTIONS:
 				pass
 			MenuMode.GAMEPLAY:
-				GameTheme.set_screen_filter_alpha(progress)
+				GameTheme.set_screen_filter_alpha(lerp(0.0, score_screen_filter_alpha, progress))
 			MenuMode.SCORE_SCREEN:
 				_draw_score_screen(center_prev)
 		match menu_mode:
@@ -362,7 +363,7 @@ func _draw():
 				GameTheme.set_screen_filter_alpha(0.0)
 				touch_rects[menu_mode] = _draw_gameplay(center)
 			MenuMode.SCORE_SCREEN:
-				GameTheme.set_screen_filter_alpha(1.0)
+				GameTheme.set_screen_filter_alpha(score_screen_filter_alpha)
 				touch_rects[menu_mode] = _draw_score_screen(center)
 				ScoreText.show()
 

@@ -296,10 +296,6 @@ func activate_note(note, judgement):
 	match note.type:
 		Note.NOTE_HOLD:
 			note.is_held = true
-		Note.NOTE_SLIDE:
-			# Set up slide trail?
-			active_slide_trails.append(note)
-			note.progress = 0.0
 
 func activate_note_release(note, judgement):
 	# Only for Hold, Slide
@@ -398,17 +394,21 @@ func _draw():
 	for note in active_notes:
 		var position : float = (t+GameTheme.note_forecast_beats-note.time_hit)/GameTheme.note_forecast_beats
 		var scale := 1.0
-		noteline_data.set_pixel(
-			i%16, i/16, Color(
-				position/arr_div.x,
-				note.column/arr_div.y,
-				GameTheme.RADIAL_COL_ANGLES[note.column]/arr_div.z
+
+		if note.hittable:
+			noteline_data.set_pixel(
+				i%16, i/16, Color(
+					position/arr_div.x,
+					note.column/arr_div.y,
+					GameTheme.RADIAL_COL_ANGLES[note.column]/arr_div.z
+				)
 			)
-		)
-		i += 1
+			i += 1
+
 		if position < GameTheme.INNER_NOTE_CIRCLE_RATIO:
 			scale *= position/GameTheme.INNER_NOTE_CIRCLE_RATIO
 			position = GameTheme.INNER_NOTE_CIRCLE_RATIO
+
 		var note_center = (GameTheme.RADIAL_UNIT_VECTORS[note.column] * position * GameTheme.receptor_ring_radius)
 		var color: PoolColorArray
 		match note.type:
@@ -491,7 +491,7 @@ func _input(event):
 	for i in range(len(active_slide_trails)-1, -1, -1):
 		var note = active_slide_trails[i]
 		var center = note.get_position(note.progress)
-		if (pos - center).length_squared() < 10000.0:
+		if (pos - center).length_squared() < Rules.SLIDE_RADIUS2:
 			note.progress += 0.09
 			if note.progress >= 1.0:
 				do_slide_release(note)
@@ -569,9 +569,10 @@ func load_track(song_key: String, difficulty_idx: int):
 	self.song_key = song_key
 	set_time(-3.0)
 	active_notes = []
-	all_notes = []
 	next_note_to_load = 0
-	all_notes = Library.get_song_charts(song_key).values()[difficulty_idx]
+	all_notes = []
+	for note in Library.get_song_charts(song_key).values()[difficulty_idx]:
+		all_notes.append(Note.copy_note(note))
 	var data = Library.all_songs[song_key]
 	bpm = data.BPM
 	sync_offset_audio = data.audio_offsets[0]
@@ -582,7 +583,7 @@ func load_track(song_key: String, difficulty_idx: int):
 	VideoPlayer.update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
 #	all_notes = FileLoader.Test.stress_pattern()
 
-	Note.process_note_list(all_notes)
+	Note.process_note_list(all_notes, false)
 	for note in all_notes:
 		if note.type == Note.NOTE_SLIDE:
 			slide_trail_meshes[note.slide_id] = make_slide_trail_mesh(note)
@@ -670,7 +671,7 @@ func _process(delta):
 					SlideTrailHandler.remove_child(slide_trail_mesh_instances[note.slide_id])
 					slide_trail_mesh_instances.erase(note.slide_id)
 					var idx = active_slide_trails.find(note)
-					if idx >= 0:
+					if idx > -1:
 						active_slide_trails.remove(idx)
 						make_judgement_column('MISS', note.column_release)
 						scores[Note.NOTE_SLIDE]['MISS'] += 1

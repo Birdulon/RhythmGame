@@ -127,7 +127,6 @@ func _input(event):
 # write how many fingers are tapping the screen
 func set_fingers(value):
 	fingers = max(value, 0)
-#	set_text("Fingers: %d" % fingers)
 
 func set_button_state(index: int, state: bool):
 	var new_state = int(state)

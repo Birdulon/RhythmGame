@@ -13,7 +13,7 @@ const RELEASE_SCORE_TYPES := {
 	NOTE_ROLL: -NOTE_ROLL
 }
 
-class NoteBase:
+class NoteBase extends Resource:
 	var time_hit: float setget set_time_hit
 	var time_death: float
 	var column: int
@@ -172,6 +172,22 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 				return fposmod(GameTheme.RADIAL_COL_ANGLES[column] - GameTheme.RADIAL_COL_ANGLES[column_release], TAU)
 		return 0.0
 
+static func copy_note(note: NoteBase):
+	# Honestly disappointed I couldn't find a better, more OOP solution for this.
+	var newnote: NoteBase
+	match note.type:
+		NOTE_TAP:
+			newnote = NoteTap.new(note.time_hit, note.column, note.is_break)
+		NOTE_STAR:
+			newnote = NoteStar.new(note.time_hit, note.column, note.is_break)
+		NOTE_HOLD:
+			newnote = NoteHold.new(note.time_hit, note.column, note.duration)
+		NOTE_SLIDE:
+			newnote = NoteSlide.new(note.time_hit, note.column, note.duration, note.column_release, note.slide_type)
+		NOTE_ROLL:
+			newnote = NoteRoll.new(note.time_hit, note.column, note.duration)
+	newnote.double_hit = note.double_hit
+	return newnote
 
 static func make_slide(time_hit: float, duration: float, column: int, column_release: int, slide_type:=SlideType.CHORD) -> NoteSlide:
 	return NoteSlide.new(time_hit, column, duration, column_release, slide_type)
