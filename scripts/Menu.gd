@@ -119,7 +119,7 @@ func _draw_song_select(center: Vector2) -> Array:
 	var spacer_y = 64
 	var sel_scales := [1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var bg_scales := [0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096]
-	var gy := center.y -250
+	var gy := center.y -300
 	var touchrects := []
 
 	for g in len(genres):
@@ -162,7 +162,7 @@ func _draw_song_select(center: Vector2) -> Array:
 			subsize = size * scales[-i]
 			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x - subsize, y), subsize)
 			touchrects.append({rect=r, song_idx=selected_song_vis-i, genre_idx=g})
-		gy += size*base_scales[0] + (spacer_y * 2)
+		gy += size*base_scales[0] + (spacer_y * (2 if selected else 1))
 	return touchrects
 
 func _draw_chart_select(center: Vector2) -> Array:
