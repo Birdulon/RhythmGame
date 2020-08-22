@@ -86,31 +86,30 @@ func scan_library():
 
 	var song_defs = {}
 	var collections = {}
-	var song_images = {}
 	var genres = {}
 	dir.open(rootdir)
-	for key in songslist.folders:
-		if dir.file_exists(key + '/song.json'):
+	for folder in songslist.folders:
+		var full_folder := '%s/%s' % [rootdir, folder]
+
+		if dir.file_exists(folder + '/song.json'):
 			# Our format
-			song_defs[key] = FileLoader.load_folder('%s/%s' % [rootdir, key])
-			print('Loaded song directory: %s' % key)
-#			song_images[key] = FileLoader.load_image('%s/%s' % [key, song_defs[key]['tile_filename']])
-			if song_defs[key]['genre'] in genres:
-				genres[song_defs[key]['genre']].append(key)
+			song_defs[folder] = FileLoader.load_folder(full_folder)
+			print('Loaded song directory: %s' % folder)
+			if song_defs[folder]['genre'] in genres:
+				genres[song_defs[folder]['genre']].append(folder)
 			else:
-				genres[song_defs[key]['genre']] = [key]
-			if typeof(song_defs[key]['chart_difficulties']) == TYPE_ARRAY:
-				var diffs = song_defs[key]['chart_difficulties']
+				genres[song_defs[folder]['genre']] = [folder]
+			if typeof(song_defs[folder]['chart_difficulties']) == TYPE_ARRAY:
+				var diffs = song_defs[folder]['chart_difficulties']
 				var chart_difficulties = {}
 				for i in min(len(diffs), len(default_difficulty_keys)):
 					chart_difficulties[default_difficulty_keys[i]] = diffs[i]
-				song_defs[key]['chart_difficulties'] = chart_difficulties
+				song_defs[folder]['chart_difficulties'] = chart_difficulties
 
-		elif dir.file_exists(key + '/collection.json'):
-			var dir_collection = '%s/%s' % [rootdir, key]
-			var collection = FileLoader.load_folder(dir_collection, 'collection')
-			collections[key] = collection
-			var base_dict = {'filepath': key+'/'}  # Top level of the collection dict contains defaults for every song in it
+		elif dir.file_exists(folder + '/collection.json'):
+			var collection = FileLoader.load_folder(full_folder, 'collection')
+			collections[folder] = collection
+			var base_dict = {'filepath': folder+'/'}  # Top level of the collection dict contains defaults for every song in it
 			for key in collection.keys():
 				if key != 'songs':
 					base_dict[key] = collection[key]
@@ -122,26 +121,25 @@ func scan_library():
 				Library.add_song(song_key, song_def)
 				# Legacy compat stuff
 				song_defs[song_key] = song_def
-#				song_images[song_key] = FileLoader.load_image('%s/%s/%s.png' % [rootdir, key, song_key])
 				if song_defs[song_key]['genre'] in genres:
 					genres[song_defs[song_key]['genre']].append(song_key)
 				else:
 					genres[song_defs[song_key]['genre']] = [song_key]
 
 		else:
-			var files_by_ext = find_by_extensions(directory_list(rootdir + '/' + key, false).files)
+			var files_by_ext = find_by_extensions(directory_list(full_folder, false).files)
 			if 'sm' in files_by_ext:
 				var sm_filename = files_by_ext['sm'][0]
 				print(sm_filename)
-				var thing = SM.load_file(rootdir + '/' + key + '/' + sm_filename)
+				var thing = SM.load_file(full_folder + '/' + sm_filename)
 				print(thing)
 				pass
 			else:
-				print('Found non-song directory: ' + key)
+				print('Found non-song directory: ' + folder)
 	for file in songslist.files:
 		print('Found file: ' + file)
 
-	return {song_defs=song_defs, song_images=song_images, genres=genres}
+	return {song_defs=song_defs, genres=genres}
 
 
 
@@ -581,8 +579,8 @@ func load_filelist(filelist: Array, directory=''):
 		match extension:
 			'rgtm':  # multiple charts
 				var res = RGT.load_file(filename)
-				for key in res:
-					charts[key] = res[key]
+				for k in res:
+					charts[k] = res[k]
 			'rgts', 'rgtx':  # single chart
 				charts[key] = RGT.load_file(filename)
 				key += 1
@@ -591,8 +589,8 @@ func load_filelist(filelist: Array, directory=''):
 				key += 1
 			'sm':  # Stepmania, multiple charts
 				var res = SM.load_file(filename)
-				for key in res:
-					charts[key] = res[key]
+				for k in res:
+					charts[k] = res[k]
 			_:
 				pass
 	return charts

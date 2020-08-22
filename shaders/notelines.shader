@@ -16,7 +16,8 @@ uniform float max_angle = 1.0708; //3.14159*0.5; //radians(90.0);
 uniform float max_dist = 1.25;
 
 // GLES2 clamps our color values that we send as makeshift arrays, so we need to divide them in code and multiply them in our shader
-uniform vec3 array_postmul = vec3(1.0);
+uniform vec3 array_postmul = vec3(2.0, 8.0, 6.283185307);
+uniform float cols_div2 = 3.999; // Used to determine opposed notes
 
 //void vertex() {
 //}
@@ -96,14 +97,14 @@ void fragment() {
 			// This note is a double!
 			last_double = true;
 			// Check for special case: directly opposite columns - full-thickness line 360°
-			if (sample.y == mod(sample2.y+4.0, 8.0)){
+//			if (sample.y == mod(sample2.y+4.0, 8.0)){
+			if (abs(sample.y-sample2.y) >= cols_div2){
 				if (diff < line_thickness){
 					line_double_alpha += (line_thickness-diff)/line_thickness;
 				}
 			} else {
 				// Find the smallest arc between them, make it fully thick
 				float diff_a2 = angle_diff(angle, sample2.z);
-//				if ((diff_a<1.5708) && (diff_a2<1.5708)){
 				if ((diff_a+diff_a2-0.0001) <= angle_diff(sample.z, sample2.z)){
 					if (diff < line_thickness){
 						line_double_alpha += (line_thickness-diff)/line_thickness;

@@ -399,7 +399,7 @@ func _draw():
 			noteline_data.set_pixel(
 				i%16, i/16, Color(
 					position/arr_div.x,
-					note.column/arr_div.y,
+					float(note.column)/arr_div.y,
 					GameTheme.RADIAL_COL_ANGLES[note.column]/arr_div.z
 				)
 			)
@@ -437,7 +437,7 @@ func _draw():
 					noteline_data.set_pixel(
 						j%16, 15, Color(
 							position_rel/arr_div.x,
-							note.column/arr_div.y,
+							float(note.column)/arr_div.y,
 							GameTheme.RADIAL_COL_ANGLES[note.column]/arr_div.z
 						)
 					)

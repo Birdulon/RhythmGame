@@ -451,7 +451,7 @@ func _input(event):
 			elif event.is_action_pressed('ui_up'):
 				selected_genre = int(max(0, selected_genre - 1))
 			elif event.is_action_pressed('ui_down'):
-				selected_genre = int(min(1, selected_genre + 1))
+				selected_genre = int(min(5, selected_genre + 1))
 			elif event.is_action_pressed('ui_page_up'):
 				selected_difficulty = int(max(0, selected_difficulty - 1))
 			elif event.is_action_pressed('ui_page_down'):
