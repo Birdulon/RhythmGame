@@ -8,9 +8,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="512"
-   height="512"
-   viewBox="0 0 512 512"
+   width="1024"
+   height="1024"
+   viewBox="0 0 1024 1024"
    version="1.1"
    id="svg8"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.0000001"
-     inkscape:cx="202.85111"
-     inkscape:cy="232.43051"
+     inkscape:zoom="1.4142136"
+     inkscape:cx="237.69457"
+     inkscape:cy="476.53435"
      inkscape:document-units="px"
      inkscape:current-layer="layerFill"
      showgrid="true"
@@ -39,15 +39,15 @@
      objecttolerance="20"
      gridtolerance="10"
      inkscape:document-rotation="0"
-     inkscape:object-nodes="false"
+     inkscape:object-nodes="true"
      inkscape:snap-smooth-nodes="false"
      inkscape:snap-object-midpoints="true"
      inkscape:snap-center="true">
     <inkscape:grid
        type="xygrid"
-       id="grid1366"
-       spacingx="32"
-       spacingy="32"
+       id="gridRect"
+       spacingx="16"
+       spacingy="16"
        empspacing="4"
        visible="true"
        snapvisiblegridlinesonly="true"
@@ -55,7 +55,7 @@
        dotted="false" />
     <inkscape:grid
        type="axonomgrid"
-       id="grid3211"
+       id="gridHexAlign"
        units="px"
        empspacing="4"
        gridanglex="30"
@@ -65,6 +65,21 @@
        originy="384"
        snapvisiblegridlinesonly="true"
        originx="384" />
+    <inkscape:grid
+       type="axonomgrid"
+       id="grid45deg"
+       originy="544"
+       units="px"
+       spacingy="5.6568542"
+       gridanglex="45"
+       gridanglez="45"
+       empspacing="6"
+       empcolor="#f2ff3f"
+       empopacity="0.25098039"
+       color="#ffea3f"
+       opacity="0.1254902"
+       originx="128"
+       enabled="false" />
   </sodipodi:namedview>
   <metadata
      id="metadata5">
@@ -74,10 +89,34 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layerOther"
+     inkscape:label="Other">
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 828,188 V 60 h 128 L 896,4 H 772 V 128 Z"
+       id="slideArrow"
+       sodipodi:nodetypes="ccccccc" />
+    <path
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 964,68 V 196 H 836 l 60,56 h 124 V 128 Z"
+       id="slideArrow2"
+       sodipodi:nodetypes="ccccccc" />
+    <path
+       style="fill:#ff0000;fill-opacity:1;stroke:#ffffff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       sodipodi:type="inkscape:offset"
+       inkscape:radius="-8"
+       inkscape:original="M 964 68 L 964 196 L 836 196 L 896 252 L 1020 252 L 1020 128 L 964 68 z "
+       xlink:href="#slideArrow2"
+       id="slideArrow2offset"
+       inkscape:href="#slideArrow2"
+       d="M 975.00781,95.925781 V 196 A 11.008471,11.008471 0 0 1 964,207.00781 H 863.92578 l 36.41211,33.98438 h 108.65431 v -108.6543 z" />
+  </g>
   <g
      inkscape:label="Outline"
      inkscape:groupmode="layer"
@@ -85,11 +124,11 @@
      style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:44;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke">
     <circle
        id="circleO"
-       cy="384"
+       cy="128"
        cx="128"
        r="96" />
     <path
-       d="m 384,288 83.13844,48 v 96 L 384,480 300.86156,432 v -96 z"
+       d="m 384,32 83.13844,48 v 96 L 384,224 300.86156,176 V 80 Z"
        id="hexagonO"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccc" />
@@ -97,7 +136,7 @@
        sodipodi:type="star"
        id="starO"
        sodipodi:sides="5"
-       sodipodi:cx="384"
+       sodipodi:cx="640"
        sodipodi:cy="128"
        sodipodi:r1="96"
        sodipodi:r2="48"
@@ -106,19 +145,28 @@
        inkscape:flatsided="false"
        inkscape:rounded="0"
        inkscape:randomized="0"
-       d="m 384,32 28.21369,57.167184 63.08774,9.167187 -45.65072,44.498449 10.77667,62.83281 L 384,176 l -56.42739,29.66563 10.77668,-62.83281 -45.65072,-44.498454 63.08774,-9.167182 z"
+       d="m 640,31.999999 28.21369,57.167184 63.08774,9.167187 -45.65072,44.49844 10.77667,62.83282 L 640,176 l -56.42739,29.66563 10.77668,-62.83281 -45.65071,-44.498455 63.08773,-9.167181 z"
        inkscape:transform-center-y="-9.1671843" />
     <path
        inkscape:connector-curvature="0"
        id="arrowO"
-       d="M 128,224 V 32 m -96,96 96,-96 96,96"
-       style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;" />
+       d="M 128,480 V 288 m -96,96 96,-96 96,96"
+       style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4" />
+    <path
+       id="thickArrowO"
+       style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4"
+       d="M 140,560 V 736 H 116 V 560 Z M 48.970563,656.97056 32,640 128,544 224,640 207.02944,656.97056 128,577.94113 Z"
+       sodipodi:nodetypes="cccccccccccc" />
+    <use
+       y="256"
+       xlink:href="#thickArrowO"
+       id="thickArrowReceptorO" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layerOutline2"
      inkscape:label="Outline2"
-     style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:36;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke">
+     style="display:inline;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:36;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke">
     <use
        xlink:href="#circleO"
        id="circleO2" />
@@ -131,12 +179,20 @@
     <use
        xlink:href="#arrowO"
        id="arrowO2" />
+    <use
+       xlink:href="#thickArrowO"
+       id="thickArrowO2" />
+    <use
+       xlink:href="#thickArrowO"
+       id="thickArrowReceptorO2"
+       y="256"
+       style="stroke-width:38" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layerFill"
      inkscape:label="Fill"
-     style="fill:none;fill-opacity:1;stroke:#ff0000;stroke-width:26;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke">
+     style="display:inline;fill:none;fill-opacity:1;stroke:#ff0000;stroke-width:26;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke">
     <use
        xlink:href="#circleO"
        id="circleF" />
@@ -149,5 +205,18 @@
     <use
        xlink:href="#arrowO"
        id="arrowF" />
+    <use
+       xlink:href="#thickArrowO"
+       id="thickArrowF" />
+    <use
+       xlink:href="#thickArrowO"
+       id="thickArrowReceptorF2"
+       y="256"
+       style="stroke-width:24;stroke:#000000" />
+    <use
+       xlink:href="#thickArrowO"
+       id="thickArrowReceptorF"
+       y="256"
+       style="stroke-width:18;fill:#ff0000" />
   </g>
 </svg>
