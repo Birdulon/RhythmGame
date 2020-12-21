@@ -213,7 +213,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var y1 = y
 	var y2 = y + size + y_spacing*1.5
 
-	var tex_judgement_text = NoteHandler.tex_judgement_text
+	var tex_judgement_text = GameTheme.tex_judgement_text
 	var judgement_text_scale = 0.667
 	var judgement_text_width = 256 * judgement_text_scale
 	var judgement_text_height = 64 * judgement_text_scale

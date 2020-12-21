@@ -15,7 +15,7 @@
    id="svg8"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
    sodipodi:docname="spritesheet.svg"
-   inkscape:export-filename="/home/luke/godot/rhythm/spritesheet-512.png"
+   inkscape:export-filename="/home/luke/godot/rhythm/assets/spritesheet-1024.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
   <defs
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4142136"
-     inkscape:cx="237.69457"
-     inkscape:cy="476.53435"
+     inkscape:zoom="0.70710678"
+     inkscape:cx="465.37094"
+     inkscape:cy="257.5019"
      inkscape:document-units="px"
      inkscape:current-layer="layerFill"
      showgrid="true"
@@ -161,6 +161,19 @@
        y="256"
        xlink:href="#thickArrowO"
        id="thickArrowReceptorO" />
+    <use
+       xlink:href="#holdBackground"
+       id="holdBGfill"
+       style="fill:#0000ff" />
+    <path
+       id="holdBackground"
+       d="m 288,368 96,-80 96,80 v 32 l -96,80 -96,-80 z"
+       sodipodi:nodetypes="ccccccc" />
+    <use
+       x="256"
+       xlink:href="#holdBackground"
+       id="rollBackground"
+       style="fill:#00ff00" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -187,6 +200,13 @@
        id="thickArrowReceptorO2"
        y="256"
        style="stroke-width:38" />
+    <use
+       xlink:href="#holdBackground"
+       id="holdBackgroundO2" />
+    <use
+       xlink:href="#holdBackground"
+       id="rollBackgroundO2"
+       x="256" />
   </g>
   <g
      inkscape:groupmode="layer"
@@ -218,5 +238,12 @@
        id="thickArrowReceptorF"
        y="256"
        style="stroke-width:18;fill:#ff0000" />
+    <use
+       xlink:href="#holdBackground"
+       id="holdBackgroundF" />
+    <use
+       xlink:href="#holdBackground"
+       id="rollBackgroundF"
+       x="256" />
   </g>
 </svg>

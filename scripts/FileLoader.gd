@@ -14,12 +14,21 @@ const ERROR_CODES := [
 ]
 
 var userroot := OS.get_user_data_dir().rstrip('/')+'/' if OS.get_name() != 'Android' else '/storage/emulated/0/RhythmGame/'
-var PATHS := [userroot, '/media/fridge-q/Games/Other/maimai Finale/decoded/RhythmGameCharts/slow_userdir/']  # Temporary hardcoded testing
+var PATHS := PoolStringArray([userroot, '/media/fridge-q/Games/Other/maimai Finale/decoded/RhythmGameCharts/slow_userdir/'])  # Temporary hardcoded testing
 # The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission('WRITE_EXTERNAL_STORAGE')
 # '/storage/emulated/0/Android/data/au.ufeff.rhythmgame/'
 # '/sdcard/Android/data/au.ufeff.rhythmgame/'
 func _ready() -> void:
 	print('Library paths: ', PATHS)
+
+func find_file(name: String) -> String:
+	# Searches through all of the paths to find the file
+	var file := File.new()
+	for root in PATHS:
+		var filename: String = root + name
+		if file.file_exists(filename):
+			return filename
+	return ''
 
 func directory_list(directory: String, hidden: bool, sort:=true) -> Dictionary:
 	# Sadly there's no filelist sugar so we make our own
@@ -567,36 +576,32 @@ func load_folder(folder, filename='song'):
 func load_filelist(filelist: Array, directory=''):
 	var charts = {}
 	var key := 1
-	for filename in filelist:
-		var extension: String = filename.rsplit('.', true, 1)[-1]
-		filename = directory.rstrip('/') + '/' + filename
-		var file = File.new()
-		for root in PATHS:
-			var filename1 = root + filename
-			if file.file_exists(filename1):
-				filename = filename1
-				break
-		match extension:
-			'rgtm':  # multiple charts
-				var res = RGT.load_file(filename)
-				for k in res:
-					charts[k] = res[k]
-			'rgts', 'rgtx':  # single chart
-				charts[key] = RGT.load_file(filename)
-				key += 1
-			'srt':  # maimai, single chart
-				charts[key] = SRT.load_file(filename)
-				key += 1
-			'sm':  # Stepmania, multiple charts
-				var res = SM.load_file(filename)
-				for k in res:
-					charts[k] = res[k]
-			_:
-				pass
+	for name in filelist:
+		var extension: String = name.rsplit('.', true, 1)[-1]
+		name = directory.rstrip('/') + '/' + name
+		var filename = find_file(name)
+		if filename != '':
+			match extension:
+				'rgtm':  # multiple charts
+					var res = RGT.load_file(filename)
+					for k in res:
+						charts[k] = res[k]
+				'rgts', 'rgtx':  # single chart
+					charts[key] = RGT.load_file(filename)
+					key += 1
+				'srt':  # maimai, single chart
+					charts[key] = SRT.load_file(filename)
+					key += 1
+				'sm':  # Stepmania, multiple charts
+					var res = SM.load_file(filename)
+					for k in res:
+						charts[k] = res[k]
+				_:
+					pass
 	return charts
 
-
-func direct_load_ogg(filename) -> AudioStreamOGGVorbis:
+func direct_load_ogg(filename: String) -> AudioStreamOGGVorbis:
+	# Loads the ogg file with that exact filename
 	var audiostream = AudioStreamOGGVorbis.new()
 	var oggfile = File.new()
 	oggfile.open(filename, File.READ)
@@ -605,27 +610,23 @@ func direct_load_ogg(filename) -> AudioStreamOGGVorbis:
 	return audiostream
 
 var fallback_audiostream = AudioStreamOGGVorbis.new()
-func load_ogg(filename) -> AudioStreamOGGVorbis:
-	var file = File.new()
-	for root in PATHS:
-		var filename1 = root + filename
-		if file.file_exists(filename1):
-			return direct_load_ogg(filename1)
-	return fallback_audiostream
+func load_ogg(name: String) -> AudioStreamOGGVorbis:
+	# Searches through all of the paths to find the file
+	match find_file(name):
+		'': return fallback_audiostream
+		var filename: return direct_load_ogg(filename)
 
 var fallback_videostream = VideoStreamWebm.new()
-func load_video(filename):
-	var file = File.new()
-	for root in PATHS:
-		var filename1 = root + filename
-		if file.file_exists(filename1):
-			return load(filename1)
-#			var videostream = VideoStreamGDNative.new()
-#			videostream.set_file(filename1)
-#			return videostream
-	return fallback_videostream
+func load_video(name: String):
+	match find_file(name):
+		'': return fallback_videostream
+		var filename:
+			return load(filename)
+	#		var videostream = VideoStreamGDNative.new()
+	#		videostream.set_file(filename1)
+	#		return videostream
 
-func direct_load_image(filename) -> ImageTexture:
+func direct_load_image(filename: String) -> ImageTexture:
 	var tex := ImageTexture.new()
 	var img := Image.new()
 	img.load(filename)
@@ -633,13 +634,11 @@ func direct_load_image(filename) -> ImageTexture:
 	return tex
 
 var fallback_texture := ImageTexture.new()
-func load_image(filename) -> ImageTexture:
-	var file = File.new()
-	for root in PATHS:
-		var filename1 = root + filename
-		if file.file_exists(filename1):
-			return direct_load_image(filename1)
-	print('File not found: ', filename)
+func load_image(name: String) -> ImageTexture:
+	var filename = find_file(name)
+	if filename != '':
+		return direct_load_image(filename)
+	print('File not found: ', name)
 	return fallback_texture
 
 

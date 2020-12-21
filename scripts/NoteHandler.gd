@@ -7,11 +7,6 @@ signal finished_song(song_key, score_data)
 var running := false
 var song_key = ''
 
-var tex := preload('res://assets/spritesheet-4k.png')
-var tex_judgement_text := preload('res://assets/text-4k.png')
-var tex_slide_arrow := preload('res://assets/slide-arrow-4k.png')
-var slide_trail_shadermaterial := preload('res://shaders/slidetrail.tres')
-
 export var MusicPlayerPath := @'/root/main/music'
 export var VideoPlayerPath := @'/root/main/video'
 export var InputHandlerPath := @'/root/main/InputHandler'
@@ -24,40 +19,6 @@ onready var SlideTrailHandler = $'Viewport/Center/SlideTrailHandler'
 onready var JudgeText = $'Viewport/Center/JudgeText'
 onready var notelines = $'Viewport/Center/notelines'
 onready var meshinstance = $'Viewport/Center/meshinstance'
-
-var snd_miss := preload('res://assets/miss.wav')
-var snd_clap := preload('res://assets/softclap.wav')
-var snd_count_in := snd_clap
-var snd_judgement := {
-	0: snd_clap,
-	1: snd_clap,
-	-1: snd_clap,
-	2: snd_clap,
-	-2: snd_clap,
-	3: snd_miss,
-	-3: snd_miss,
-	'MISS': snd_miss
-}
-var db_judgement := {
-	0: 0.0,
-	1: -1.5,
-	-1: -1.5,
-	2: -3.0,
-	-2: -3.0,
-	3: -6.0,
-	-3: -6.0,
-	'MISS': 0.0
-}
-var pitch_judgement := {
-	0: 1.0,
-	-1: 1.0/0.75,
-	1: 0.75,
-	-2: 1.0/0.60,
-	2: 0.60,
-	-3: 1.5,
-	3: 1.5,
-	'MISS': 1.0
-}
 
 const SQRT2 := sqrt(2)
 const DEG45 := deg2rad(45.0)
@@ -280,12 +241,12 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 #----------------------------------------------------------------------------------------------------------------------------------------------
 func make_judgement_column(judgement, column: int):
 	active_judgement_texts.append({col=column, judgement=judgement, time=t})
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[judgement], db_judgement[judgement], pitch_judgement[judgement])
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_judgement[judgement], GameTheme.db_judgement[judgement], GameTheme.pitch_judgement[judgement])
 
 func make_judgement_pos(judgement, pos: Vector2):
 	# Positional judgement text not yet implemented, will do if touches are ever added
 	#active_judgement_texts.append({judgement=judgement, time=t})
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_judgement[judgement], db_judgement[judgement], pitch_judgement[judgement])
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_judgement[judgement], GameTheme.db_judgement[judgement], GameTheme.pitch_judgement[judgement])
 
 
 func activate_note(note, judgement):
@@ -464,7 +425,7 @@ func _draw():
 				slide_trail_mesh_instances[note.slide_id].material.set_shader_param('base_alpha', trail_alpha*GameTheme.slide_trail_alpha)
 
 	noteline_data.unlock()
-	var noteline_data_tex = ImageTexture.new()
+	var noteline_data_tex := ImageTexture.new()
 	noteline_data_tex.create_from_image(noteline_data, 0)
 	notelines.set_texture(noteline_data_tex)
 
@@ -592,7 +553,7 @@ func load_track(song_key: String, difficulty_idx: int):
 	meshinstance.material.set_shader_param('held_color', GameTheme.COLOR_HOLD_HELD)
 	meshinstance.material.set_shader_param('bps', bpm/60.0)
 	meshinstance.material.set_shader_param('screen_size', get_viewport().get_size())
-	meshinstance.set_texture(tex)
+	meshinstance.set_texture(GameTheme.tex_notes)
 	initialise_scores()  # Remove old score
 
 func stop():
@@ -602,7 +563,7 @@ func stop():
 	next_note_to_load = 1000000  # Hacky but whatever
 
 func intro_click():
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_count_in)
+	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_count_in)
 
 func get_realtime_precise() -> float:
 	# Usually we only update the gametime once per process loop, but for input callbacks it's good to have msec precision
@@ -710,9 +671,9 @@ func _process(delta):
 		if note.type == Note.NOTE_SLIDE:
 			var meshi = MeshInstance2D.new()
 			meshi.set_mesh(slide_trail_meshes[note.slide_id])
-			meshi.set_material(slide_trail_shadermaterial.duplicate())
+			meshi.set_material(GameTheme.slide_trail_shadermaterial.duplicate())
 			meshi.material.set_shader_param('trail_progress', 0.0)
-			meshi.set_texture(tex_slide_arrow)
+			meshi.set_texture(GameTheme.tex_slide_arrow)
 			slide_trail_mesh_instances[note.slide_id] = meshi
 			SlideTrailHandler.add_child(meshi)
 

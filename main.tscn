@@ -64,7 +64,6 @@ shader_param/dot_fullbright_thickness = 0.013
 shader_param/max_angle = 1.0708
 shader_param/max_dist = 1.25
 shader_param/array_postmul = Vector3( 1, 1, 1 )
-shader_param/cols_div2 = 3.999
 shader_param/array_sidelen = 16
 shader_param/array_size = 256
 

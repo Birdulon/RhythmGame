@@ -8,11 +8,6 @@
 
 config_version=4
 
-_global_script_classes=[  ]
-_global_script_class_icons={
-
-}
-
 [application]
 
 config/name="Rhythm"
@@ -62,7 +57,6 @@ singletons_disabled=[  ]
 
 [rendering]
 
-quality/driver/driver_name="GLES2"
 vram_compression/import_etc=true
 environment/default_clear_color=Color( 0.16, 0.16, 0.16, 1 )
 quality/filters/msaa=1

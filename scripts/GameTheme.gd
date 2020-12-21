@@ -1,6 +1,45 @@
 tool
 extends Node
 
+var tex_notes := preload('res://assets/spritesheet-2048.png')
+var tex_judgement_text := preload('res://assets/text-4k.png')
+var tex_slide_arrow := tex_notes
+var slide_trail_shadermaterial := preload('res://shaders/slidetrail.tres')
+
+var snd_miss := preload('res://assets/miss.wav')
+var snd_clap := preload('res://assets/softclap.wav')
+var snd_count_in := snd_clap
+var snd_judgement := {
+	0: snd_clap,
+	1: snd_clap,
+	-1: snd_clap,
+	2: snd_clap,
+	-2: snd_clap,
+	3: snd_miss,
+	-3: snd_miss,
+	'MISS': snd_miss
+}
+var db_judgement := {
+	0: 0.0,
+	1: -1.5,
+	-1: -1.5,
+	2: -3.0,
+	-2: -3.0,
+	3: -6.0,
+	-3: -6.0,
+	'MISS': 0.0
+}
+var pitch_judgement := {
+	0: 1.0,
+	-1: 1.0/0.75,
+	1: 0.75,
+	-2: 1.0/0.60,
+	2: 0.60,
+	-3: 1.5,
+	3: 1.5,
+	'MISS': 1.0
+}
+
 var receptor_ring_radius := 460.0
 var note_forecast_beats := 2.0  # Notes start to appear this many beats before you need to tap them
 const INNER_NOTE_CIRCLE_RATIO := 0.3  # Notes under this far from the center will zoom into existence
@@ -23,16 +62,29 @@ var judge_text_duration := 2.0
 # UV vertex arrays for our sprites
 # tap/star/arrow are 4-vertex 2-triangle simple squares
 # hold is 8-vertex 6-triangle to enable stretching in the middle
-const UV_ARRAY_TAP := PoolVector2Array([Vector2(0, 0.5), Vector2(0.5, 0.5), Vector2(0, 1), Vector2(0.5, 1)])
+const TNSZ := 4;
+const UV_ARRAY_TAP := PoolVector2Array([Vector2(0, 0)/TNSZ, Vector2(1, 0)/TNSZ, Vector2(0, 1)/TNSZ, Vector2(1, 1)/TNSZ])
 const UV_ARRAY_HOLD := PoolVector2Array([
-	Vector2(0.5, 0.5), Vector2(1, 0.5), Vector2(0.5, 0.75), Vector2(1, 0.75),
-	Vector2(0.5, 0.75), Vector2(1, 0.75), Vector2(0.5, 1), Vector2(1, 1)
+	Vector2(1, 0)/TNSZ, Vector2(2, 0)/TNSZ, Vector2(1, 0.5)/TNSZ, Vector2(2, 0.5)/TNSZ,
+	Vector2(1, 0.5)/TNSZ, Vector2(2, 0.5)/TNSZ, Vector2(1, 1)/TNSZ, Vector2(2, 1)/TNSZ
 	])
-const UV_ARRAY_STAR := PoolVector2Array([Vector2(0.5, 0), Vector2(1, 0), Vector2(0.5, 0.5), Vector2(1, 0.5)])
-const UV_ARRAY_ARROW := PoolVector2Array([Vector2(0, 0), Vector2(0.5, 0), Vector2(0, 0.5), Vector2(0.5, 0.5)])
+const UV_ARRAY_STAR := PoolVector2Array([Vector2(2, 0)/TNSZ, Vector2(3, 0)/TNSZ, Vector2(2, 1)/TNSZ, Vector2(3, 1)/TNSZ])
+const UV_ARRAY_ARROW := PoolVector2Array([Vector2(0, 1)/TNSZ, Vector2(1, 1)/TNSZ, Vector2(0, 2)/TNSZ, Vector2(1, 2)/TNSZ])
 # Slide trail arrow. Single tri.
-const UV_ARRAY_SLIDE_ARROW := PoolVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(0, 1)])
-const UV_ARRAY_SLIDE_ARROW2 := PoolVector2Array([Vector2(1, 1), Vector2(0, 1), Vector2(1, 0)])
+const UV_ARRAY_SLIDE_ARROW := PoolVector2Array([Vector2(3, 0)/TNSZ, Vector2(4, 0)/TNSZ, Vector2(3, 1)/TNSZ])
+const UV_ARRAY_SLIDE_ARROW2 := PoolVector2Array([Vector2(4, 1)/TNSZ, Vector2(3, 1)/TNSZ, Vector2(4, 0)/TNSZ])
+
+# Dance mode
+const UV_ARRAY_D_ARROW := PoolVector2Array([Vector2(0, 2)/TNSZ, Vector2(1, 2)/TNSZ, Vector2(0, 3)/TNSZ, Vector2(1, 3)/TNSZ])
+const UV_ARRAY_D_RECEPTOR := PoolVector2Array([Vector2(0, 3)/TNSZ, Vector2(1, 3)/TNSZ, Vector2(0, 4)/TNSZ, Vector2(1, 4)/TNSZ])
+const UV_ARRAY_D_HOLD := PoolVector2Array([
+	Vector2(1, 1)/TNSZ, Vector2(2, 1)/TNSZ, Vector2(1, 1.5)/TNSZ, Vector2(2, 1.5)/TNSZ,
+	Vector2(1, 1.5)/TNSZ, Vector2(2, 1.5)/TNSZ, Vector2(1, 2)/TNSZ, Vector2(2, 2)/TNSZ
+	])
+const UV_ARRAY_D_ROLL := PoolVector2Array([
+	Vector2(2, 1)/TNSZ, Vector2(3, 1)/TNSZ, Vector2(2, 1.5)/TNSZ, Vector2(3, 1.5)/TNSZ,
+	Vector2(2, 1.5)/TNSZ, Vector2(3, 1.5)/TNSZ, Vector2(2, 2)/TNSZ, Vector2(3, 2)/TNSZ
+	])
 
 # Color definitions
 const COLOR_TAP := Color(1, 0.15, 0.15, 1)
@@ -54,28 +106,28 @@ const COLOR_DIFFICULTY := PoolColorArray([  # Background, foreground for each
 	Color(1.0, 1.0, 1.0), Color(0.737, 0.188, 0.894),
 ])
 
-var COLOR_ARRAY_TAP := PoolColorArray([COLOR_TAP, COLOR_TAP, COLOR_TAP, COLOR_TAP])
-var COLOR_ARRAY_TAP2 := PoolColorArray([COLOR_TAP2, COLOR_TAP2, COLOR_TAP2, COLOR_TAP2])
-var COLOR_ARRAY_HOLD := PoolColorArray([
+const COLOR_ARRAY_TAP := PoolColorArray([COLOR_TAP, COLOR_TAP, COLOR_TAP, COLOR_TAP])
+const COLOR_ARRAY_TAP2 := PoolColorArray([COLOR_TAP2, COLOR_TAP2, COLOR_TAP2, COLOR_TAP2])
+const COLOR_ARRAY_HOLD := PoolColorArray([
 	COLOR_HOLD, COLOR_HOLD, COLOR_HOLD, COLOR_HOLD,
 	COLOR_HOLD, COLOR_HOLD, COLOR_HOLD, COLOR_HOLD
 	])
-var COLOR_ARRAY_HOLD_HELD := PoolColorArray([
+const COLOR_ARRAY_HOLD_HELD := PoolColorArray([
 	COLOR_HOLD_HELD, COLOR_HOLD_HELD, COLOR_HOLD_HELD, COLOR_HOLD_HELD,
 	COLOR_HOLD_HELD, COLOR_HOLD_HELD, COLOR_HOLD_HELD, COLOR_HOLD_HELD
 	])
-var COLOR_ARRAY_HOLD_MISS := PoolColorArray([
+const COLOR_ARRAY_HOLD_MISS := PoolColorArray([
 	COLOR_HOLD_MISS, COLOR_HOLD_MISS, COLOR_HOLD_MISS, COLOR_HOLD_MISS,
 	COLOR_HOLD_MISS, COLOR_HOLD_MISS, COLOR_HOLD_MISS, COLOR_HOLD_MISS
 	])
-var COLOR_ARRAY_STAR := PoolColorArray([COLOR_STAR, COLOR_STAR, COLOR_STAR, COLOR_STAR])
-var COLOR_ARRAY_DOUBLE_4 := PoolColorArray([COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE])
-var COLOR_ARRAY_DOUBLE_8 := PoolColorArray([
+const COLOR_ARRAY_STAR := PoolColorArray([COLOR_STAR, COLOR_STAR, COLOR_STAR, COLOR_STAR])
+const COLOR_ARRAY_DOUBLE_4 := PoolColorArray([COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE])
+const COLOR_ARRAY_DOUBLE_8 := PoolColorArray([
 	COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE,
 	COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE, COLOR_DOUBLE
 	])
-var COLOR_ARRAY_DOUBLE_MISS_4 := PoolColorArray([COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS])
-var COLOR_ARRAY_DOUBLE_MISS_8 := PoolColorArray([
+const COLOR_ARRAY_DOUBLE_MISS_4 := PoolColorArray([COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS])
+const COLOR_ARRAY_DOUBLE_MISS_8 := PoolColorArray([
 	COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS,
 	COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS
 	])
