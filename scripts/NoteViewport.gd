@@ -1,5 +1,10 @@
 extends Viewport
 
+export var SubsampleXControl = @'/root/main/InputHandler/SSXSlider'
+export var SubsampleYControl = @'/root/main/InputHandler/SSYSlider'
+onready var SSX = get_node(SubsampleXControl)
+onready var SSY = get_node(SubsampleYControl)
+
 func set_render_scale(scale: Vector2):
 	var ws = OS.window_size
 	var dim = min(ws.x, ws.y)
@@ -8,10 +13,10 @@ func set_render_scale(scale: Vector2):
 	$Center.scale = size/1080
 
 func slider_slot(arg1):
-	set_render_scale(Vector2($"/root/main/InputHandler/SSXSlider".value, $"/root/main/InputHandler/SSYSlider".value))
+	set_render_scale(Vector2(SSX.value, SSY.value))
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	$"/root/main/InputHandler/SSXSlider".connect("value_changed", self, "slider_slot")
-	$"/root/main/InputHandler/SSYSlider".connect("value_changed", self, "slider_slot")
+	SSX.connect('value_changed', self, 'slider_slot')
+	SSY.connect('value_changed', self, 'slider_slot')
 	slider_slot(1)
