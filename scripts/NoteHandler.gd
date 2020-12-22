@@ -44,15 +44,6 @@ var slide_trail_mesh_instances := {}
 
 var noteline_array_image := Image.new()
 
-
-# Normal vertex arrays for our sprites. Might be unnecessary?
-const DEFAULT_NORMAL := Vector3(0, 0, 1)
-var NORMAL_ARRAY_4 := PoolVector3Array([DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL])
-var NORMAL_ARRAY_8 := PoolVector3Array([
-	DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL,
-	DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL
-	])
-
 # Text UVs
 var text_UV_arrays := []
 func make_text_UV(row: int, column: int) -> PoolVector2Array:
@@ -125,7 +116,6 @@ func make_tap_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, color_arra
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
-#	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
 	arrays[Mesh.ARRAY_TEX_UV] = GameTheme.UV_ARRAY_TAP
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
@@ -148,7 +138,6 @@ func make_hold_mesh(mesh: ArrayMesh, note_center: Vector2, note_center_rel: Vect
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
-#	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_8
 	arrays[Mesh.ARRAY_TEX_UV] = GameTheme.UV_ARRAY_HOLD
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
@@ -166,7 +155,6 @@ func make_star_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, angle:=0.
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
-#	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
 	arrays[Mesh.ARRAY_TEX_UV] = GameTheme.UV_ARRAY_STAR
 	arrays[Mesh.ARRAY_COLOR] = color_array
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
@@ -175,7 +163,6 @@ func make_star_mesh(mesh: ArrayMesh, note_center: Vector2, scale:=1.0, angle:=0.
 #	var arrays = []
 #	arrays.resize(Mesh.ARRAY_MAX)
 #	arrays[Mesh.ARRAY_VERTEX] = vertex_array
-##	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
 #	arrays[Mesh.ARRAY_TEX_UV] = UV_ARRAY_ARROW
 #	arrays[Mesh.ARRAY_COLOR] = color_array
 #	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
@@ -481,7 +468,6 @@ func make_noteline_mesh_old() -> ArrayMesh:
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array_playfield
-	arrays[Mesh.ARRAY_NORMAL] = NORMAL_ARRAY_4
 	arrays[Mesh.ARRAY_TEX_UV] = uv_array_playfield
 	mesh_playfield.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
 	return mesh_playfield

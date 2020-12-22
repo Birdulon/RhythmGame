@@ -132,6 +132,14 @@ const COLOR_ARRAY_DOUBLE_MISS_8 := PoolColorArray([
 	COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS, COLOR_DOUBLE_MISS
 	])
 
+# Normal vertex arrays for our sprites. Might be unnecessary?
+const DEFAULT_NORMAL := Vector3(0, 0, 1)
+const NORMAL_ARRAY_4 := PoolVector3Array([DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL])
+const NORMAL_ARRAY_8 := PoolVector3Array([
+	DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL,
+	DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL, DEFAULT_NORMAL
+	])
+
 var screen_filter_min_alpha := 0.2
 var screen_filter := Color(0.0, 0.0, 0.0, screen_filter_min_alpha)
 signal screen_filter_changed()
