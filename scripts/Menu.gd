@@ -16,6 +16,7 @@ var selected_song: int = 0
 var selected_song_vis: int = 0
 var selected_song_delta: float = 0.0  # For floaty display scrolling
 var selected_song_speed: float = 0.0  # For floaty display scrolling
+var selected_song_key: String = ''
 var selected_difficulty = ChartDifficulty.ADV
 var menu_mode = MenuMode.SONG_SELECT
 var menu_mode_prev = MenuMode.SONG_SELECT
@@ -171,29 +172,31 @@ func _draw_chart_select(center: Vector2) -> Array:
 	var size = 192
 	var spacer_x = 12
 	var touchrects = []
-	var songslist = genres[genres.keys()[selected_genre]]
-	var song_key = songslist[selected_song % len(songslist)]
 	var x = center.x - (size*2.5 + spacer_x*2)
 	for diff in 5:
-		var r = draw_songtile(song_key, Vector2(x, center.y), size, false, diff, (9 if diff == selected_difficulty else 3))
+		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, diff, (9 if diff == selected_difficulty else 3))
 		touchrects.append({rect=r, chart_idx=diff})
 		x += size + spacer_x
-	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+64), Library.all_songs[song_key].title.n, Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), Library.all_songs[selected_song_key].title.n, Color(0.95, 0.95, 1.0))
 	touchrects.append({rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1})
 
 
 	# TODO: This is relatively expensive so we probably want to calculate this stuff once instead of every frame
-	var all_notes = Library.get_song_charts(song_key).values()[selected_difficulty]
+	var all_notes = Library.get_song_charts(selected_song_key).values()[selected_difficulty]
+	var song_data = Library.all_songs[selected_song_key]
 	var note_counts = {Note.NOTE_TAP: 0, Note.NOTE_HOLD: 0, Note.NOTE_STAR: 0}
 	for note in all_notes:
 		if note.type in note_counts:
 			note_counts[note.type] += 1
 
+	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:', Color(0.95, 0.95, 1.0))
+	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM), Color(0.95, 0.95, 1.0))
+
 	var notestrs = ['Taps:', 'Holds:', 'Slides:']
 	var notetypes = [0, 1, 2]
 	for i in len(notestrs):
-		draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+128+i*50), notestrs[i], Color(0.95, 0.95, 1.0))
-		draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+128+i*50), str(note_counts[notetypes[i]]), Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+148+i*50), notestrs[i], Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+148+i*50), str(note_counts[notetypes[i]]), Color(0.95, 0.95, 1.0))
 
 	return touchrects
 
@@ -375,6 +378,8 @@ func set_menu_mode(mode):
 func touch_select_song(touchdict):
 	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song == touchdict.song_idx):
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		var songslist = genres[genres.keys()[selected_genre]]
+		selected_song_key = songslist[selected_song % len(songslist)]
 		set_menu_mode(MenuMode.CHART_SELECT)
 	else:
 		self.selected_genre = touchdict.genre_idx
@@ -451,7 +456,7 @@ func _input(event):
 			elif event.is_action_pressed('ui_up'):
 				selected_genre = int(max(0, selected_genre - 1))
 			elif event.is_action_pressed('ui_down'):
-				selected_genre = int(min(5, selected_genre + 1))
+				selected_genre = int(min(len(genres)-1, selected_genre + 1))
 			elif event.is_action_pressed('ui_page_up'):
 				selected_difficulty = int(max(0, selected_difficulty - 1))
 			elif event.is_action_pressed('ui_page_down'):
