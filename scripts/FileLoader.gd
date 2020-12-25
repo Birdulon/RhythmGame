@@ -272,8 +272,9 @@ class RGT:
 				chart_ids.append(line.lstrip('[').rstrip(']'))
 				lines.append([])
 			elif !line.empty():
-				lines[-1].append(line)
+				lines[-1].push_back(line)
 		file.close()
+		print('Parsing chart: ', filename)
 
 		match format:
 			Format.RGTS:
@@ -290,15 +291,19 @@ class RGT:
 				return charts
 		return format
 
-	static func parse_rgtx(lines):
+	static func parse_rgtx(lines: PoolStringArray):
 		return []  # To be implemented later
 
 	const beats_per_measure = 4.0  # TODO: Bit of an ugly hack, need to revisit this later
-	static func parse_rgts(lines):
-		var notes = []
-		var slide_ids = {}
-		var slide_stars = {}  # Multiple stars might link to one star. We only care about linking for the spin speed.
-		var last_star = []
+	static func parse_rgts(lines: PoolStringArray):
+		var metadata := {}
+		var num_taps := 0
+		var num_holds := 0
+		var num_slides := 0
+		var notes := []
+		var slide_ids := {}
+		var slide_stars := {}  # Multiple stars might link to one star. We only care about linking for the spin speed.
+		var last_star := []
 		for i in Rules.COLS:
 			last_star.append(null)
 
@@ -306,23 +311,26 @@ class RGT:
 			if len(line) < 4:  # shortest legal line would be like '1:1t'
 				continue
 			var s = line.split(':')
-			var time = float(s[0]) * beats_per_measure
-			var note_hits = []
-			var note_nonhits = []
+			var time := float(s[0]) * beats_per_measure
+			var note_hits := []
+			var note_nonhits := []
 			for i in range(1, len(s)):
 				var n = s[i]
-				var column = int(n[0])
+				var column := int(n[0])
 				var ntype = n[1]
 				n = n.substr(2)
 
 				match ntype:
 					't':  # tap
 						note_hits.append(Note.NoteTap.new(time, column))
+						num_taps += 1
 					'b':  # break
 						note_hits.append(Note.NoteTap.new(time, column, true))
+						num_taps += 1
 					'h':  # hold
 						var duration = float(n) * beats_per_measure
 						note_hits.append(Note.NoteHold.new(time, column, duration))
+						num_holds += 1
 					's':  # slide star
 						var star = Note.NoteStar.new(time, column)
 						note_hits.append(star)
@@ -334,6 +342,7 @@ class RGT:
 							var slide = Note.NoteSlide.new(time, column)
 							slide_ids[slide_id] = slide
 							note_nonhits.append(slide)
+						num_slides += 1
 					'e':  # slide end
 						var slide_type = n[0]  # numeric digit, left as str just in case
 						var slide_id = int(n.substr(1))
@@ -359,7 +368,10 @@ class RGT:
 				for note in note_hits:  # Set multihit on each one
 					note.double_hit = true
 			notes += note_hits + note_nonhits
-		return notes
+		metadata['num_taps'] = num_taps
+		metadata['num_holds'] = num_holds
+		metadata['num_slides'] = num_slides
+		return [metadata, notes]
 
 
 class SM:
@@ -490,14 +502,17 @@ class SM:
 		metadata['num_mines'] = num_mines
 		return [metadata, notes]
 
-	static func load_file(filename):
+	static func load_file(filename: String) -> Array:
+		# Output is [metadata, [[meta0, chart0], ..., [metaN, chartN]]]
 		# Technically, declarations end with a semicolon instead of a linebreak.
 		# This is a PITA to do correctly in GDScript and the files in our collection are well-behaved with linebreaks anyway, so we won't bother.
 		var file := File.new()
-		var err := file.open(filename, File.READ)
-		if err != OK:
-			print(err)
-			return err
+		match file.open(filename, File.READ):
+			OK:
+				pass
+			var err:
+				print_debug('Error loading file: ', err)
+				return []
 		var length = file.get_len()
 		var lines = [[]]  # First list will be header, then every subsequent one is a chart
 		while (file.get_position() < (length-1)):  # Could probably replace this with file.eof_reached()
@@ -594,8 +609,9 @@ func load_filelist(filelist: Array, directory=''):
 					key += 1
 				'sm':  # Stepmania, multiple charts
 					var res = SM.load_file(filename)
-					for k in res:
-						charts[k] = res[k]
+					for chart in res[1]:
+						var diff = chart[0].difficulty_str
+						charts[diff] = chart[1]
 				_:
 					pass
 	return charts
@@ -652,19 +668,22 @@ func init_directory(directory: String):
 func save_json(filename: String, data: Dictionary):
 	filename = userroot + filename
 	var dir = filename.rsplit('/', true, 1)[0]
-	var err = FileLoader.init_directory(dir)
-	if err != OK:
-		print('Error making directory for JSON file: ', err, ERROR_CODES[err])
-		return err
+	match FileLoader.init_directory(dir):
+		OK:
+			pass
+		var err:
+			print_debug('Error making directory for JSON file: ', err, ERROR_CODES[err])
+			return err
 	var json = JSON.print(data)
 	var file = File.new()
-	err = file.open(filename, File.WRITE)
-	if err != OK:
-		print('Error saving JSON file: ', err, ERROR_CODES[err])
-		return err
-	file.store_string(json)
-	file.close()
-	return OK
+	match file.open(filename, File.WRITE):
+		OK:
+			file.store_string(json)
+			file.close()
+			return OK
+		var err:
+			print_debug('Error saving JSON file: ', err, ERROR_CODES[err])
+			return err
 
 func load_json(filename: String):
 	var file = File.new()

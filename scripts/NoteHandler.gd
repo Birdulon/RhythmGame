@@ -518,9 +518,10 @@ func load_track(song_key: String, difficulty_idx: int):
 	active_notes = []
 	next_note_to_load = 0
 	all_notes = []
-	for note in Library.get_song_charts(song_key).values()[difficulty_idx]:
-		all_notes.append(Note.copy_note(note))
 	var data = Library.all_songs[song_key]
+	var chart = Library.get_song_charts(song_key).values()[difficulty_idx]
+	for note in chart[1]:
+		all_notes.append(Note.copy_note(note))
 	bpm = data.BPM
 	sync_offset_audio = data.audio_offsets[0]
 	sync_offset_video = data.video_offsets[0]

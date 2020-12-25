@@ -45,10 +45,13 @@ func save_score() -> int:
 	var data = {'score_data': scorescreen_score_data, 'song_key': scorescreen_song_key}
 	var dt = scorescreen_datetime
 	var filename = 'scores/%04d%02d%02dT%02d%02d%02d.json'%[dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
-	var err = FileLoader.save_json(filename, data)
-	if err == OK:
-		scorescreen_saved = true
-	return err
+	match FileLoader.save_json(filename, data):
+		OK:
+			scorescreen_saved = true
+			return OK
+		var err:
+			print_debug('Error saving score file %s'%filename)
+			return err
 
 func load_score(filename):
 	var result = FileLoader.load_json('scores/%s'%filename)
@@ -59,10 +62,9 @@ func load_score(filename):
 	for key in result.score_data:
 		var value = {}
 		for k2 in result.score_data[key]:
-			if k2 == 'MISS':
-				value[k2] = result.score_data[key][k2]
-			else:
-				value[int(k2)] = result.score_data[key][k2]
+			if k2 != 'MISS':
+				k2 = int(k2)  # Could use something more robust later
+			value[k2] = result.score_data[key][k2]
 		data[int(key)] = value
 	scorescreen_score_data = data
 	scorescreen_song_key = result.song_key
@@ -182,18 +184,17 @@ func _draw_chart_select(center: Vector2) -> Array:
 
 
 	# TODO: This is relatively expensive so we probably want to calculate this stuff once instead of every frame
-	var all_notes = Library.get_song_charts(selected_song_key).values()[selected_difficulty]
+	var chart: Array = Library.get_song_charts(selected_song_key).values()[selected_difficulty]
+	var all_notes: Array = chart[1]
+	var meta: Dictionary = chart[0]
 	var song_data = Library.all_songs[selected_song_key]
-	var note_counts = {Note.NOTE_TAP: 0, Note.NOTE_HOLD: 0, Note.NOTE_STAR: 0}
-	for note in all_notes:
-		if note.type in note_counts:
-			note_counts[note.type] += 1
 
 	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:', Color(0.95, 0.95, 1.0))
 	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM), Color(0.95, 0.95, 1.0))
 
 	var notestrs = ['Taps:', 'Holds:', 'Slides:']
 	var notetypes = [0, 1, 2]
+	var note_counts = [meta.num_taps, meta.num_holds, meta.num_slides]
 	for i in len(notestrs):
 		draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+148+i*50), notestrs[i], Color(0.95, 0.95, 1.0))
 		draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+148+i*50), str(note_counts[notetypes[i]]), Color(0.95, 0.95, 1.0))
@@ -206,11 +207,16 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var touchrects = []
 	var songslist = genres[genres.keys()[selected_genre]]
 	var song_key = scorescreen_song_key
+#	var song_data = Library.all_songs[song_key]
+	var chart: Array = Library.get_song_charts(selected_song_key).values()[selected_difficulty]
+	var all_notes: Array = chart[1]
+	var meta: Dictionary = chart[0]
+
 	var x = center.x
 	var y = center.y - 200
 	var x_songtile = x - 120
 	var x_score = x + 120
-	var x2 = x - 370
+	var x2 = x - 360
 	var x_spacing = 124
 	var y_spacing = 42
 	var y1 = y
@@ -223,7 +229,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 
 	draw_songtile(song_key, Vector2(x_songtile-size/2.0, y), size, false, selected_difficulty, 3)
 	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), Library.all_songs[song_key].title.n, Color(0.95, 0.95, 1.0))
-	var notestrs = ['Taps:', 'Holds Hit:', 'Released:', 'Stars:', 'Slides:']
+	var notestrs = ['Taps (%d):'%meta.num_taps, 'Holds (%d) Hit:'%meta.num_holds, 'Released:', 'Stars (%d):'%meta.num_slides, 'Slides:']
 	var notetypes = [0, 1, -1, 2, -2]
 	var note_spacing = [0.0, 1.25, 2.25, 3.5, 4.5]
 	var judgestrs = Array(Rules.JUDGEMENT_STRINGS + ['Miss'])
@@ -248,7 +254,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 		var note_count = 0
 #		var y_row = y2+y_spacing*(i+1)
 		var y_row = y2 + y_spacing * (note_spacing[i]+1)
-		draw_string_centered(TitleFont, Vector2(x2, y_row), notestrs[i], Color(0.95, 0.95, 1.0))
+		draw_string_centered(TitleFont, Vector2(x2-20, y_row), notestrs[i], Color(0.95, 0.95, 1.0))
 		for j in len(judgestrs):
 			var score
 			if j == 0:
