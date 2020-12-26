@@ -101,6 +101,8 @@ func draw_string_centered(font, position, string, color := Color.white):
 func draw_songtile(song_key, position, size, title_text:=false, difficulty=selected_difficulty, outline_px:=3):
 	# Draws from top left-corner. Returns Rect2 of the image (not the outline).
 	# Draw difficulty-colored outline
+	if typeof(difficulty) == TYPE_STRING:
+		difficulty = Library.Song.difficulty_key_ids.get(difficulty, 0)
 	var diff_color := GameTheme.COLOR_DIFFICULTY[difficulty*2]
 	var rect := Rect2(position.x, position.y, size, size)
 	draw_rect(Rect2(position.x - outline_px, position.y - outline_px, size + outline_px*2, size + outline_px*2), diff_color)
@@ -173,21 +175,23 @@ func _draw_chart_select(center: Vector2) -> Array:
 	# Select difficulty for chosen song
 	var size = 192
 	var spacer_x = 12
-	var touchrects = []
+	var touchrects = [{rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1}]
 	var x = center.x - (size*2.5 + spacer_x*2)
-	for diff in 5:
-		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, diff, (9 if diff == selected_difficulty else 3))
-		touchrects.append({rect=r, chart_idx=diff})
+
+	var charts: Dictionary = Library.get_song_charts(selected_song_key)
+	var song_data = Library.all_songs[selected_song_key]
+	var diffs = song_data.chart_difficulties
+	for diff in diffs:
+		var i_diff = Library.Song.difficulty_key_ids.get(diff, 0)
+		var width = 9 if i_diff == selected_difficulty else 3
+		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, i_diff, width)
+		touchrects.append({rect=r, chart_idx=i_diff})
 		x += size + spacer_x
 	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), Library.all_songs[selected_song_key].title.n, Color(0.95, 0.95, 1.0))
-	touchrects.append({rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1})
 
-
-	# TODO: This is relatively expensive so we probably want to calculate this stuff once instead of every frame
-	var chart: Array = Library.get_song_charts(selected_song_key).values()[selected_difficulty]
-	var all_notes: Array = chart[1]
-	var meta: Dictionary = chart[0]
-	var song_data = Library.all_songs[selected_song_key]
+	var sel_chart: Array = charts.values()[min(selected_difficulty, len(charts)-1)]
+	var all_notes: Array = sel_chart[1]
+	var meta: Dictionary = sel_chart[0]
 
 	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:', Color(0.95, 0.95, 1.0))
 	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM), Color(0.95, 0.95, 1.0))

@@ -104,6 +104,7 @@ const COLOR_DIFFICULTY := PoolColorArray([  # Background, foreground for each
 	Color(1.000, 0.150, 0.150), Color(1.0, 1.0, 1.0),
 	Color(0.761, 0.271, 0.902), Color(1.0, 1.0, 1.0),
 	Color(1.0, 1.0, 1.0), Color(0.737, 0.188, 0.894),
+	Color(0.000, 0.000, 1.000), Color(1.0, 1.0, 1.0),
 ])
 
 const COLOR_ARRAY_TAP := PoolColorArray([COLOR_TAP, COLOR_TAP, COLOR_TAP, COLOR_TAP])

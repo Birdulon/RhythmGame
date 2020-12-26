@@ -50,6 +50,7 @@ class Song:
 	var video_dimensions: Array
 	var chart_difficulties: Dictionary
 	const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R', '宴']
+	const difficulty_key_ids = {'Z':0, 'B':1, 'A':2, 'E':3, 'M':4, 'R':5, '宴':6}
 
 	func _init(values: Dictionary):
 		title = MultilangStr.new(values.get('title', ''), values.get('title_transliteration', ''), values.get('title_english', ''))
