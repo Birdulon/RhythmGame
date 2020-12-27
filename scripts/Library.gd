@@ -1,5 +1,7 @@
 extends Node
 
+const difficulty_translations = {'01': 'Z', '02': 'B', '03': 'A', '04': 'E', '05': 'M', '06': 'R', '10': '宴'}  # A bit redundant now but might be useful later for other hacks
+
 class MultilangStr:
 	# Automatically propogate higher langs to lower ones if lower ones are missing.
 	# e.g. if we don't have a proper english title, return the transliterated one instead
@@ -48,7 +50,7 @@ class Song:
 	var video_offsets: Array
 	var audio_preview_times: Array
 	var video_dimensions: Array
-	var chart_difficulties: Dictionary
+	var chart_difficulties := {}
 	const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R', '宴']
 	const difficulty_key_ids = {'Z':0, 'B':1, 'A':2, 'E':3, 'M':4, 'R':5, '宴':6}
 
@@ -83,12 +85,10 @@ class Song:
 			TYPE_DICTIONARY:
 				chart_difficulties = diffs
 			TYPE_ARRAY:
-				chart_difficulties = {}
 				for i in min(len(diffs), len(default_difficulty_keys)):
 					chart_difficulties[default_difficulty_keys[i]] = diffs[i]
 			_:
 				print_debug('Invalid chart_difficulties!', title.en)
-				chart_difficulties = {}
 
 	func get_BPM(realtime:=0.0):
 		if not dynamic_bpm:
@@ -128,7 +128,23 @@ func get_song_charts(song_key):
 	if song_key in charts_cache:
 		return charts_cache[song_key]
 	elif song_key in all_songs:
-		charts_cache[song_key] = FileLoader.load_filelist(all_songs[song_key].chart_filelist, 'songs/'+all_songs[song_key].filepath)
+		var charts = FileLoader.load_filelist(all_songs[song_key].chart_filelist, 'songs/'+all_songs[song_key].filepath)
+		# Need to fix keys on this to match the song
+		var diffs = all_songs[song_key].chart_difficulties
+		var missing_diffs = []
+		var unid_charts = []
+		for k in diffs:
+			if not (k in charts):
+				missing_diffs.push_back(k)
+		for k in charts:
+			if not (k in diffs):
+				unid_charts.push_back(k)
+		for i in len(missing_diffs):
+			if i < len(unid_charts):
+				charts[missing_diffs[i]] = charts[unid_charts[i]]
+				charts.erase(unid_charts[i])
+
+		charts_cache[song_key] = charts
 		return charts_cache[song_key]
 	else:
 		print_debug('Invalid song_key: ', song_key)

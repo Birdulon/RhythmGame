@@ -92,7 +92,7 @@ func _process(delta):
 	if (menu_mode == MenuMode.GAMEPLAY) and (menu_mode_prev_fade_timer <= 0.0) and not NoteHandler.running:
 		var songslist = genres[genres.keys()[selected_genre]]
 		var song_key = songslist[selected_song % len(songslist)]
-		NoteHandler.load_track(song_key, selected_difficulty)
+		NoteHandler.load_track(song_key, Library.Song.default_difficulty_keys[selected_difficulty])
 		NoteHandler.running = true
 
 func draw_string_centered(font, position, string, color := Color.white):

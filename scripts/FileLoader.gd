@@ -590,7 +590,7 @@ func load_folder(folder, filename='song'):
 
 func load_filelist(filelist: Array, directory=''):
 	var charts = {}
-	var key := 1
+	var key := 0
 	for name in filelist:
 		var extension: String = name.rsplit('.', true, 1)[-1]
 		name = directory.rstrip('/') + '/' + name
@@ -600,8 +600,8 @@ func load_filelist(filelist: Array, directory=''):
 				'rgtm':  # multiple charts
 					var res = RGT.load_file(filename)
 					for k in res:
-						charts[k] = res[k]
-				'rgts', 'rgtx':  # single chart
+						charts[Library.difficulty_translations.get(k, k)] = res[k]
+				'rgts', 'rgtx':  # single chart - The keys for this should be translated afterwards
 					charts[key] = RGT.load_file(filename)
 					key += 1
 				'srt':  # maimai, single chart

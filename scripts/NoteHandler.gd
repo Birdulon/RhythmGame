@@ -512,14 +512,14 @@ func _ready():
 	InputHandler.connect('button_released', self, 'button_released')
 	InputHandler.connect('touchbutton_released', self, 'touchbutton_released')
 
-func load_track(song_key: String, difficulty_idx: int):
+func load_track(song_key: String, difficulty_key: String):
 	self.song_key = song_key
 	set_time(-3.0)
 	active_notes = []
 	next_note_to_load = 0
 	all_notes = []
 	var data = Library.all_songs[song_key]
-	var chart = Library.get_song_charts(song_key).values()[difficulty_idx]
+	var chart = Library.get_song_charts(song_key)[difficulty_key]
 	for note in chart[1]:
 		all_notes.append(Note.copy_note(note))
 	bpm = data.BPM
