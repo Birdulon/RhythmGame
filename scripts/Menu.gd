@@ -173,17 +173,18 @@ func _draw_song_select(center: Vector2) -> Array:
 
 func _draw_chart_select(center: Vector2) -> Array:
 	# Select difficulty for chosen song
-	var size = 192
-	var spacer_x = 12
-	var touchrects = [{rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1}]
-	var x = center.x - (size*2.5 + spacer_x*2)
-
 	var charts: Dictionary = Library.get_song_charts(selected_song_key)
 	var song_data = Library.all_songs[selected_song_key]
 	var diffs = song_data.chart_difficulties
+	var n = len(diffs)
+	var spacer_x = max(14, 70/n)
+	var size = min(192, 960/n)
+	var touchrects = [{rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1}]  # invisible back button
+	var x = center.x - (size*n + spacer_x*(n-1))/2
+
 	for diff in diffs:
 		var i_diff = Library.Song.difficulty_key_ids.get(diff, 0)
-		var width = 9 if i_diff == selected_difficulty else 3
+		var width = 8 if i_diff == selected_difficulty else 3
 		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, i_diff, width)
 		touchrects.append({rect=r, chart_idx=i_diff})
 		x += size + spacer_x
