@@ -13,7 +13,7 @@ signal button_released(index)
 signal touchbutton_pressed(index)
 signal touchbutton_released(index)
 const TOUCHBUTTON_MIN_DIST := 0.8
-const TOUCHBUTTON_MAX_DIST := 1.05
+const TOUCHBUTTON_MAX_DIST := 1.075
 const BUTTON_MIN_DIST := TOUCHBUTTON_MAX_DIST
 const BUTTON_MAX_DIST := 1.25
 
