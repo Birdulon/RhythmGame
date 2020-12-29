@@ -216,7 +216,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var songslist = genres[genres.keys()[selected_genre]]
 	var song_key = scorescreen_song_key
 #	var song_data = Library.all_songs[song_key]
-	var chart: Array = Library.get_song_charts(selected_song_key).values()[selected_difficulty]
+	var chart: Array = Library.get_song_charts(selected_song_key)[Library.Song.default_difficulty_keys[selected_difficulty]]
 	var all_notes: Array = chart[1]
 	var meta: Dictionary = chart[0]
 
@@ -308,7 +308,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 
 	var rect_save := Rect2(x-300.0, y+660.0, 180.0, 100.0)
 	if not scorescreen_saved:
-		draw_rect(rect_save, Color.blue)
+		draw_rect(rect_save, Color(0.0, 0.01, 1.0))
 		draw_string_centered(TitleFont, Vector2(x-210, y+680), 'Save', Color(0.95, 0.95, 1.0))
 		touchrects.append({rect=rect_save, action='save'})
 	else:
