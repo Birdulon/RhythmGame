@@ -87,6 +87,8 @@ const UV_ARRAY_D_ROLL := PoolVector2Array([
 	])
 
 # Color definitions
+const COLOR_MENU_TEXT = Color(0.95, 0.95, 1.0)
+
 const COLOR_TAP := Color(1, 0.15, 0.15, 1)
 const COLOR_TAP2 := Color(0.75, 0.5, 0, 1)  # High-score taps ("breaks" in maimai)
 const COLOR_HOLD := Color(1, 0.15, 0.15, 1)

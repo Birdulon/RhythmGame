@@ -11,6 +11,6 @@ func draw_string_centered(font, position, string, color := Color.white):
 
 func _draw():
 	if score:
-		draw_string_centered(ScoreFont, Vector2(0, 0), score, Color(1.0, 1.0, 1.0))
+		draw_string_centered(ScoreFont, Vector2(0, 0), score)
 	if score_sub:
-		draw_string_centered(TitleFont, Vector2(0, 128), score_sub, Color(1.0, 1.0, 1.0))
+		draw_string_centered(TitleFont, Vector2(0, 128), score_sub)
