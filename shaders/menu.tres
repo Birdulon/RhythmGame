@@ -1,0 +1,66 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=2]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+//render_mode unshaded;
+const float PI = 3.141592654;
+
+uniform float bps;
+// All components are in the range [0…1], including hue.
+vec3 hsl2rgb(vec3 c)
+{
+//    vec3 rgb = clamp( abs(mod(c.x*6.0 + vec3(0.0,4.0,2.0), 6.0) - 3.0)-1.0, 0.0, 1.0 );
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    vec3 rgb = clamp(p-K.xxx, 0.0, 1.0);
+    return clamp(c.z + c.y*(rgb-0.5)*(1.0-abs(2.0*c.z-1.0)), 0.0, 1.0);
+}
+
+vec3 lab2xyz(vec3 c){
+	float fy=(c.x+16.)/116.,
+	      fx=c.y/500.+fy,
+	      fz=fy-c.z/200.;
+	vec3 scale = vec3(95.047, 100.000, 108.883);
+	return scale * vec3(
+		(fx > 0.206897) ? fx*fx*fx : (fx-16./116.)/7.787,
+		(fy > 0.206897) ? fy*fy*fy : (fy-16./116.)/7.787,
+		(fz > 0.206897) ? fz*fz*fz : (fz-16./116.)/7.787
+	);
+}
+vec3 xyz2rgb(vec3 c){
+	vec3 v = (c/100.0) * mat3(
+		vec3( 3.2406,-1.5372,-0.4986),
+		vec3(-0.9689, 1.8758, 0.0415),
+		vec3( 0.0557,-0.2040, 1.0570)
+	);
+	vec3 r = vec3(
+		(v.r>.0031308) ? (1.055*pow(v.r, (1./2.4)) - 0.055) : 12.92*v.r,
+		(v.g>.0031308) ? (1.055*pow(v.g, (1./2.4)) - 0.055) : 12.92*v.g,
+		(v.b>.0031308) ? (1.055*pow(v.b, (1./2.4)) - 0.055) : 12.92*v.b
+	);
+	return r;
+}
+vec3 lab2rgb(vec3 c){return xyz2rgb(lab2xyz(vec3(100.*c.x,2.*127.*(c.y-.5),2.*127.*(c.z-.5))));}
+
+
+void fragment() {
+	float wave_scale = 0.015;
+	float timescale = 0.75;
+	float t = TIME * timescale;
+	vec3 lab;
+	if (COLOR.rgb == vec3(0.0, 0.0, 1.0)){
+		//lab.x = mix(texture(TEXTURE, UV).b, 0.5, 0.35+0.25*cos(TIME * PI));
+		lab.x = 0.7+0.2*cos(TIME * PI/10.0);
+		lab.y = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.y+t*2.5) + 0.125*sin(0.5*wave_scale*FRAGCOORD.y+cos(t*1.5) + 0.125*cos(t*5.5));
+		lab.z = 0.5 + 0.25*sin(wave_scale*FRAGCOORD.x+t*2.25) + 0.125*sin(0.5*wave_scale*FRAGCOORD.x+cos(t*3.5) + 0.125*cos(t*6.5));
+		COLOR.rgb = lab2rgb(lab);
+
+		COLOR.a = clamp(texture(TEXTURE, UV).a, 0.0, 1.0);
+	} else {
+		COLOR *= texture(TEXTURE, UV);
+	}
+}"
+
+[resource]
+shader = SubResource( 1 )
+shader_param/bps = null

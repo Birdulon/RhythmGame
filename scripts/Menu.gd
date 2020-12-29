@@ -103,18 +103,21 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	# Draw difficulty-colored outline
 	if typeof(difficulty) == TYPE_STRING:
 		difficulty = Library.Song.difficulty_key_ids.get(difficulty, 0)
+
+	var song_diffs = Library.all_songs[song_key]['chart_difficulties']
+	if not (Library.Song.default_difficulty_keys[difficulty] in song_diffs):
+		difficulty = Library.Song.difficulty_key_ids.get(song_diffs.keys()[-1], 0)
 	var diff_color := GameTheme.COLOR_DIFFICULTY[difficulty*2]
 	var rect := Rect2(position.x, position.y, size, size)
 	draw_rect(Rect2(position.x - outline_px, position.y - outline_px, size + outline_px*2, size + outline_px*2), diff_color)
 	draw_texture_rect(Library.get_song_tile_texture(song_key), rect, false)
 	# Draw track difficulty rating
-	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), Library.all_songs[song_key]['chart_difficulties'].get(Library.Song.default_difficulty_keys[difficulty], '0'), diff_color)
+	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), song_diffs.get(Library.Song.default_difficulty_keys[difficulty], '0'), diff_color)
 	if title_text:
 		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), Library.all_songs[song_key].title.n, diff_color.lightened(0.33))
 	return rect
 
-func diffstr(difficulty: float):
-	# Convert .5 to +
+func diff_f2str(difficulty: float):  # Convert .5 to +
 	return str(int(floor(difficulty))) + ('+' if fmod(difficulty, 1.0)>0.4 else '')
 
 
@@ -147,13 +150,13 @@ func _draw_song_select(center: Vector2) -> Array:
 		var subsize = size * scales[0]
 		var gx = center.x - (subsize + spacer_x) * selected_song_delta
 		var songslist = Library.genre_songs[g].keys()
-		var genre_str = genres.keys()[g] + ' (%d)'%len(songslist)
+		var genre_str = '%s (%d)'%[genres.keys()[g], len(songslist)]
 		draw_string_centered(GenreFont, Vector2(center.x, gy), genre_str, Color.aqua)
 		var s = len(songslist)
 		var key = songslist[selected_song_vis % s]
 		var y = gy + spacer_y
 		var x = -subsize/2.0
-		var r = draw_songtile(key, Vector2(gx+x, y), subsize, selected, selected_difficulty)
+		var r = draw_songtile(key, Vector2(gx+x, y), subsize, selected)
 		touchrects.append({rect=r, song_idx=selected_song_vis, genre_idx=g})
 
 		for i in range(1, len(base_scales)):
@@ -178,7 +181,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 	var diffs = song_data.chart_difficulties
 	var n = len(diffs)
 	var spacer_x = max(14, 70/n)
-	var size = min(192, 960/n)
+	var size = min(192, (1000-spacer_x*(n-1))/n)
 	var touchrects = [{rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1}]  # invisible back button
 	var x = center.x - (size*n + spacer_x*(n-1))/2
 
