@@ -96,15 +96,17 @@ const COLOR_STAR := Color(0, 0, 1, 1)
 const COLOR_DOUBLE := Color(1, 1, 0, 1)  # When two (or more in master) hit events coincide
 const COLOR_DOUBLE_MISS := Color(0.33, 0.33, 0, 1)
 const COLOR_TEXT := Color(1, 1, 1, 1)
+const COLOR_SLIDE := Color(0.65, 0.65, 1.0, 1.0)
+const COLOR_DOUBLE_SLIDE := Color(1.0, 1.0, 0.35, 1.0)
 
 const COLOR_DIFFICULTY := PoolColorArray([  # Background, foreground for each
-	Color(0.435, 0.333, 1.000), Color(1.0, 1.0, 1.0),
-	Color(0.150, 1.000, 0.275), Color(1.0, 1.0, 1.0),
-	Color(0.973, 0.718, 0.039), Color(1.0, 1.0, 1.0),
-	Color(1.000, 0.150, 0.150), Color(1.0, 1.0, 1.0),
-	Color(0.761, 0.271, 0.902), Color(1.0, 1.0, 1.0),
+	Color(0.435, 0.333, 1.000), Color.white,
+	Color(0.150, 1.000, 0.275), Color.white,
+	Color(0.973, 0.718, 0.039), Color.white,
+	Color(1.000, 0.150, 0.150), Color.white,
+	Color(0.761, 0.271, 0.902), Color.white,
 	Color(1.0, 1.0, 1.0), Color(0.737, 0.188, 0.894),
-	Color(0.000, 0.000, 1.000), Color(1.0, 1.0, 1.0),
+	Color(0.000, 0.000, 1.000), Color.white,
 ])
 
 const COLOR_ARRAY_TAP := PoolColorArray([COLOR_TAP, COLOR_TAP, COLOR_TAP, COLOR_TAP])

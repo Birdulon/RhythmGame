@@ -178,19 +178,17 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 	var uvs := PoolVector2Array()
 	var colors := PoolColorArray()
 	var size := GameTheme.sprite_size2
-	var color := Color(0.67, 0.67, 1.0)
-	if note.double_hit:
-		color = Color(1.0, 1.0, 0.35)
+	var color := GameTheme.COLOR_DOUBLE_SLIDE if note.double_hit else GameTheme.COLOR_SLIDE
 
 	# First we need to determine how many arrows to leave.
 	var trail_length : int = int(floor(note.get_slide_length() * slide_arrows_per_unit_length))
 	vertices.resize(3*trail_length)
-#	uvs.resize(3*trail_length)
+	uvs.resize(3*trail_length)
 	colors.resize(3*trail_length)
 	for i in trail_length:
-		uvs.append_array(GameTheme.UV_ARRAY_SLIDE_ARROW if i%3 else GameTheme.UV_ARRAY_SLIDE_ARROW2)
+		var u = GameTheme.UV_ARRAY_SLIDE_ARROW if i%3 else GameTheme.UV_ARRAY_SLIDE_ARROW2
 		for j in 3:
-#			uvs[i*3+j] = GameTheme.UV_ARRAY_SLIDE_ARROW[j] if i%2 else GameTheme.UV_ARRAY_SLIDE_ARROW2[j]
+			uvs[i*3+j] = u[j]
 			colors[i*3+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
 
 	match note.slide_type:
@@ -331,7 +329,7 @@ func touchbutton_released(col):
 		check_hold_release(col)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
-var arr_div := Vector3(2.0, float(Rules.COLS), TAU)
+const arr_div := Vector3(2.0, float(Rules.COLS), TAU)
 func _draw():
 	var mesh := ArrayMesh.new()
 	var noteline_data : Image = noteline_array_image.get_rect(Rect2(0, 0, 16, 16))
