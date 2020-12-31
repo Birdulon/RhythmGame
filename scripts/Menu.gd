@@ -468,9 +468,9 @@ func _input(event):
 			elif event.is_action_pressed('ui_left'):
 				selected_song -= 1
 			elif event.is_action_pressed('ui_up'):
-				selected_genre = int(max(0, selected_genre - 1))
+				selected_genre = posmod(selected_genre - 1, len(genres))
 			elif event.is_action_pressed('ui_down'):
-				selected_genre = int(min(len(genres)-1, selected_genre + 1))
+				selected_genre = posmod(selected_genre + 1, len(genres))
 			elif event.is_action_pressed('ui_page_up'):
 				selected_difficulty = int(max(0, selected_difficulty - 1))
 			elif event.is_action_pressed('ui_page_down'):
