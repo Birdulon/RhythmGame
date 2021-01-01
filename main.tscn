@@ -245,3 +245,14 @@ text = "Vsync"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="WakelockButton" type="CheckButton" parent="InputHandler"]
+margin_left = 4.0
+margin_top = 240.0
+margin_right = 121.0
+margin_bottom = 130.0
+pressed = true
+text = "Wakelock"
+__meta__ = {
+"_edit_use_anchors_": false
+}

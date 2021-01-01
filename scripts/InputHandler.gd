@@ -36,11 +36,15 @@ func _ready():
 #	connect("button_pressed", self, "print_pressed")
 	$"/root".connect("size_changed", self, "resize")
 	$VsyncButton.connect("toggled", self, "update_vsync")
+	$WakelockButton.connect("toggled", self, "update_wakelock")
 	$FilterSlider.connect("value_changed", self, "update_filter")
 	resize()
 
 func update_vsync(setting: bool):
 	OS.vsync_enabled = setting
+
+func update_wakelock(setting: bool):
+	OS.keep_screen_on = setting  # This is waiting on godotengine/godot#35536 to be merged to do anything in Linux :(
 
 func update_filter(alpha: float):
 	GameTheme.screen_filter_min_alpha = alpha
