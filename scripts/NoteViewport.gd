@@ -4,13 +4,14 @@ export var SubsampleXControl = @'/root/main/InputHandler/SSXSlider'
 export var SubsampleYControl = @'/root/main/InputHandler/SSYSlider'
 onready var SSX = get_node(SubsampleXControl)
 onready var SSY = get_node(SubsampleYControl)
+onready var base_height = ProjectSettings.get_setting('display/window/size/height')
 
 func set_render_scale(scale: Vector2):
 	var ws = OS.window_size
 	var dim = min(ws.x, ws.y)
 	size = Vector2(dim, dim) * scale
 	$Center.position = size * 0.5
-	$Center.scale = size/1080
+	$Center.scale = size/base_height
 
 func slider_slot(arg1):
 	set_render_scale(Vector2(SSX.value, SSY.value))
