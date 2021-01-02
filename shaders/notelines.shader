@@ -103,7 +103,7 @@ void fragment() {
 			float double_diff = angle_diff(sample.z, sample2.z);
 			// Find the smallest arc between them, make it fully thick. If they are directly opposite, this will go 360°
 			float diff_a2 = angle_diff(angle, sample2.z);
-			bool fullthick = (diff_a+diff_a2-EPS) <= min(double_diff, PI-EPS); // Branchless logic
+			bool fullthick = (diff_a+diff_a2-EPS) <= min(double_diff, PI+EPS); // Branchless logic
 			line_double_alpha += ((line_thickness-radial_dist)/line_thickness) * float(radial_dist < line_thickness) * float(fullthick);
 			line_double_alpha += get_fringe_alpha(radial_dist, min(diff_a, diff_a2)) * float(!fullthick);
 		} else { // Just a regular single, fringing line only
