@@ -66,8 +66,8 @@ func _draw():
 #		if point.pressed:
 		# DRAW POINTS ################################################
 		draw_texture(txt_ball, point.position - Vector2(24, 24))
-		draw_string(default_font, point.position - Vector2(24, 24), str(i))
-		draw_string(default_font, point.position + Vector2(-24, 48), str(point.position))
+#		draw_string(default_font, point.position - Vector2(24, 24), str(i))
+#		draw_string(default_font, point.position + Vector2(-24, 48), str(point.position))
 #	if len(touch_positions) > 1:
 #		for i in range(len(touch_positions)-1):
 #			# Draw line
