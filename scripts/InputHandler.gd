@@ -55,9 +55,9 @@ func print_pressed(col: int):
 
 ##########################################################################
 # draw fingers points on screen
+var fps: float = 0.0
+var audio_latency: float = 0.0
 func _draw():
-	var fps = Engine.get_frames_per_second()
-	var audio_latency = AudioServer.get_output_latency()
 	set_text("FPS: %.0f\nAudio Latency: %.2fms"%[fps, audio_latency*1000])
 
 	# draw points
@@ -73,7 +73,13 @@ func _draw():
 #			# Draw line
 #			draw_line(touch_positions[i], touch_positions[i+1], Color(1,1,1,1))
 
+var last_latency_check := 0.0
 func _process(delta):
+	last_latency_check += delta
+	fps = Engine.get_frames_per_second()
+	if last_latency_check > 3.0:
+		last_latency_check = 0.0
+		audio_latency = AudioServer.get_output_latency()  # Note that on official godot builds this will only work ONCE for PulseAudio
 	update()
 
 func update_data():
