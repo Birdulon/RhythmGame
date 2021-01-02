@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=2]
+[gd_scene load_steps=21 format=2]
 
 [ext_resource path="res://scripts/main.gd" type="Script" id=1]
 [ext_resource path="res://scripts/video.gd" type="Script" id=2]
@@ -11,13 +11,10 @@
 [ext_resource path="res://shaders/notemesh.shader" type="Shader" id=9]
 [ext_resource path="res://shaders/notelines.shader" type="Shader" id=10]
 [ext_resource path="res://scripts/NotePainter.gd" type="Script" id=11]
-[ext_resource path="res://scripts/Menu.gd" type="Script" id=12]
-[ext_resource path="res://shaders/scoretext.tres" type="Material" id=13]
-[ext_resource path="res://scripts/ScoreText.gd" type="Script" id=14]
+[ext_resource path="res://Menu.tscn" type="PackedScene" id=12]
 [ext_resource path="res://scripts/Bezel.gd" type="Script" id=15]
 [ext_resource path="res://assets/NotoSans.tres" type="DynamicFont" id=16]
 [ext_resource path="res://scripts/InputHandler.gd" type="Script" id=17]
-[ext_resource path="res://shaders/menu.tres" type="Material" id=18]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 4 )
@@ -134,22 +131,7 @@ material = SubResource( 4 )
 material = SubResource( 5 )
 script = ExtResource( 11 )
 
-[node name="Menu" type="Control" parent="."]
-material = ExtResource( 18 )
-margin_left = -540.0
-margin_top = -540.0
-margin_right = 540.0
-margin_bottom = 540.0
-rect_pivot_offset = Vector2( 540, 540 )
-rect_clip_content = true
-script = ExtResource( 12 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="ScoreText" type="Node2D" parent="Menu"]
-material = ExtResource( 13 )
-script = ExtResource( 14 )
+[node name="Menu" parent="." instance=ExtResource( 12 )]
 
 [node name="Bezel" type="Node2D" parent="."]
 script = ExtResource( 15 )
@@ -236,9 +218,8 @@ __meta__ = {
 }
 
 [node name="VsyncButton" type="CheckButton" parent="InputHandler"]
-margin_left = 4.0
 margin_top = 90.0
-margin_right = 121.0
+margin_right = 117.0
 margin_bottom = 130.0
 pressed = true
 text = "Vsync"
@@ -247,9 +228,9 @@ __meta__ = {
 }
 
 [node name="WakelockButton" type="CheckButton" parent="InputHandler"]
-margin_left = 4.0
-margin_top = 240.0
-margin_right = 121.0
+margin_left = 110.0
+margin_top = 90.0
+margin_right = 251.0
 margin_bottom = 130.0
 pressed = true
 text = "Wakelock"

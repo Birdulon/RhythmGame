@@ -56,8 +56,8 @@ func print_pressed(col: int):
 ##########################################################################
 # draw fingers points on screen
 func _draw():
-	var fps = Performance.get_monitor(Performance.TIME_FPS)
-	var audio_latency = Performance.get_monitor(Performance.AUDIO_OUTPUT_LATENCY)
+	var fps = Engine.get_frames_per_second()
+	var audio_latency = AudioServer.get_output_latency()
 	set_text("FPS: %.0f\nAudio Latency: %.2fms"%[fps, audio_latency*1000])
 
 	# draw points

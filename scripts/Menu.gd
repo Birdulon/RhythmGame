@@ -2,7 +2,7 @@
 #extends Node2D
 extends Control
 
-var NoteHandlerPath := @'/root/main/NoteHandler'
+export var NoteHandlerPath := @'/root/main/NoteHandler'
 onready var NoteHandler := get_node(NoteHandlerPath)
 onready var ScoreText := $ScoreText
 
