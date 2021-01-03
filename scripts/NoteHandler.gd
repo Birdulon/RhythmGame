@@ -437,7 +437,8 @@ func _input(event):
 	for i in range(len(active_slide_trails)-1, -1, -1):
 		var note = active_slide_trails[i]
 		var center = note.get_position(note.progress)
-		if (pos - center).length_squared() < Rules.SLIDE_RADIUS2:
+		var center2 = note.get_position(min(note.progress+0.06, 1.0))
+		if ((pos - center).length_squared() < Rules.SLIDE_RADIUS2) or ((pos - center2).length_squared() < Rules.SLIDE_RADIUS2):
 			note.progress += 0.09
 			if note.progress >= 1.0:
 				do_slide_release(note)

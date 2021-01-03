@@ -14,7 +14,7 @@ signal touchbutton_pressed(index)
 signal touchbutton_released(index)
 const TOUCHBUTTON_MIN_DIST := 0.8
 const TOUCHBUTTON_MAX_DIST := 1.075
-const BUTTON_MIN_DIST := TOUCHBUTTON_MAX_DIST
+const BUTTON_MIN_DIST := 0.925
 const BUTTON_MAX_DIST := 1.25
 
 func resize():
@@ -97,17 +97,15 @@ func update_data():
 		var pol = cartesian2polar(pos.x, pos.y)
 		var dist = pol.x/GameTheme.receptor_ring_radius
 		var angle = rad2deg(pol.y)
-		if dist < TOUCHBUTTON_MIN_DIST:
+		if dist < TOUCHBUTTON_MIN_DIST:  # Short circuit out to save some logic
 			continue
 		# bin the angle
 		angle -= Rules.FIRST_COLUMN_ANGLE_DEG - Rules.COLS_TOUCH_ARC_DEG/2.0
 		if fmod(angle, Rules.COLS_ANGLE_DEG) > Rules.COLS_TOUCH_ARC_DEG:
 			continue
 		var col := int(floor(angle/Rules.COLS_ANGLE_DEG))
-		if dist < TOUCHBUTTON_MAX_DIST:
-			touchbuttons_pressed_temp[col] = true
-		elif dist < BUTTON_MAX_DIST:
-			buttons_pressed_temp[col] = true
+		touchbuttons_pressed_temp[col] = touchbuttons_pressed_temp[col] or (dist < TOUCHBUTTON_MAX_DIST)  # min dist already checked
+		buttons_pressed_temp[col] = buttons_pressed_temp[col] or (dist >= BUTTON_MIN_DIST) and (dist < BUTTON_MAX_DIST)
 
 	for i in Rules.COLS:
 		set_button_state(i, buttons_pressed_temp[i])
