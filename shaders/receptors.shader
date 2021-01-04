@@ -15,6 +15,7 @@ uniform float dot_radius = 0.033;
 uniform float shadow_thickness = 0.01;
 uniform float shadow_thickness_taper = 0.33;
 uniform float px = 0.002;  // Represents 1px in UV space, for AA purposes
+uniform float px2 = 0.004;  // Represents 2px in UV space, for AA purposes
 
 //void vertex() {
 //}
@@ -25,45 +26,45 @@ float angle_diff(float a, float b) {
 	return d;
 }
 
-void fragment() {
-	if (COLOR.rgba != vec4(1.0, 0.0, 0.0, 1.0)) {
-	COLOR.rgba = vec4(0.0);
-	lowp float dist = distance(UV, vec2(0.0));
-	lowp float angle = atan(-UV.y, UV.x);
-	float line_alpha = 0.0;
-	float dot_alpha = 0.0;
-	float shadow_alpha = 0.0;
-	float px2 = px/2.0;
-	
-	float diff = abs(dist - 1.0);
-	float d2 = diff - line_thickness;
-	if (d2 < -px2){
-		line_alpha = 1.0;
-	} else if (d2 < shadow_thickness){
-		if (d2 < px2)
-			line_alpha = 1.0 - (d2 + px2)/px;
-		shadow_alpha = 1.0 - min((d2 - shadow_thickness*shadow_thickness_taper)/(shadow_thickness*(1.0-shadow_thickness_taper)), 1.0);
-	}
-	
+vec2 line_alpha(float dist) {
+	// Returns [line, shadow]
+	vec2 output = vec2(0.0);
+	float d = abs(dist - 1.0) - line_thickness;
+	output.x = clamp(-d/px - 1.0, 0.0, 1.0);
+	output.y = clamp(1.0 - (d - shadow_thickness*shadow_thickness_taper)/(shadow_thickness*(1.0-shadow_thickness_taper)), 0, 1.0);
+	return output;
+}
+
+vec2 dot_alpha(vec2 uv) {
+	// Returns [dot, shadow]
+	vec2 output = vec2(0.0);
 	// Iterate over all the receptors and check distance to them
 	float receptor_spacing = TAU/float(num_receptors);
 	for (float rads=receptor_offset; rads<TAU; rads+=receptor_spacing){
 		// Check for dot distance
-		vec2 uv = vec2(cos(rads), -sin(rads));
-		float dist2 = distance(UV, uv);
-		float diff2 = dist2 - dot_radius;
-		if (diff2 < -px2){
-			dot_alpha = 1.0;
-		} else if (diff2 < shadow_thickness){
-			if (diff2 < px2)
-				dot_alpha = 1.0 - (diff2 + px2)/px;
-			shadow_alpha = max(shadow_alpha, 1.0-min((diff2 - shadow_thickness*shadow_thickness_taper)/(shadow_thickness*(1.0-shadow_thickness_taper)), 1.0));
-		}
+		vec2 dot_uv = vec2(cos(rads), -sin(rads));
+		float d = distance(uv, dot_uv) - dot_radius;
+		output.x = clamp(-d/px - 1.0, output.x, 1.0);
+		output.y = clamp(1.0 - (d - shadow_thickness*shadow_thickness_taper)/(shadow_thickness*(1.0-shadow_thickness_taper)), output.y, 1.0);
 	}
-	line_alpha = max(line_alpha - dot_alpha, 0.0);
+	return output;
+}
 
-	COLOR.rgb = (dot_color.rgb*dot_alpha) + (line_color.rgb*line_alpha) + (shadow_color.rgb*shadow_alpha);
-	COLOR.a = dot_alpha + line_alpha*(1.0-dot_alpha);
-	COLOR.a = COLOR.a + shadow_alpha*(1.0-COLOR.a);
+const vec4 dbg_color = vec4(1.0, 0.0, 0.0, 1.0);
+void fragment() {
+	if (COLOR.rgba != dbg_color) {  // Can't use return in fragment() function
+	COLOR.rgba = vec4(0.0);
+	lowp float dist = distance(UV, vec2(0.0));
+	lowp float angle = atan(-UV.y, UV.x);
+	vec3 lds_alpha = vec3(0.0);
+	
+	lds_alpha.yz = dot_alpha(UV);
+	lds_alpha.xz = clamp(line_alpha(dist), vec2(0.0, lds_alpha.z), vec2(1.0-lds_alpha.y));
+//	lds_alpha.x = clamp(line_alpha(dist).x, 0.0, 1.0-lds_alpha.y);
+	lds_alpha = clamp(lds_alpha, 0.0, 1.0);
+
+	COLOR.rgb = (dot_color.rgb*lds_alpha.y) + (line_color.rgb*lds_alpha.x) + (shadow_color.rgb*lds_alpha.z);
+	COLOR.a = lds_alpha.y + lds_alpha.x*(1.0-lds_alpha.y);
+	COLOR.a = COLOR.a + lds_alpha.z*(1.0-COLOR.a);
 	COLOR.a = clamp(COLOR.a, 0.0, 1.0); }
 }
