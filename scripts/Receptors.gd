@@ -147,3 +147,8 @@ func _ready():
 #	if not Engine.editor_hint:
 #		set_receptor_positions(sin(OS.get_ticks_msec()*0.001*0.0125*PI)*PI)
 #		update()
+
+func fade(visible: bool):
+#	$Tween.interpolate_property(self, "modulate", modulate, Color(1.0, 1.0, 1.0, float(visible)), 1.0)
+	$Tween.interpolate_property(self, "position", position, Vector2(0.0, float(!visible)*1080), 1.0)
+	$Tween.start()

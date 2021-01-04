@@ -385,6 +385,7 @@ func _draw():
 				ScoreText.show()
 
 func set_menu_mode(mode):
+	$'../Receptors'.fade(mode == MenuMode.GAMEPLAY)
 	menu_mode_prev = menu_mode
 	menu_mode = mode
 	menu_mode_prev_fade_timer = menu_mode_prev_fade_timer_duration
