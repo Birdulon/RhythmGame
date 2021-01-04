@@ -31,7 +31,7 @@ vec2 line_alpha(float dist) {
 	vec2 output = vec2(0.0);
 	float d = abs(dist - 1.0) - line_thickness;
 	output.x = clamp(-d/px - 1.0, 0.0, 1.0);
-	output.y = clamp(1.0 - (d - shadow_thickness*shadow_thickness_taper)/(shadow_thickness*(1.0-shadow_thickness_taper)), 0, 1.0);
+	output.y = clamp(1.0 - (d/shadow_thickness - shadow_thickness_taper)/(1.0 - shadow_thickness_taper), 0.0, 1.0);
 	return output;
 }
 
@@ -45,7 +45,7 @@ vec2 dot_alpha(vec2 uv) {
 		vec2 dot_uv = vec2(cos(rads), -sin(rads));
 		float d = distance(uv, dot_uv) - dot_radius;
 		output.x = clamp(-d/px - 1.0, output.x, 1.0);
-		output.y = clamp(1.0 - (d - shadow_thickness*shadow_thickness_taper)/(shadow_thickness*(1.0-shadow_thickness_taper)), output.y, 1.0);
+		output.y = clamp(1.0 - (d/shadow_thickness - shadow_thickness_taper)/(1.0 - shadow_thickness_taper), output.y, 1.0);
 	}
 	return output;
 }
