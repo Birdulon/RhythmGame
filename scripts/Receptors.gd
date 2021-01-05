@@ -6,7 +6,7 @@ export var receptor_px := 24  # Diameter
 export var shadow_px := 8  # Outer edge, analogous to radius
 export var line_color := Color.blue
 export var dot_color := Color.blue
-export var shadow_color := Color.black
+export var shadow_color := Color(0.0, 0.0, 0.0, 0.57)
 var center := Vector2(0.0, 0.0)
 
 var ring_vertex_count := 36
@@ -110,7 +110,7 @@ func update_ring_mesh():
 
 func _draw():
 #	draw_old(true, true)
-	draw_tris()
+#	draw_tris()
 #	var mesh_v = ring_vertex_count
 #	var ring_thickness = receptor_px + shadow_px*2
 #	var estimated_area = circumscribe_polygon_area(GameTheme.receptor_ring_radius+ring_thickness*0.5, mesh_v) - inscribe_polygon_area(GameTheme.receptor_ring_radius-ring_thickness*0.5, mesh_v)
@@ -121,7 +121,7 @@ func _draw():
 	material.set_shader_param("dot_radius", 0.5*receptor_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_thickness", 0.5*ring_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("shadow_thickness", shadow_px/GameTheme.receptor_ring_radius)
-	material.set_shader_param("shadow_thickness_taper", -0.75)
+#	material.set_shader_param("shadow_thickness_taper", -0.75)
 	material.set_shader_param("px", 0.5/GameTheme.receptor_ring_radius)
 	material.set_shader_param("px2", 1.0/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_color", line_color)
