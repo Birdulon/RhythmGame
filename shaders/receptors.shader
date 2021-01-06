@@ -56,7 +56,7 @@ void fragment() {
 	
 	lds_alpha.yw = dot_alpha(UV);
 	lds_alpha.xz = clamp(line_alpha(dist), vec2(0.0), vec2(1.0-lds_alpha.y));
-	lds_alpha.z = pow(max(lds_alpha.z, lds_alpha.w), 1.0-min(lds_alpha.z, lds_alpha.w));
+	lds_alpha.z += lds_alpha.w*(1.0-lds_alpha.z);
 	lds_alpha = clamp(lds_alpha, 0.0, 1.0);
 	lds_alpha.z *= 1.0-min(dot(lds_alpha.xy, vec2(1.0)), 1.0);
 	lds_alpha.z = max(pow(lds_alpha.z, 2.0)-0.125, 0.0);
