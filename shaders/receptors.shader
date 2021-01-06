@@ -17,6 +17,7 @@ uniform float dot_radius = 0.033;
 uniform float shadow_thickness = 0.01;
 uniform float px = 0.002;  // Represents 1px in UV space, for AA purposes
 uniform float px2 = 0.004;  // Represents 2px in UV space, for AA purposes
+uniform float alpha = 1.0;
 
 //void vertex() {
 //}
@@ -49,7 +50,6 @@ vec2 dot_alpha(vec2 uv) {
 
 void fragment() {
 	if (COLOR.rgba != dbg_color) {  // Can't use return in fragment() function
-	COLOR.rgba = vec4(0.0);
 	lowp float dist = distance(UV, vec2(0.0));
 	lowp float angle = atan(-UV.y, UV.x);
 	vec4 lds_alpha = vec4(0.0);
@@ -65,5 +65,6 @@ void fragment() {
 	COLOR.rgb = (line_color.rgb*lds_alpha.x) + (dot_color.rgb*lds_alpha.y) + (shadow_color.rgb*lds_alpha.z);
 	COLOR.a = lds_alpha.y + lds_alpha.x*(1.0-lds_alpha.y);
 	COLOR.a += lds_alpha.z*(1.0-COLOR.a);
-	COLOR = clamp(COLOR, 0.0, 1.0); }
+	COLOR = clamp(COLOR, 0.0, 1.0);
+	COLOR *= alpha; }
 }

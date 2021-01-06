@@ -7,6 +7,7 @@ export var shadow_px := 8  # Outer edge, analogous to radius
 export var line_color := Color.blue
 export var dot_color := Color.blue
 export var shadow_color := Color(0.0, 0.0, 0.0, 0.57)
+var alpha := 1.0
 var center := Vector2(0.0, 0.0)
 
 var ring_vertex_count := 36
@@ -115,18 +116,17 @@ func _draw():
 #	var ring_thickness = receptor_px + shadow_px*2
 #	var estimated_area = circumscribe_polygon_area(GameTheme.receptor_ring_radius+ring_thickness*0.5, mesh_v) - inscribe_polygon_area(GameTheme.receptor_ring_radius-ring_thickness*0.5, mesh_v)
 #	var ideal_ring_area = PI * (pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2) - pow(GameTheme.receptor_ring_radius-receptor_px/2-shadow_px, 2))
-
-	var quad_area = 4*pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2)
+#	var quad_area = 4*pow(GameTheme.receptor_ring_radius+receptor_px/2+shadow_px, 2)
 
 	material.set_shader_param("dot_radius", 0.5*receptor_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_thickness", 0.5*ring_px/GameTheme.receptor_ring_radius)
 	material.set_shader_param("shadow_thickness", shadow_px/GameTheme.receptor_ring_radius)
-#	material.set_shader_param("shadow_thickness_taper", -0.75)
 	material.set_shader_param("px", 0.5/GameTheme.receptor_ring_radius)
 	material.set_shader_param("px2", 1.0/GameTheme.receptor_ring_radius)
 	material.set_shader_param("line_color", line_color)
 	material.set_shader_param("dot_color", dot_color)
 	material.set_shader_param("shadow_color", shadow_color)
+	material.set_shader_param("alpha", alpha)
 
 func set_ring_vertex_count(num: int):
 	assert(num > 3)
@@ -155,7 +155,10 @@ func _ready():
 #		set_receptor_positions(sin(OS.get_ticks_msec()*0.001*0.0125*PI)*PI)
 #		update()
 
+func set_alpha(a):
+	alpha = a
+	material.set_shader_param("alpha", alpha)
+
 func fade(visible: bool):
-#	$Tween.interpolate_property(self, "modulate", modulate, Color(1.0, 1.0, 1.0, float(visible)), 1.0)
-	$Tween.interpolate_property(self, "position", position, Vector2(0.0, float(!visible)*1080), 1.0)
+	$Tween.interpolate_method(self, "set_alpha", alpha, float(visible), abs(alpha-float(visible))*2.0)
 	$Tween.start()
