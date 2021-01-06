@@ -52,12 +52,14 @@ void fragment() {
 	COLOR.rgba = vec4(0.0);
 	lowp float dist = distance(UV, vec2(0.0));
 	lowp float angle = atan(-UV.y, UV.x);
-	vec3 lds_alpha = vec3(0.0);
+	vec4 lds_alpha = vec4(0.0);
 	
-	lds_alpha.yz = dot_alpha(UV);
-	lds_alpha.xz = clamp(line_alpha(dist), vec2(0.0, lds_alpha.z), vec2(1.0-lds_alpha.y));
+	lds_alpha.yw = dot_alpha(UV);
+	lds_alpha.xz = clamp(line_alpha(dist), vec2(0.0), vec2(1.0-lds_alpha.y));
+	lds_alpha.z = pow(max(lds_alpha.z, lds_alpha.w), 1.0-min(lds_alpha.z, lds_alpha.w));
 	lds_alpha = clamp(lds_alpha, 0.0, 1.0);
 	lds_alpha.z *= 1.0-min(dot(lds_alpha.xy, vec2(1.0)), 1.0);
+	lds_alpha.z = max(pow(lds_alpha.z, 2.0)-0.125, 0.0);
 	lds_alpha.z *= shadow_color.a;
 
 	COLOR.rgb = (line_color.rgb*lds_alpha.x) + (dot_color.rgb*lds_alpha.y) + (shadow_color.rgb*lds_alpha.z);
