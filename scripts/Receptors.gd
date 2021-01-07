@@ -144,16 +144,8 @@ func set_receptor_positions(skew:=0.0):
 func _ready():
 	set_receptor_positions()
 	update_ring_mesh()
-#	$"../InputHandler/VerticesSlider".connect("value_changed", self, "set_ring_vertex_count")
-#	$"../InputHandler/SkewSlider".connect("value_changed", self, "set_ring_skew")
+	set_alpha(float(Engine.editor_hint))
 	$"/root".connect("size_changed", self, "update")
-
-#func _process(delta):
-#	update()
-#	pass
-#	if not Engine.editor_hint:
-#		set_receptor_positions(sin(OS.get_ticks_msec()*0.001*0.0125*PI)*PI)
-#		update()
 
 func set_alpha(a):
 	alpha = a
