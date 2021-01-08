@@ -434,7 +434,7 @@ func _input(event):
 	else:
 		return
 
-	for i in range(len(active_slide_trails)-1, -1, -1):
+	for i in range(len(active_slide_trails)-1, -1, -1):  # Iterate backwards as we are potentially deleting entries
 		var note = active_slide_trails[i]
 		var center = note.get_position(note.progress)
 		var center2 = note.get_position(min(note.progress+0.06, 1.0))
@@ -456,20 +456,6 @@ func set_time(seconds: float):
 	time_zero_msec = msecs - (seconds * 1000)
 	time = seconds
 	t = game_time(time)
-
-func make_noteline_mesh_old() -> ArrayMesh:
-	var rec_scale1 = (float(screen_height)/float(GameTheme.receptor_ring_radius))*0.5
-	var uv_array_playfield := PoolVector2Array([Vector2(-1.0, -1.0)*rec_scale1, Vector2(-1.0, 1.0)*rec_scale1, Vector2(1.0, -1.0)*rec_scale1, Vector2(1.0, 1.0)*rec_scale1])
-	var vertex_array_playfield := PoolVector2Array([
-		Vector2(-screen_height/2.0, screen_height/2.0), Vector2(-screen_height/2.0, -screen_height/2.0),
-		Vector2(screen_height/2.0, screen_height/2.0), Vector2(screen_height/2.0, -screen_height/2.0)])
-	var mesh_playfield := ArrayMesh.new()
-	var arrays = []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = vertex_array_playfield
-	arrays[Mesh.ARRAY_TEX_UV] = uv_array_playfield
-	mesh_playfield.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
-	return mesh_playfield
 
 func make_noteline_mesh(vertices := 32) -> ArrayMesh:
 	assert(vertices > 3)
@@ -501,7 +487,6 @@ func _ready():
 	notelines.material.set_shader_param('bps', bpm/60.0)
 	notelines.material.set_shader_param('array_postmul', arr_div)
 
-
 	noteline_array_image.create(16, 16, false, Image.FORMAT_RGBF)
 	noteline_array_image.fill(Color(0.0, 0.0, 0.0))
 	# Format: first 15 rows are for hit events, last row is for releases only (no ring glow)
@@ -510,6 +495,12 @@ func _ready():
 	InputHandler.connect('touchbutton_pressed', self, 'touchbutton_pressed')
 	InputHandler.connect('button_released', self, 'button_released')
 	InputHandler.connect('touchbutton_released', self, 'touchbutton_released')
+
+	meshinstance.material.set_shader_param('star_color', GameTheme.COLOR_STAR)
+	meshinstance.material.set_shader_param('held_color', GameTheme.COLOR_HOLD_HELD)
+	meshinstance.material.set_shader_param('bps', bpm/60.0)
+	meshinstance.material.set_shader_param('screen_size', get_viewport().get_size())
+	meshinstance.set_texture(GameTheme.tex_notes)
 
 func load_track(song_key: String, difficulty_key: String):
 	self.song_key = song_key
@@ -535,18 +526,13 @@ func load_track(song_key: String, difficulty_key: String):
 		if note.type == Note.NOTE_SLIDE:
 			slide_trail_meshes[note.slide_id] = make_slide_trail_mesh(note)
 
-	meshinstance.material.set_shader_param('star_color', GameTheme.COLOR_STAR)
-	meshinstance.material.set_shader_param('held_color', GameTheme.COLOR_HOLD_HELD)
-	meshinstance.material.set_shader_param('bps', bpm/60.0)
-	meshinstance.material.set_shader_param('screen_size', get_viewport().get_size())
-	meshinstance.set_texture(GameTheme.tex_notes)
 	initialise_scores()  # Remove old score
 
 func stop():
 	MusicPlayer.stop()
 	VideoPlayer.stop()
 #	running = false
-	next_note_to_load = 1000000  # Hacky but whatever
+	next_note_to_load = 10000000  # Hacky but whatever
 
 func intro_click():
 	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_count_in)
