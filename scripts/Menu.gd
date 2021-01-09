@@ -122,17 +122,18 @@ func diff_f2str(difficulty: float):  # Convert .5 to +
 
 
 func _draw_song_select(center: Vector2) -> Array:
-	var size = 128
+	var size = 192
 	var spacer_x = 12
 	var spacer_y = 64
 	var title_spacer_y = 48
 	var sel_scales := [1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var bg_scales := [0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096]
-	var gy := center.y -300
+	var gy := center.y - 360
 	var touchrects := []
 
-	for g in len(genres):
-		var selected: bool = (g == selected_genre)
+	for gi in [-2, -1, 0, 1, 2]:
+		var g = (selected_genre + gi) % len(genres)
+		var selected: bool = (gi == 0)
 		var base_scales = sel_scales if selected else bg_scales
 		var scales = []
 		scales.resize(len(base_scales)*2-1)
