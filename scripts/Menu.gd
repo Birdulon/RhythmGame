@@ -36,6 +36,7 @@ var GenreFont := preload('res://assets/MenuGenreFont.tres')
 var DiffNumFont := preload('res://assets/MenuDiffNumberFont.tres')
 var ScoreFont := preload('res://assets/MenuScoreFont.tres')
 var snd_interact := preload('res://assets/softclap.wav')
+var snd_error := preload('res://assets/miss.wav')
 
 func scan_library():
 	var results = FileLoader.scan_library()
@@ -98,7 +99,7 @@ func _process(delta):
 func draw_string_centered(font, position, string, color := GameTheme.COLOR_MENU_TEXT):
 	draw_string(font, Vector2(position.x - font.get_string_size(string).x/2.0, position.y + font.get_ascent()), string, color)
 
-func draw_songtile(song_key, position, size, title_text:=false, difficulty=selected_difficulty, outline_px:=3):
+func draw_songtile(song_key, position, size, title_text:=false, difficulty=selected_difficulty, outline_px:=3, disabled:=false):
 	# Draws from top left-corner. Returns Rect2 of the image (not the outline).
 	# Draw difficulty-colored outline
 	if typeof(difficulty) == TYPE_STRING:
@@ -110,9 +111,11 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	var diff_color := GameTheme.COLOR_DIFFICULTY[difficulty*2]
 	var rect := Rect2(position.x, position.y, size, size)
 	draw_rect(Rect2(position.x - outline_px, position.y - outline_px, size + outline_px*2, size + outline_px*2), diff_color)
-	draw_texture_rect(Library.get_song_tile_texture(song_key), rect, false)
+	draw_texture_rect(Library.get_song_tile_texture(song_key), rect, false, Color.white if not disabled else Color(0.5, 0.2, 0.1))
 	# Draw track difficulty rating
 	draw_string_centered(DiffNumFont, Vector2(position.x+size-17, position.y+size-40), song_diffs.get(Library.Song.default_difficulty_keys[difficulty], '0'), diff_color)
+	if disabled:
+		draw_string_centered(DiffNumFont, Vector2(position.x+size/2, position.y+size/2-16), 'No Chart!', diff_color)
 	if title_text:
 		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), Library.all_songs[song_key].title.n, diff_color.lightened(0.33))
 	return rect
@@ -183,30 +186,37 @@ func _draw_chart_select(center: Vector2) -> Array:
 	var n = len(diffs)
 	var spacer_x = max(14, 70/n)
 	var size = min(192, (1000-spacer_x*(n-1))/n)
-	var touchrects = [{rect=Rect2(center.x-450.0, center.y+310.0, 900.0, 300.0), chart_idx=-1}]  # invisible back button
+	var rect_back = Rect2(center.x-300.0, center.y+550.0, 600.0, 140.0)
+	draw_rect(rect_back, Color.red)
+	draw_string_centered(TitleFont, rect_back.position+rect_back.size/2-Vector2(0,26), 'Back to song selection')
+	var touchrects = [{rect=rect_back, chart_idx=-1, enabled=true}]  # invisible back button
 	var x = center.x - (size*n + spacer_x*(n-1))/2
 
 	for diff in diffs:
 		var i_diff = Library.Song.difficulty_key_ids.get(diff, 0)
 		var width = 8 if i_diff == selected_difficulty else 3
-		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, i_diff, width)
-		touchrects.append({rect=r, chart_idx=i_diff})
+		var chart_exists: bool = (diff in charts)
+		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, i_diff, width, not chart_exists)
+		touchrects.append({rect=r, chart_idx=i_diff, enabled=chart_exists})
 		x += size + spacer_x
 	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), Library.all_songs[selected_song_key].title.n)
-
-	var sel_chart: Array = charts.values()[min(selected_difficulty, len(charts)-1)]
-	var all_notes: Array = sel_chart[1]
-	var meta: Dictionary = sel_chart[0]
 
 	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:')
 	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM))
 
-	var notestrs = ['Taps:', 'Holds:', 'Slides:']
-	var notetypes = [0, 1, 2]
-	var note_counts = [meta.num_taps, meta.num_holds, meta.num_slides]
-	for i in len(notestrs):
-		draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+148+i*50), notestrs[i])
-		draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+148+i*50), str(note_counts[notetypes[i]]))
+	if len(charts) > 0:
+		var sel_chart: Array = charts.values()[min(selected_difficulty, len(charts)-1)]
+		var all_notes: Array = sel_chart[1]
+		var meta: Dictionary = sel_chart[0]
+
+		var notestrs = ['Taps:', 'Holds:', 'Slides:']
+		var notetypes = [0, 1, 2]
+		var note_counts = [meta.num_taps, meta.num_holds, meta.num_slides]
+		for i in len(notestrs):
+			draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+148+i*50), notestrs[i])
+			draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+148+i*50), str(note_counts[notetypes[i]]))
+	else:
+		draw_string_centered(TitleFont, Vector2(center.x, center.y+size+148), 'No available charts!', Color.red)
 
 	return touchrects
 
@@ -404,8 +414,11 @@ func touch_select_song(touchdict):
 
 func touch_select_chart(touchdict):
 	if touchdict.chart_idx == selected_difficulty:
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
-		set_menu_mode(MenuMode.GAMEPLAY)
+		if touchdict.enabled:
+			SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+			set_menu_mode(MenuMode.GAMEPLAY)
+		else:
+			SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_error, 0.0)
 	elif touchdict.chart_idx < 0:
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -3.0, 0.7)
 		set_menu_mode(MenuMode.SONG_SELECT)
