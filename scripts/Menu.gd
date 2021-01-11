@@ -12,6 +12,9 @@ enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
 enum MenuMode {SONG_SELECT, CHART_SELECT, OPTIONS, GAMEPLAY, SCORE_SCREEN}
 
 var selected_genre: int = 0
+var selected_genre_vis: int = 0
+var selected_genre_delta: float = 0.0  # For floaty display scrolling
+var selected_genre_speed: float = 0.0  # For floaty display scrolling
 var selected_song: int = 0
 var selected_song_vis: int = 0
 var selected_song_delta: float = 0.0  # For floaty display scrolling
@@ -88,6 +91,16 @@ func _process(delta):
 		selected_song_delta += 1.0
 		selected_song_vis -= 1
 
+	var g_diff = selected_genre - (selected_genre_vis + selected_genre_delta)
+	selected_genre_speed = ease(abs(g_diff), 1)*10
+	selected_genre_delta += sign(g_diff) * selected_genre_speed * delta
+	if selected_genre_delta > 0.5:
+		selected_genre_delta -= 1.0
+		selected_genre_vis += 1
+	elif selected_genre_delta < -0.5:
+		selected_genre_delta += 1.0
+		selected_genre_vis -= 1
+
 	menu_mode_prev_fade_timer = max(0.0, menu_mode_prev_fade_timer - delta)
 	update()
 	if (menu_mode == MenuMode.GAMEPLAY) and (menu_mode_prev_fade_timer <= 0.0) and not NoteHandler.running:
@@ -131,11 +144,11 @@ func _draw_song_select(center: Vector2) -> Array:
 	var title_spacer_y = 48
 	var sel_scales := [1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var bg_scales := [0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096]
-	var gy := center.y - 360
+	var gy: float = center.y - 360 - size*selected_genre_delta
 	var touchrects := []
 
 	for gi in [-2, -1, 0, 1, 2]:
-		var g = (selected_genre + gi) % len(genres)
+		var g = (selected_genre_vis + gi) % len(genres)
 		var selected: bool = (gi == 0)
 		var base_scales = sel_scales if selected else bg_scales
 		var scales = []
@@ -478,7 +491,7 @@ func _input(event):
 							touch_score_screen(d)
 	match menu_mode:
 		MenuMode.SONG_SELECT:
-			if event.is_action_pressed('ui_right'):
+			if event.is_action_pressed('ui_right'):  # Sadly can't use match with this input system
 				selected_song += 1
 			elif event.is_action_pressed('ui_left'):
 				selected_song -= 1
