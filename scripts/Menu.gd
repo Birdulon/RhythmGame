@@ -14,11 +14,9 @@ enum MenuMode {SONG_SELECT, CHART_SELECT, OPTIONS, GAMEPLAY, SCORE_SCREEN}
 var selected_genre: int = 0
 var selected_genre_vis: int = 0
 var selected_genre_delta: float = 0.0  # For floaty display scrolling
-var selected_genre_speed: float = 0.0  # For floaty display scrolling
 var selected_song: int = 0
 var selected_song_vis: int = 0
 var selected_song_delta: float = 0.0  # For floaty display scrolling
-var selected_song_speed: float = 0.0  # For floaty display scrolling
 var selected_song_key: String = ''
 var selected_difficulty = ChartDifficulty.ADV
 var menu_mode = MenuMode.SONG_SELECT
@@ -40,6 +38,8 @@ var DiffNumFont := preload('res://assets/MenuDiffNumberFont.tres')
 var ScoreFont := preload('res://assets/MenuScoreFont.tres')
 var snd_interact := preload('res://assets/softclap.wav')
 var snd_error := preload('res://assets/miss.wav')
+
+export var ease_curve: Curve
 
 func scan_library():
 	var results = FileLoader.scan_library()
@@ -82,8 +82,7 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	var diff = selected_song - (selected_song_vis + selected_song_delta)
-	selected_song_speed = ease(abs(diff), 1)*10
-	selected_song_delta += sign(diff) * selected_song_speed * delta
+	selected_song_delta += ease_curve.interpolate(clamp(diff, -2, 2)*0.5) * 10 * delta
 	if selected_song_delta > 0.5:
 		selected_song_delta -= 1.0
 		selected_song_vis += 1
@@ -92,8 +91,7 @@ func _process(delta):
 		selected_song_vis -= 1
 
 	var g_diff = selected_genre - (selected_genre_vis + selected_genre_delta)
-	selected_genre_speed = ease(abs(g_diff), 1)*10
-	selected_genre_delta += sign(g_diff) * selected_genre_speed * delta
+	selected_genre_delta += ease_curve.interpolate(clamp(g_diff, -1, 1)) * 10 * delta
 	if selected_genre_delta > 0.5:
 		selected_genre_delta -= 1.0
 		selected_genre_vis += 1
