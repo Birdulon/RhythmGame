@@ -124,7 +124,7 @@ func _process(delta):
 		NoteHandler.running = true
 
 func draw_string_centered(font, position, string, color := GameTheme.COLOR_MENU_TEXT):
-	draw_string(font, Vector2(position.x - font.get_string_size(string).x/2.0, position.y + font.get_ascent()), string, color)
+	draw_string(font, Vector2(position.x - font.get_string_size(string).x/2.0, position.y + font.get_ascent()).round(), string, color)
 
 func draw_songtile(song_key, position, size, title_text:=false, difficulty=selected_difficulty, outline_px:=3, disabled:=false):
 	# Draws from top left-corner. Returns Rect2 of the image (not the outline).
@@ -150,14 +150,14 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 func diff_f2str(difficulty: float):  # Convert .5 to +
 	return str(int(floor(difficulty))) + ('+' if fmod(difficulty, 1.0)>0.4 else '')
 
-var sel_scales := lerp_array.new([1.0, 0.8, 0.64, 0.512, 0.4096])
-var bg_scales := lerp_array.new([0.64, 0.64, 0.64, 0.512, 0.4096])
+var sel_scales := lerp_array.new([1.0, 0.8, 0.64, 0.5, 0.4])
+var bg_scales := lerp_array.new([0.64, 0.64, 0.64, 0.5, 0.4])
 func _draw_song_select(center: Vector2) -> Array:
-	var size = 192
+	var size = 200
 	var spacer_x = 12
 	var spacer_y = 64
 	var title_spacer_y = 48
-	var gy: float = center.y - 360 - size*selected_genre_delta
+	var gy: float = center.y - 375 - size*selected_genre_delta
 	var touchrects := []
 
 	for gi in [-2, -1, 0, 1, 2]:
@@ -177,17 +177,18 @@ func _draw_song_select(center: Vector2) -> Array:
 		var r = draw_songtile(key, Vector2(gx+x, y), subsize, selected)
 		touchrects.append({rect=r, song_idx=selected_song_vis, genre_idx=g})
 
+		var subsize_p = subsize
+		var subsize_n = subsize
+		var x_p = x
+		var x_n = x
 		for i in range(1, len(scales.array)):
-			x += subsize + spacer_x
-			subsize = size * scales.value(abs(i-selected_song_delta))
-			r = draw_songtile(songslist[(selected_song_vis+i) % s], Vector2(gx+x, y), subsize)
+			x_p += subsize_p + spacer_x
+			x_n += subsize_n + spacer_x
+			subsize_p = size * scales.value(abs(i-selected_song_delta))
+			subsize_n = size * scales.value(abs(-i-selected_song_delta))
+			r = draw_songtile(songslist[(selected_song_vis+i) % s], Vector2(gx+x_p, y), subsize_p)
 			touchrects.append({rect=r, song_idx=selected_song_vis+i, genre_idx=g})
-		subsize = size * scales.value(abs(selected_song_delta))
-		x = -subsize/2.0
-		for i in range(1, len(scales.array)):
-			x += subsize + spacer_x
-			subsize = size * scales.value(abs(-i-selected_song_delta))
-			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x - subsize, y), subsize)
+			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x_n - subsize_n, y), subsize_n)
 			touchrects.append({rect=r, song_idx=selected_song_vis-i, genre_idx=g})
 		gy += size*scales.value(0) + spacer_y + (title_spacer_y if selected else 0)
 	return touchrects
