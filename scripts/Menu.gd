@@ -41,6 +41,22 @@ var snd_error := preload('res://assets/miss.wav')
 
 export var ease_curve: Curve
 
+
+class lerp_array extends Resource:
+	var array
+	func _init(array: Array):
+		self.array = array
+
+	func value(index: float):
+		# Only >= 0 for now, but should be fine since it's an arraylike anyway
+		var i := min(int(floor(index)), len(array)-2)  # Somewhat hacky - if we pass len(array)-1 as index, it will return lerp(a[-2], a[-1], 1) == a[-1]
+		var f := min(index - i, 1.0)
+		return lerp(array[i], array[i+1], f)
+
+	func len():
+		return len(array)
+
+
 func scan_library():
 	var results = FileLoader.scan_library()
 	genres = results.genres
@@ -134,35 +150,22 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 func diff_f2str(difficulty: float):  # Convert .5 to +
 	return str(int(floor(difficulty))) + ('+' if fmod(difficulty, 1.0)>0.4 else '')
 
-
+var sel_scales := lerp_array.new([1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096])
+var bg_scales := lerp_array.new([0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096])
 func _draw_song_select(center: Vector2) -> Array:
 	var size = 192
 	var spacer_x = 12
 	var spacer_y = 64
 	var title_spacer_y = 48
-	var sel_scales := [1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096]
-	var bg_scales := [0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096]
 	var gy: float = center.y - 360 - size*selected_genre_delta
 	var touchrects := []
 
 	for gi in [-2, -1, 0, 1, 2]:
 		var g = (selected_genre_vis + gi) % len(genres)
 		var selected: bool = (gi == 0)
-		var base_scales = sel_scales if selected else bg_scales
-		var scales = []
-		scales.resize(len(base_scales)*2-1)
-		if selected_song_delta >= 0.0:
-			for i in len(base_scales)-1:
-				scales[i+1] = lerp(base_scales[i+1], base_scales[i], selected_song_delta)
-				scales[-i] = lerp(base_scales[i], base_scales[i+1], selected_song_delta)
-			scales[len(base_scales)] = base_scales[-1]
-		else:
-			for i in len(base_scales)-1:
-				scales[i] = lerp(base_scales[i], base_scales[i+1], -selected_song_delta)
-				scales[-i-1] = lerp(base_scales[i+1], base_scales[i], -selected_song_delta)
-			scales[-len(base_scales)] = base_scales[-1]
+		var scales = sel_scales if selected else bg_scales
 
-		var subsize = size * scales[0]
+		var subsize = size * scales.value(abs(selected_song_delta))
 		var gx = center.x - (subsize + spacer_x) * selected_song_delta
 		var songslist = Library.genre_songs[g].keys()
 		var genre_str = '%s (%d)'%[genres.keys()[g], len(songslist)]
@@ -174,19 +177,19 @@ func _draw_song_select(center: Vector2) -> Array:
 		var r = draw_songtile(key, Vector2(gx+x, y), subsize, selected)
 		touchrects.append({rect=r, song_idx=selected_song_vis, genre_idx=g})
 
-		for i in range(1, len(base_scales)):
+		for i in range(1, len(scales.array)):
 			x += subsize + spacer_x
-			subsize = size * scales[i]
+			subsize = size * scales.value(abs(i-selected_song_delta))
 			r = draw_songtile(songslist[(selected_song_vis+i) % s], Vector2(gx+x, y), subsize)
 			touchrects.append({rect=r, song_idx=selected_song_vis+i, genre_idx=g})
-		subsize = size * scales[0]
+		subsize = size * scales.value(abs(selected_song_delta))
 		x = -subsize/2.0
-		for i in range(1, len(base_scales)):
+		for i in range(1, len(scales.array)):
 			x += subsize + spacer_x
-			subsize = size * scales[-i]
+			subsize = size * scales.value(abs(-i-selected_song_delta))
 			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x - subsize, y), subsize)
 			touchrects.append({rect=r, song_idx=selected_song_vis-i, genre_idx=g})
-		gy += size*base_scales[0] + spacer_y + (title_spacer_y if selected else 0)
+		gy += size*scales.value(0) + spacer_y + (title_spacer_y if selected else 0)
 	return touchrects
 
 func _draw_chart_select(center: Vector2) -> Array:
