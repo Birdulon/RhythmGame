@@ -150,8 +150,8 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 func diff_f2str(difficulty: float):  # Convert .5 to +
 	return str(int(floor(difficulty))) + ('+' if fmod(difficulty, 1.0)>0.4 else '')
 
-var sel_scales := lerp_array.new([1.0, 0.8, 0.64, 0.64, 0.64, 0.512, 0.4096])
-var bg_scales := lerp_array.new([0.64, 0.64, 0.64, 0.64, 0.64, 0.512, 0.4096])
+var sel_scales := lerp_array.new([1.0, 0.8, 0.64, 0.512, 0.4096])
+var bg_scales := lerp_array.new([0.64, 0.64, 0.64, 0.512, 0.4096])
 func _draw_song_select(center: Vector2) -> Array:
 	var size = 192
 	var spacer_x = 12
