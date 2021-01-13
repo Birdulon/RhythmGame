@@ -513,6 +513,7 @@ func load_track(song_key: String, difficulty_key: String):
 	for note in chart[1]:
 		all_notes.append(Note.copy_note(note))
 	bpm = data.BPM
+	GameTheme.note_forecast_beats = 2.0 if (bpm < 180) else 3.0  # Hack to make high-BPM playable until proper settings
 	sync_offset_audio = data.audio_offsets[0]
 	sync_offset_video = data.video_offsets[0]
 	var videostream = FileLoader.load_video('songs/' + data.filepath.rstrip('/') + '/' + data.video_filelist[0])
