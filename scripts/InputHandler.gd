@@ -38,6 +38,7 @@ func _ready():
 	$VsyncButton.connect("toggled", self, "update_vsync")
 	$WakelockButton.connect("toggled", self, "update_wakelock")
 	$FilterSlider.connect("value_changed", self, "update_filter")
+	$VolumeSlider.connect("value_changed", self, "update_volume")
 	resize()
 
 func update_vsync(setting: bool):
@@ -48,6 +49,9 @@ func update_wakelock(setting: bool):
 
 func update_filter(alpha: float):
 	GameTheme.screen_filter_min_alpha = alpha
+
+func update_volume(volume: float):
+	AudioServer.set_bus_volume_db(0, volume)
 
 func print_pressed(col: int):
 	print("Pressed %d"%col)

@@ -181,7 +181,7 @@ func _draw_song_select(center: Vector2) -> Array:
 		var subsize_n = subsize
 		var x_p = x
 		var x_n = x
-		for i in range(1, len(scales.array)):
+		for i in range(1, scales.len()):
 			x_p += subsize_p + spacer_x
 			x_n += subsize_n + spacer_x
 			subsize_p = size * scales.value(abs(i-selected_song_delta))

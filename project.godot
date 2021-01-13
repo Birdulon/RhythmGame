@@ -58,6 +58,5 @@ singletons_disabled=[  ]
 [rendering]
 
 vram_compression/import_etc=true
-environment/default_clear_color=Color( 0.16, 0.16, 0.16, 1 )
 quality/filters/msaa=1
 environment/default_environment="res://default_env.tres"

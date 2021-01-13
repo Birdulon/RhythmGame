@@ -22,7 +22,7 @@ shader_param/num_receptors = 8
 shader_param/receptor_offset = 0.392699
 shader_param/line_color = Color( 0, 0, 1, 1 )
 shader_param/dot_color = Color( 0, 0, 1, 1 )
-shader_param/shadow_color = Color( 0, 0, 0, 0.568627 )
+shader_param/shadow_color = Color( 0, 0, 0, 0.57 )
 shader_param/line_thickness = 0.00434783
 shader_param/dot_radius = 0.026087
 shader_param/shadow_thickness = 0.0173913
@@ -79,6 +79,7 @@ __meta__ = {
 
 [node name="music" type="AudioStreamPlayer" parent="."]
 volume_db = -6.0
+bus = "Music"
 
 [node name="video" type="VideoPlayer" parent="."]
 margin_left = -540.0
@@ -90,6 +91,7 @@ grow_vertical = 2
 rect_pivot_offset = Vector2( 540, 540 )
 mouse_filter = 2
 volume_db = -80.0
+bus = "Music"
 script = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -215,6 +217,29 @@ margin_bottom = 234.0
 max_value = 1.0
 step = 0.01
 value = 0.2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label3" type="Label" parent="InputHandler"]
+margin_top = 240.0
+margin_right = 133.0
+margin_bottom = 254.0
+text = "Main Volume"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VolumeSlider" type="HSlider" parent="InputHandler"]
+margin_left = 10.0
+margin_top = 260.0
+margin_right = 250.0
+margin_bottom = 276.0
+min_value = -70.0
+max_value = 0.0
+step = 1.0
+tick_count = 8
+ticks_on_borders = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
