@@ -3,8 +3,8 @@ extends Label
 var touch_points = {} 								# dict containing all points touched on the screen
 var touch_positions = []							# array of above
 var fingers = 0 setget set_fingers					# setter for show fingers number on screen
-var txt_ball = preload("res://assets/ball.png")		# preload our ball texture
-var default_font = preload("res://assets/NotoSans.tres")
+var txt_ball = preload('res://assets/ball.png')		# preload our ball texture
+var default_font = preload('res://assets/NotoSans.tres')
 
 var buttons_pressed := PoolByteArray()
 var touchbuttons_pressed := PoolByteArray()
@@ -18,7 +18,7 @@ const BUTTON_MIN_DIST := 0.925
 const BUTTON_MAX_DIST := 1.25
 
 func resize():
-	var screen_size = $"/root".get_visible_rect().size
+	var screen_size = $'/root'.get_visible_rect().size
 	rect_position = -screen_size*0.5
 	rect_size = screen_size
 
@@ -33,12 +33,14 @@ func _ready():
 	Input.set_use_accumulated_input(false)  # Gotta go fast
 	set_process_unhandled_input(true)  # process user input
 	set_fingers(0)
-#	connect("button_pressed", self, "print_pressed")
-	$"/root".connect("size_changed", self, "resize")
-	$VsyncButton.connect("toggled", self, "update_vsync")
-	$WakelockButton.connect("toggled", self, "update_wakelock")
-	$FilterSlider.connect("value_changed", self, "update_filter")
-	$VolumeSlider.connect("value_changed", self, "update_volume")
+#	connect('button_pressed', self, 'print_pressed')
+	$'/root'.connect('size_changed', self, 'resize')
+	$VsyncButton.connect('toggled', self, 'update_vsync')
+	$WakelockButton.connect('toggled', self, 'update_wakelock')
+	$FilterSlider.connect('value_changed', self, 'update_filter')
+	$VolumeSlider.connect('value_changed', self, 'update_volume')
+	$SSXSlider.connect('value_changed', Settings, 'SSX_set')
+	$SSYSlider.connect('value_changed', Settings, 'SSY_set')
 	resize()
 
 func update_vsync(setting: bool):
@@ -54,7 +56,7 @@ func update_volume(volume: float):
 	AudioServer.set_bus_volume_db(0, volume)
 
 func print_pressed(col: int):
-	print("Pressed %d"%col)
+	print('Pressed %d'%col)
 
 
 ##########################################################################
@@ -62,7 +64,7 @@ func print_pressed(col: int):
 var fps: float = 0.0
 var audio_latency: float = 0.0
 func _draw():
-	set_text("FPS: %.0f\nAudio Latency: %.2fms"%[fps, audio_latency*1000])
+	set_text('FPS: %.0f\nAudio Latency: %.2fms'%[fps, audio_latency*1000])
 
 	# draw points
 	for i in touch_points:
@@ -144,16 +146,16 @@ func set_button_state(index: int, state: bool):
 	var new_state = int(state)
 	match new_state - buttons_pressed[index]:
 		1:
-			emit_signal("button_pressed", index)
+			emit_signal('button_pressed', index)
 		-1:
-			emit_signal("button_released", index)
+			emit_signal('button_released', index)
 	buttons_pressed[index] = new_state
 
 func set_touchbutton_state(index: int, state: bool):
 	var new_state = int(state)
 	match new_state - touchbuttons_pressed[index]:
 		1:
-			emit_signal("touchbutton_pressed", index)
+			emit_signal('touchbutton_pressed', index)
 		-1:
-			emit_signal("touchbutton_released", index)
+			emit_signal('touchbutton_released', index)
 	touchbuttons_pressed[index] = new_state

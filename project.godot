@@ -30,6 +30,7 @@ FileLoader="*res://scripts/FileLoader.gd"
 Library="*res://scripts/Library.gd"
 GameTheme="*res://scripts/GameTheme.gd"
 SFXPlayer="*res://scripts/SFXPlayer.gd"
+Settings="*res://scripts/Settings.gd"
 
 [debug]
 
@@ -60,3 +61,5 @@ singletons_disabled=[  ]
 vram_compression/import_etc=true
 quality/filters/msaa=1
 environment/default_environment="res://default_env.tres"
+quality/subsampling/x=1.0
+quality/subsampling/y=1.0
