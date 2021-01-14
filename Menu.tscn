@@ -27,3 +27,6 @@ ease_curve = SubResource( 1 )
 [node name="ScoreText" type="Node2D" parent="."]
 material = ExtResource( 4 )
 script = ExtResource( 1 )
+
+[node name="PVMusic" type="AudioStreamPlayer" parent="."]
+bus = "Preview"

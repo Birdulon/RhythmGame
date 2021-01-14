@@ -5,6 +5,7 @@ extends Control
 export var NoteHandlerPath := @'/root/main/NoteHandler'
 onready var NoteHandler := get_node(NoteHandlerPath)
 onready var ScoreText := $ScoreText
+onready var PVMusic := $PVMusic
 
 var genres = {}
 
@@ -90,6 +91,14 @@ func load_score(filename):
 	scorescreen_song_key = result.song_key
 	scorescreen_saved = true
 	set_menu_mode(MenuMode.SCORE_SCREEN)
+
+func load_preview():
+	var songslist = genres[genres.keys()[selected_genre]]
+	var song_key = songslist[selected_song % len(songslist)]
+	var data = Library.all_songs[song_key]
+	PVMusic.stop()
+	PVMusic.set_stream(FileLoader.load_ogg('songs/' + data.filepath.rstrip('/') + '/' + data.audio_filelist[0]))
+	PVMusic.play(16*60.0/data.BPM)
 
 func _ready():
 	scan_library()
@@ -412,6 +421,8 @@ func _draw():
 
 func set_menu_mode(mode):
 	$'../Receptors'.fade(mode == MenuMode.GAMEPLAY)
+	if mode == MenuMode.GAMEPLAY:
+		PVMusic.stop()
 	menu_mode_prev = menu_mode
 	menu_mode = mode
 	menu_mode_prev_fade_timer = menu_mode_prev_fade_timer_duration
@@ -426,6 +437,7 @@ func touch_select_song(touchdict):
 		self.selected_genre = touchdict.genre_idx
 		self.selected_song = touchdict.song_idx
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
+		load_preview()
 
 func touch_select_chart(touchdict):
 	if touchdict.chart_idx == selected_difficulty:
