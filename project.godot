@@ -24,13 +24,13 @@ channel_disable_time=5.0
 
 [autoload]
 
-Note="*res://scripts/Note.gd"
-Rules="*res://scripts/Rules.gd"
-FileLoader="*res://scripts/FileLoader.gd"
-Library="*res://scripts/Library.gd"
-GameTheme="*res://scripts/GameTheme.gd"
-SFXPlayer="*res://scripts/SFXPlayer.gd"
-Settings="*res://scripts/Settings.gd"
+Settings="*res://singletons/Settings.gd"
+Note="*res://singletons/Note.gd"
+Rules="*res://singletons/Rules.gd"
+FileLoader="*res://singletons/FileLoader.gd"
+Library="*res://singletons/Library.gd"
+GameTheme="*res://singletons/GameTheme.gd"
+SFXPlayer="*res://singletons/SFXPlayer.gd"
 
 [debug]
 
