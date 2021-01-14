@@ -114,6 +114,9 @@ func _process(delta):
 	elif selected_song_delta < -0.5:
 		selected_song_delta += 1.0
 		selected_song_vis -= 1
+	if abs(diff) < 0.02:  # Snap
+		selected_song_delta = 0.0
+		selected_song_vis = selected_song
 
 	var g_diff = selected_genre - (selected_genre_vis + selected_genre_delta)
 	selected_genre_delta += ease_curve.interpolate(clamp(g_diff, -1, 1)) * 10 * delta
@@ -123,6 +126,9 @@ func _process(delta):
 	elif selected_genre_delta < -0.5:
 		selected_genre_delta += 1.0
 		selected_genre_vis -= 1
+	if abs(g_diff) < 0.02:  # Snap
+		selected_genre_delta = 0.0
+		selected_genre_vis = selected_genre
 
 	menu_mode_prev_fade_timer = max(0.0, menu_mode_prev_fade_timer - delta)
 	update()
