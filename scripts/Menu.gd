@@ -434,7 +434,7 @@ func set_menu_mode(mode):
 	menu_mode_prev_fade_timer = menu_mode_prev_fade_timer_duration
 
 func touch_select_song(touchdict):
-	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song == touchdict.song_idx):
+	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song_vis == touchdict.song_idx):
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		var songslist = genres[genres.keys()[selected_genre]]
 		selected_song_key = songslist[selected_song % len(songslist)]
