@@ -202,14 +202,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 				vertices[i*3] = offset + uv1o
 				vertices[i*3+1] = offset + uv2o
 				vertices[i*3+2] = offset + uv3o
-		Note.SlideType.ARC_CW:
-			for i in trail_length:
-				var angle : float = note.get_angle((i+1)/float(trail_length))
-				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
-				vertices[i*3] = offset + polar2cartesian(size, angle)
-				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
-				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
-		Note.SlideType.ARC_ACW:
+		_:
 			for i in trail_length:
 				var angle : float = note.get_angle((i+1)/float(trail_length))
 				var offset : Vector2 = note.get_position((i+1)/float(trail_length))

@@ -231,26 +231,28 @@ class RGT:
 		'h': Note.NOTE_HOLD,
 		's': Note.NOTE_STAR,
 		'e': Note.NOTE_SLIDE,
-		'b': Note.NOTE_TAP  # Break
+		'b': Note.NOTE_TAP,  # Break
+		'x': Note.NOTE_STAR  # Break star
 	}
 	const SLIDE_TYPES = {
 		'0': null,  # Seems to be used for stars without slides attached
 		'1': Note.SlideType.CHORD,
-		'2': Note.SlideType.ARC_ACW,  # From Cirno master
-		'3': Note.SlideType.ARC_CW,  # From Cirno master
-		'4': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'5': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'6': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'7': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'8': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'9': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'a': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'b': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'c': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'2': Note.SlideType.ARC_ACW,
+		'3': Note.SlideType.ARC_CW,
+		'4': Note.SlideType.COMPLEX,  # From nekomatsuri master - Loop ACW around center. Size of loop is roughly inscribed in chords of 0-3, 1-4, 2-5...   NB: doesn't loop if directly opposite col
+		'5': Note.SlideType.COMPLEX,  # CW of above
+		'6': Note.SlideType.COMPLEX,  # S zigzag through center
+		'7': Note.SlideType.COMPLEX,  # Z zigzag through center
+		'8': Note.SlideType.COMPLEX,  # V into center
+		'9': Note.SlideType.COMPLEX,  # From nekomatsuri master - Seems to loop around to center ACW to make a + to the end
+		'a': Note.SlideType.COMPLEX,  # CW of above
+		'b': Note.SlideType.COMPLEX,  # V into column 2 places ACW
+		'c': Note.SlideType.COMPLEX,  # V into column 2 places CW
 		'd': Note.SlideType.CHORD_TRIPLE,  # Triple cone. Spreads out to the adjacent receptors of the target.
-		'e': Note.SlideType.CHORD,  # Probably some weird loop etc.
-		'f': Note.SlideType.CHORD,  # Probably some weird loop etc.
+		'e': Note.SlideType.CHORD,  # Not used in any of our charts
+		'f': Note.SlideType.CHORD,  # Not used in any of our charts
 	}
+	const SLIDE_IN_R := sin(PI/8)  # Circle radius circumscribed by chords 0-3, 1-4, 2-5 etc.
 
 	static func load_file(filename: String):
 		var extension = filename.rsplit('.', false, 1)[1]
@@ -353,6 +355,32 @@ class RGT:
 							slide_ids[slide_id].column_release = column
 							slide_ids[slide_id].slide_type = SLIDE_TYPES[slide_type]
 							slide_ids[slide_id].update_slide_variables()
+							if SLIDE_TYPES[slide_type] == Note.SlideType.COMPLEX:
+								var col_hit = slide_ids[slide_id].column
+								var RUV = GameTheme.RADIAL_UNIT_VECTORS
+								slide_ids[slide_id].values.curve2d.add_point(RUV[col_hit])  # Start col
+								match slide_type:
+									'4':  # TODO: Loop ACW around center. Size of loop is roughly inscribed in chords of 0-3, 1-4, 2-5...   NB: doesn't loop if directly opposite col
+										slide_ids[slide_id].values.curve2d.add_point((RUV[posmod(col_hit-3, Rules.COLS)] + RUV[col_hit]) * 0.5)
+									'5':  # TODO: CW of above
+										slide_ids[slide_id].values.curve2d.add_point((RUV[posmod(col_hit+3, Rules.COLS)] + RUV[col_hit]) * 0.5)
+									'6':  # S zigzag through center
+										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit-2, Rules.COLS)] * SLIDE_IN_R)
+										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit+2, Rules.COLS)] * SLIDE_IN_R)
+									'7':  # Z zigzag through center
+										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit+2, Rules.COLS)] * SLIDE_IN_R)
+										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit-2, Rules.COLS)] * SLIDE_IN_R)
+									'8':  # V into center
+										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
+									'9':  # TODO: From nekomatsuri master - Seems to loop around to center ACW to make a + to the end
+										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
+									'a':  # TODO: CW of above
+										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
+									'b':  # V into column 2 places ACW
+										slide_ids[slide_id].values.curve2d.add_point(GameTheme.RADIAL_UNIT_VECTORS[posmod(col_hit-2, Rules.COLS)])
+									'c':  # V into column 2 places CW
+										slide_ids[slide_id].values.curve2d.add_point(GameTheme.RADIAL_UNIT_VECTORS[posmod(col_hit+2, Rules.COLS)])
+								slide_ids[slide_id].values.curve2d.add_point(GameTheme.RADIAL_UNIT_VECTORS[column])  # End col
 						else:  # Naked slide start
 							if last_star[column] != null:
 								slide_stars[slide_id] = last_star[column]

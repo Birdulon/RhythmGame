@@ -4,7 +4,7 @@ extends Node
 #class_name Note
 
 enum {NOTE_TAP, NOTE_HOLD, NOTE_STAR=2, NOTE_SLIDE=-2, NOTE_TOUCH=3, NOTE_TOUCH_HOLD=4, NOTE_ARROW, NOTE_ROLL}
-enum SlideType {CHORD, ARC_CW, ARC_ACW, CHORD_TRIPLE}
+enum SlideType {CHORD, ARC_CW, ARC_ACW, CHORD_TRIPLE, COMPLEX}
 const DEATH_DELAY := 1.0  # This is touchy with the judgement windows and variable bpm.
 const RELEASE_SCORE_TYPES := {
 	NOTE_HOLD: -NOTE_HOLD,
@@ -136,6 +136,9 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 				values.end_a = GameTheme.RADIAL_COL_ANGLES[column_release]
 				if values.end_a > values.start_a:
 					values.end_a -= TAU
+			Note.SlideType.COMPLEX:
+				values.curve2d = Curve2D.new()
+				values.curve2d.bake_interval = 0.005  # TODO: play around with this
 
 	func get_position(progress: float) -> Vector2:
 		match slide_type:
@@ -147,6 +150,9 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 			Note.SlideType.ARC_ACW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
 				return polar2cartesian(GameTheme.receptor_ring_radius, circle_angle)
+			Note.SlideType.COMPLEX:
+				progress *= values.curve2d.get_baked_length()
+				return values.curve2d.interpolate_baked(progress) * GameTheme.receptor_ring_radius
 		return Vector2(0.0, 0.0)
 
 	func get_angle(progress: float) -> float:
@@ -159,6 +165,11 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 			Note.SlideType.ARC_ACW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
 				return circle_angle - PI/2.0
+			Note.SlideType.COMPLEX:
+				# TODO: get a better tangent maybe?
+				progress = clamp(progress, 0.001, 0.999)  # Yes this is scuffed
+				var l = values.curve2d.get_baked_length()
+				return (values.curve2d.interpolate_baked((progress+0.001)*l) - values.curve2d.interpolate_baked((progress-0.001)*l)).angle()
 		return 0.0
 
 	func get_slide_length() -> float:
@@ -170,6 +181,8 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 				return fposmod(GameTheme.RADIAL_COL_ANGLES[column_release] - GameTheme.RADIAL_COL_ANGLES[column], TAU)
 			Note.SlideType.ARC_ACW:
 				return fposmod(GameTheme.RADIAL_COL_ANGLES[column] - GameTheme.RADIAL_COL_ANGLES[column_release], TAU)
+			Note.SlideType.COMPLEX:
+				return values.curve2d.get_baked_length()
 		return 0.0
 
 static func copy_note(note: NoteBase):
@@ -184,6 +197,8 @@ static func copy_note(note: NoteBase):
 			newnote = NoteHold.new(note.time_hit, note.column, note.duration)
 		NOTE_SLIDE:
 			newnote = NoteSlide.new(note.time_hit, note.column, note.duration, note.column_release, note.slide_type)
+			if note.slide_type == Note.SlideType.COMPLEX:
+				newnote.values.curve2d = note.values.curve2d
 		NOTE_ROLL:
 			newnote = NoteRoll.new(note.time_hit, note.column, note.duration)
 	newnote.double_hit = note.double_hit
