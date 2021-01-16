@@ -177,7 +177,7 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 	var vertices := PoolVector2Array()
 	var uvs := PoolVector2Array()
 	var colors := PoolColorArray()
-	var size := GameTheme.sprite_size2
+	var size := GameTheme.sprite_size2 * sqrt(2)
 	var color := GameTheme.COLOR_DOUBLE_SLIDE if note.double_hit else GameTheme.COLOR_SLIDE
 
 	# First we need to determine how many arrows to leave.
@@ -194,21 +194,20 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 	match note.slide_type:
 		Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:  # Will need to split off triple at some point
 			var angle : float = note.get_angle(0)
-			var uv1o : Vector2 = polar2cartesian(size, angle)
-			var uv2o : Vector2 = polar2cartesian(size, angle+PI/2.0)
-			var uv3o : Vector2 = polar2cartesian(size, angle-PI/2.0)
+			var uv2o : Vector2 = polar2cartesian(size, angle+PI*0.75)
+			var uv3o : Vector2 = polar2cartesian(size, angle-PI*0.75)
 			for i in trail_length:
 				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
-				vertices[i*3] = offset + uv1o
+				vertices[i*3] = offset
 				vertices[i*3+1] = offset + uv2o
 				vertices[i*3+2] = offset + uv3o
 		_:
 			for i in trail_length:
 				var angle : float = note.get_angle((i+1)/float(trail_length))
 				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
-				vertices[i*3] = offset + polar2cartesian(size, angle)
-				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI/2.0)
-				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI/2.0)
+				vertices[i*3] = offset
+				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI*0.75)
+				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI*0.75)
 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
