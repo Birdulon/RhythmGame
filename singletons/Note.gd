@@ -123,8 +123,8 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 	func update_slide_variables():
 		match slide_type:
 			Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:
-				values.start = GameTheme.RADIAL_UNIT_VECTORS[column] * GameTheme.receptor_ring_radius
-				values.end = GameTheme.RADIAL_UNIT_VECTORS[column_release] * GameTheme.receptor_ring_radius
+				values.start = GameTheme.RADIAL_UNIT_VECTORS[column]
+				values.end = GameTheme.RADIAL_UNIT_VECTORS[column_release]
 				values.angle = (values.end - values.start).angle()
 			Note.SlideType.ARC_CW:
 				values.start_a = GameTheme.RADIAL_COL_ANGLES[column]
@@ -138,22 +138,41 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 					values.end_a -= TAU
 			Note.SlideType.COMPLEX:
 				values.curve2d = Curve2D.new()
-				values.curve2d.bake_interval = 0.005  # TODO: play around with this
+				values.curve2d.bake_interval = 0.1  # TODO: play around with this
 
 	func get_position(progress: float) -> Vector2:
 		match slide_type:
 			Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:
 				return lerp(values.start, values.end, progress)
-			Note.SlideType.ARC_CW:
+			Note.SlideType.ARC_CW, Note.SlideType.ARC_ACW:
 				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
-				return polar2cartesian(GameTheme.receptor_ring_radius, circle_angle)
-			Note.SlideType.ARC_ACW:
-				var circle_angle : float = lerp(values.start_a, values.end_a, progress)
-				return polar2cartesian(GameTheme.receptor_ring_radius, circle_angle)
+				return polar2cartesian(1.0, circle_angle)
 			Note.SlideType.COMPLEX:
 				progress *= values.curve2d.get_baked_length()
-				return values.curve2d.interpolate_baked(progress) * GameTheme.receptor_ring_radius
+				return values.curve2d.interpolate_baked(progress)
 		return Vector2(0.0, 0.0)
+
+	func get_points(per_radius: float = 10.0) -> Array:
+		# Returns PoolVector2Array positions, PoolRealArray angles
+		match slide_type:
+			Note.SlideType.COMPLEX:
+				var interval = 1.0/per_radius
+				if values.curve2d.bake_interval != interval:
+					values.curve2d.set_bake_interval(interval)  # Setting this, even to the same value triggers a new bake
+				var positions: PoolVector2Array = values.curve2d.get_baked_points()
+				var angles = []
+				for i in len(positions)-1:
+					angles.append((positions[i+1]-positions[i]).angle())
+				positions.remove(0)  # Don't need an arrow pointing at the start position
+				return [positions, PoolRealArray(angles)]
+			_:
+				var trail_length : int = int(floor(get_slide_length() * per_radius))
+				var angles = []
+				var positions = []
+				for i in trail_length:
+					angles.append(get_angle((i+1)/float(trail_length)))
+					positions.append(get_position((i+1)/float(trail_length)))
+				return [PoolVector2Array(positions), PoolRealArray(angles)]
 
 	func get_angle(progress: float) -> float:
 		match slide_type:

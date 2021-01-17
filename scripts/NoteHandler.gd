@@ -180,23 +180,22 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 	var size := GameTheme.sprite_size2 * sqrt(2)
 	var color := GameTheme.COLOR_DOUBLE_SLIDE if note.double_hit else GameTheme.COLOR_SLIDE
 
-	# First we need to determine how many arrows to leave.
-	var trail_length : int = int(floor(note.get_slide_length() * slide_arrows_per_unit_length))
-	vertices.resize(3*trail_length)
-	uvs.resize(3*trail_length)
-	colors.resize(3*trail_length)
-	for i in trail_length:
-		var u = GameTheme.UV_ARRAY_SLIDE_ARROW if i%3 else GameTheme.UV_ARRAY_SLIDE_ARROW2
-		for j in 3:
-			uvs[i*3+j] = u[j]
-			colors[i*3+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
-
-	for i in trail_length:
-		var angle : float = note.get_angle((i+1)/float(trail_length))
-		var offset : Vector2 = note.get_position((i+1)/float(trail_length))
-		vertices[i*3] = offset
-		vertices[i*3+1] = offset + polar2cartesian(size, angle+PI*0.75)
-		vertices[i*3+2] = offset + polar2cartesian(size, angle-PI*0.75)
+	match note.get_points():
+		[var positions, var angles]:
+			var trail_length : int = len(positions)
+			vertices.resize(3*trail_length)
+			uvs.resize(3*trail_length)
+			colors.resize(3*trail_length)
+			for i in trail_length:
+				var u = GameTheme.UV_ARRAY_SLIDE_ARROW if i%3 else GameTheme.UV_ARRAY_SLIDE_ARROW2
+				for j in 3:
+					uvs[i*3+j] = u[j]
+					colors[i*3+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
+				var angle : float = angles[i]
+				var offset : Vector2 = positions[i] * GameTheme.receptor_ring_radius
+				vertices[i*3] = offset
+				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI*0.75)
+				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI*0.75)
 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
@@ -381,7 +380,7 @@ func _draw():
 					trail_alpha = min(1.0, (position-GameTheme.INNER_NOTE_CIRCLE_RATIO)/(1-GameTheme.INNER_NOTE_CIRCLE_RATIO*2))
 				else:
 					var trail_progress : float = clamp((t - note.time_hit - GameTheme.SLIDE_DELAY)/(note.duration - GameTheme.SLIDE_DELAY), 0.0, 1.0)
-					var star_pos : Vector2 = note.get_position(trail_progress)
+					var star_pos : Vector2 = note.get_position(trail_progress) * GameTheme.receptor_ring_radius
 					var star_angle : float = note.get_angle(trail_progress)
 					make_star_mesh(mesh, star_pos, 1.33, star_angle)
 					if note.progress != INF:
@@ -417,8 +416,8 @@ func _input(event):
 
 	for i in range(len(active_slide_trails)-1, -1, -1):  # Iterate backwards as we are potentially deleting entries
 		var note = active_slide_trails[i]
-		var center = note.get_position(note.progress)
-		var center2 = note.get_position(min(note.progress+0.06, 1.0))
+		var center = note.get_position(note.progress) * GameTheme.receptor_ring_radius
+		var center2 = note.get_position(min(note.progress+0.06, 1.0)) * GameTheme.receptor_ring_radius
 		if ((pos - center).length_squared() < Rules.SLIDE_RADIUS2) or ((pos - center2).length_squared() < Rules.SLIDE_RADIUS2):
 			note.progress += 0.09
 			if note.progress >= 1.0:
