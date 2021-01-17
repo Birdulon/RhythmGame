@@ -191,23 +191,12 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 			uvs[i*3+j] = u[j]
 			colors[i*3+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
 
-	match note.slide_type:
-		Note.SlideType.CHORD, Note.SlideType.CHORD_TRIPLE:  # Will need to split off triple at some point
-			var angle : float = note.get_angle(0)
-			var uv2o : Vector2 = polar2cartesian(size, angle+PI*0.75)
-			var uv3o : Vector2 = polar2cartesian(size, angle-PI*0.75)
-			for i in trail_length:
-				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
-				vertices[i*3] = offset
-				vertices[i*3+1] = offset + uv2o
-				vertices[i*3+2] = offset + uv3o
-		_:
-			for i in trail_length:
-				var angle : float = note.get_angle((i+1)/float(trail_length))
-				var offset : Vector2 = note.get_position((i+1)/float(trail_length))
-				vertices[i*3] = offset
-				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI*0.75)
-				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI*0.75)
+	for i in trail_length:
+		var angle : float = note.get_angle((i+1)/float(trail_length))
+		var offset : Vector2 = note.get_position((i+1)/float(trail_length))
+		vertices[i*3] = offset
+		vertices[i*3+1] = offset + polar2cartesian(size, angle+PI*0.75)
+		vertices[i*3+2] = offset + polar2cartesian(size, angle-PI*0.75)
 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
