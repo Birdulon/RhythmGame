@@ -363,9 +363,9 @@ func _draw_gameplay(center: Vector2) -> Array:
 	var x = center.x
 	var y = center.y
 
-	var rect_songselect := Rect2(x-960.0, y+440.0, 100.0, 100.0)
+	var rect_songselect := Rect2(x-960.0, y+440.0, 100.0, 50.0)
 	draw_rect(rect_songselect, Color.red)
-	draw_string_centered(TitleFont, center+Vector2(-910, 470), 'Stop')
+	draw_string_centered(TitleFont, center+Vector2(-910, 438), 'Stop')
 	touchrects.append({rect=rect_songselect, action='stop'})
 	return touchrects
 
@@ -430,6 +430,9 @@ func set_menu_mode(mode):
 	$'../Receptors'.fade(mode == MenuMode.GAMEPLAY)
 	if mode == MenuMode.GAMEPLAY:
 		PVMusic.stop()
+		rect_clip_content = false
+	else:
+		rect_clip_content = true
 	menu_mode_prev = menu_mode
 	menu_mode = mode
 	menu_mode_prev_fade_timer = menu_mode_prev_fade_timer_duration
