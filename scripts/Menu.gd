@@ -12,19 +12,31 @@ var genres = {}
 enum ChartDifficulty {EASY, BASIC, ADV, EXPERT, MASTER}
 enum MenuMode {SONG_SELECT, CHART_SELECT, OPTIONS, GAMEPLAY, SCORE_SCREEN}
 
-var selected_genre: int = 0
-var selected_genre_vis: int = 0
-var selected_genre_delta: float = 0.0  # For floaty display scrolling
-var selected_song: int = 0
-var selected_song_vis: int = 0
-var selected_song_delta: float = 0.0  # For floaty display scrolling
-var selected_song_key: String = ''
-var selected_difficulty = ChartDifficulty.ADV
 var menu_mode = MenuMode.SONG_SELECT
 var menu_mode_prev = MenuMode.SONG_SELECT
 var menu_mode_prev_fade_timer := 0.0
 var menu_mode_prev_fade_timer_duration := 0.25
 var currently_playing := false
+
+var selected_genre: int = 0
+var selected_genre_vis: int = 0
+var selected_genre_delta: float = 0.0  # For floaty display scrolling
+var target_song_idx: int = 0 setget set_target_song_idx
+var target_song_delta: float = 0.0  # For floaty display scrolling
+var selected_song_idx: int setget , get_song_idx
+var selected_song_key: String setget , get_song_key
+var selected_difficulty = ChartDifficulty.ADV
+
+func set_target_song_idx(index: int):
+	target_song_delta -= index - target_song_idx
+	target_song_idx = index
+
+func get_song_idx() -> int:
+	return int(round(self.target_song_idx + target_song_delta))
+
+func get_song_key() -> String:
+	var songslist = genres[genres.keys()[selected_genre]]
+	return songslist[self.target_song_idx % len(songslist)]
 
 var scorescreen_song_key := ''
 var scorescreen_score_data := {}
@@ -74,7 +86,7 @@ func save_score() -> int:
 			print_debug('Error saving score file %s'%filename)
 			return err
 
-func load_score(filename):
+func load_score(filename: String):
 	var result = FileLoader.load_json('scores/%s'%filename)
 	if not (result is Dictionary):
 		print('An error occurred while trying to access the chosen score file: ', result)
@@ -93,9 +105,8 @@ func load_score(filename):
 	set_menu_mode(MenuMode.SCORE_SCREEN)
 
 func load_preview():
-	var songslist = genres[genres.keys()[selected_genre]]
-	var song_key = songslist[selected_song % len(songslist)]
-	var data = Library.all_songs[song_key]
+	var tmp = self.selected_song_key
+	var data = Library.all_songs[tmp]
 	PVMusic.stop()
 	PVMusic.set_stream(FileLoader.load_ogg('songs/' + data.filepath.rstrip('/') + '/' + data.audio_filelist[0]))
 	PVMusic.play(16*60.0/data.BPM)
@@ -106,17 +117,10 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	var diff = selected_song - (selected_song_vis + selected_song_delta)
-	selected_song_delta += ease_curve.interpolate(clamp(diff, -2, 2)*0.5) * 10 * delta
-	if selected_song_delta > 0.5:
-		selected_song_delta -= 1.0
-		selected_song_vis += 1
-	elif selected_song_delta < -0.5:
-		selected_song_delta += 1.0
-		selected_song_vis -= 1
-	if abs(diff) < 0.02:  # Snap
-		selected_song_delta = 0.0
-		selected_song_vis = selected_song
+	target_song_delta -= ease_curve.interpolate(clamp(target_song_delta, -2, 2)*0.5) * 10 * delta
+#	target_song_delta += $'../InputHandler'.swipe_momentum.x * 1
+	if abs(target_song_delta) < 0.02:  # Snap
+		target_song_delta = 0.0
 
 	var g_diff = selected_genre - (selected_genre_vis + selected_genre_delta)
 	selected_genre_delta += ease_curve.interpolate(clamp(g_diff, -1, 1)) * 10 * delta
@@ -134,7 +138,7 @@ func _process(delta):
 	update()
 	if (menu_mode == MenuMode.GAMEPLAY) and (menu_mode_prev_fade_timer <= 0.0) and not NoteHandler.running:
 		var songslist = genres[genres.keys()[selected_genre]]
-		var song_key = songslist[selected_song % len(songslist)]
+		var song_key = songslist[self.target_song_idx % len(songslist)]
 		NoteHandler.load_track(song_key, Library.Song.default_difficulty_keys[selected_difficulty])
 		NoteHandler.running = true
 
@@ -175,22 +179,24 @@ func _draw_song_select(center: Vector2) -> Array:
 	var gy: float = center.y - 375 - size*selected_genre_delta
 	var touchrects := []
 
+	var ssid = self.selected_song_idx
+	var s_delta = target_song_delta-round(target_song_delta)
 	for gi in [-2, -1, 0, 1, 2]:
 		var g = (selected_genre_vis + gi) % len(genres)
 		var selected: bool = (gi == 0)
 		var scales = sel_scales if selected else bg_scales
 
-		var subsize = size * scales.value(abs(selected_song_delta))
-		var gx = center.x - (subsize + spacer_x) * selected_song_delta
+		var subsize = size * scales.value(abs(s_delta))
+		var gx = center.x - (subsize + spacer_x) * s_delta
 		var songslist = Library.genre_songs[g].keys()
 		var genre_str = '%s (%d)'%[genres.keys()[g], len(songslist)]
 		draw_string_centered(GenreFont, Vector2(center.x, gy), genre_str, Color.aqua)
 		var s = len(songslist)
-		var key = songslist[selected_song_vis % s]
+		var key = songslist[self.selected_song_idx % s]
 		var y = gy + spacer_y
 		var x = -subsize/2.0
 		var r = draw_songtile(key, Vector2(gx+x, y), subsize, selected)
-		touchrects.append({rect=r, song_idx=selected_song_vis, genre_idx=g})
+		touchrects.append({rect=r, song_idx=self.selected_song_idx, genre_idx=g})
 
 		var subsize_p = subsize
 		var subsize_n = subsize
@@ -199,19 +205,19 @@ func _draw_song_select(center: Vector2) -> Array:
 		for i in range(1, scales.len()):
 			x_p += subsize_p + spacer_x
 			x_n += subsize_n + spacer_x
-			subsize_p = size * scales.value(abs(i-selected_song_delta))
-			subsize_n = size * scales.value(abs(-i-selected_song_delta))
-			r = draw_songtile(songslist[(selected_song_vis+i) % s], Vector2(gx+x_p, y), subsize_p)
-			touchrects.append({rect=r, song_idx=selected_song_vis+i, genre_idx=g})
-			r = draw_songtile(songslist[(selected_song_vis-i) % s], Vector2(gx-x_n - subsize_n, y), subsize_n)
-			touchrects.append({rect=r, song_idx=selected_song_vis-i, genre_idx=g})
+			subsize_p = size * scales.value(abs(i-s_delta))
+			subsize_n = size * scales.value(abs(-i-s_delta))
+			r = draw_songtile(songslist[(ssid+i) % s], Vector2(gx+x_p, y), subsize_p)
+			touchrects.append({rect=r, song_idx=ssid+i, genre_idx=g})
+			r = draw_songtile(songslist[(ssid-i) % s], Vector2(gx-x_n - subsize_n, y), subsize_n)
+			touchrects.append({rect=r, song_idx=ssid-i, genre_idx=g})
 		gy += size*scales.value(0) + spacer_y + (title_spacer_y if selected else 0)
 	return touchrects
 
 func _draw_chart_select(center: Vector2) -> Array:
 	# Select difficulty for chosen song
-	var charts: Dictionary = Library.get_song_charts(selected_song_key)
-	var song_data = Library.all_songs[selected_song_key]
+	var charts: Dictionary = Library.get_song_charts(self.selected_song_key)
+	var song_data = Library.all_songs[self.selected_song_key]
 	var diffs = song_data.chart_difficulties
 	var n = len(diffs)
 	var spacer_x = max(14, 70/n)
@@ -227,10 +233,10 @@ func _draw_chart_select(center: Vector2) -> Array:
 		var i_diff = Library.Song.difficulty_key_ids.get(diff, 0)
 		var width = 8 if i_diff == selected_difficulty else 3
 		var chart_exists: bool = (diff in charts)
-		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, i_diff, width, not chart_exists)
+		var r = draw_songtile(self.selected_song_key, Vector2(x, center.y), size, false, i_diff, width, not chart_exists)
 		touchrects.append({rect=r, chart_idx=i_diff, enabled=chart_exists})
 		x += size + spacer_x
-	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), str(Library.all_songs[selected_song_key].title))
+	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), str(Library.all_songs[self.selected_song_key].title))
 
 	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:')
 	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM))
@@ -258,7 +264,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var songslist = genres[genres.keys()[selected_genre]]
 	var song_key = scorescreen_song_key
 #	var song_data = Library.all_songs[song_key]
-	var chart: Array = Library.get_song_charts(selected_song_key)[Library.Song.default_difficulty_keys[selected_difficulty]]
+	var chart: Array = Library.get_song_charts(song_key)[Library.Song.default_difficulty_keys[selected_difficulty]]
 	var all_notes: Array = chart[1]
 	var meta: Dictionary = chart[0]
 
@@ -438,14 +444,14 @@ func set_menu_mode(mode):
 	menu_mode_prev_fade_timer = menu_mode_prev_fade_timer_duration
 
 func touch_select_song(touchdict):
-	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song_vis == touchdict.song_idx):
+	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song_idx == touchdict.song_idx):
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
-		var songslist = genres[genres.keys()[selected_genre]]
-		selected_song_key = songslist[selected_song % len(songslist)]
+		# var songslist = genres[genres.keys()[selected_genre]]
+		# selected_song_key = songslist[self.target_song_idx % len(songslist)]
 		set_menu_mode(MenuMode.CHART_SELECT)
 	else:
 		self.selected_genre = touchdict.genre_idx
-		self.selected_song = touchdict.song_idx
+		self.target_song_idx = touchdict.song_idx
 		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
 		load_preview()
 
@@ -516,9 +522,9 @@ func _input(event):
 	match menu_mode:
 		MenuMode.SONG_SELECT:
 			if event.is_action_pressed('ui_right'):  # Sadly can't use match with this input system
-				selected_song += 1
+				self.target_song_idx += 1
 			elif event.is_action_pressed('ui_left'):
-				selected_song -= 1
+				self.target_song_idx -= 1
 			elif event.is_action_pressed('ui_up'):
 				selected_genre = posmod(selected_genre - 1, len(genres))
 			elif event.is_action_pressed('ui_down'):
@@ -526,4 +532,4 @@ func _input(event):
 			elif event.is_action_pressed('ui_page_up'):
 				selected_difficulty = int(max(0, selected_difficulty - 1))
 			elif event.is_action_pressed('ui_page_down'):
-				selected_difficulty = int(min(4, selected_difficulty + 1))
+				selected_difficulty = int(min(6, selected_difficulty + 1))

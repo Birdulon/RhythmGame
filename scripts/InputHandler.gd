@@ -17,6 +17,8 @@ const TOUCHBUTTON_MAX_DIST := 1.075
 const BUTTON_MIN_DIST := 0.925
 const BUTTON_MAX_DIST := 1.25
 
+var swipe_momentum := Vector2.ZERO
+
 func resize():
 	var screen_size = $'/root'.get_visible_rect().size
 	rect_position = -screen_size*0.5
@@ -41,6 +43,10 @@ func _ready():
 	$VolumeSlider.connect('value_changed', self, 'update_volume')
 	$SSXSlider.connect('value_changed', Settings, 'SSX_set')
 	$SSYSlider.connect('value_changed', Settings, 'SSY_set')
+	$BtnLanguage.add_item('Native')
+	$BtnLanguage.add_item('Romaji')
+	$BtnLanguage.add_item('English')
+	$BtnLanguage.connect('item_selected', self, 'update_display_language')
 	resize()
 
 func update_vsync(setting: bool):
@@ -55,6 +61,9 @@ func update_filter(alpha: float):
 func update_volume(volume: float):
 	AudioServer.set_bus_volume_db(0, volume)
 
+func update_display_language(index: int):
+	GameTheme.display_language = ['n', 'tl', 'en'][index]
+
 func print_pressed(col: int):
 	print('Pressed %d'%col)
 
@@ -65,6 +74,8 @@ var fps: float = 0.0
 var audio_latency: float = 0.0
 func _draw():
 	set_text('FPS: %.0f\nAudio Latency: %.2fms'%[fps, audio_latency*1000])
+	var swipe_origin = Vector2(300, 540)
+	draw_line(swipe_origin, swipe_origin+swipe_momentum, Color.red)
 
 	# draw points
 	for i in touch_points:
@@ -81,6 +92,9 @@ func _draw():
 
 var last_latency_check := 0.0
 func _process(delta):
+	swipe_momentum *= max(1.0 - 5.0*delta, 0)
+	if swipe_momentum.length_squared() < 1.0:
+		swipe_momentum = Vector2.ZERO
 	last_latency_check += delta
 	fps = Engine.get_frames_per_second()
 	if last_latency_check > 3.0:
@@ -126,6 +140,7 @@ func _input(event):
 	# As such, we'll need to do some fancy mapping for multiple inputs
 	if (event is InputEventScreenDrag):
 		touch_points[event.index] = {pressed = true, position = event.position}
+		swipe_momentum = event.speed
 	elif (event is InputEventScreenTouch):
 		if event.pressed:
 			if not touch_points.has(event.index):
