@@ -323,28 +323,26 @@ class RGT:
 				n = n.substr(2)
 
 				match ntype:
-					't':  # tap
-						note_hits.append(Note.NoteTap.new(time, column))
-						num_taps += 1
-					'b':  # break
-						note_hits.append(Note.NoteTap.new(time, column, true))
+					't', 'b':  # tap
+						note_hits.append(Note.NoteTap.new(time, column, ntype=='b'))
 						num_taps += 1
 					'h':  # hold
 						var duration = float(n) * beats_per_measure
 						note_hits.append(Note.NoteHold.new(time, column, duration))
 						num_holds += 1
-					's':  # slide star
-						var star = Note.NoteStar.new(time, column)
+					's', 'x':  # slide star
+						var star = Note.NoteStar.new(time, column, ntype=='z')
 						note_hits.append(star)
-						last_star[column] = star
-						var slide_type = n[0]  # hex digit
-						var slide_id = int(n.substr(1))
-						if slide_id > 0:
-							slide_stars[slide_id] = star
-							var slide = Note.NoteSlide.new(time, column)
-							slide_ids[slide_id] = slide
-							note_nonhits.append(slide)
 						num_slides += 1
+						last_star[column] = star
+						if len(n) > 1:  # Not all stars have proper slide info
+							var slide_type = n[0]  # hex digit
+							var slide_id = int(n.substr(1))
+							if slide_id > 0:
+								slide_stars[slide_id] = star
+								var slide = Note.NoteSlide.new(time, column)
+								slide_ids[slide_id] = slide
+								note_nonhits.append(slide)
 					'e':  # slide end
 						var slide_type = n[0]  # numeric digit, left as str just in case
 						var slide_id = int(n.substr(1))
@@ -389,8 +387,8 @@ class RGT:
 							var note = Note.NoteSlide.new(time, column)
 							slide_ids[slide_id] = note
 							note_nonhits.append(note)
-					'x':  # not sure
-						pass
+					'_':
+						print_debug('Unknown note type: ', ntype)
 
 			if len(note_hits) > 1:
 				for note in note_hits:  # Set multihit on each one
