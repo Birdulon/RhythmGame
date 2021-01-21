@@ -219,6 +219,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 	var rect_back = Rect2(center.x-300.0, center.y+550.0, 600.0, 140.0)
 	draw_rect(rect_back, Color.red)
 	draw_string_centered(TitleFont, rect_back.position+rect_back.size/2-Vector2(0,26), 'Back to song selection')
+	draw_string_centered(GenreFont, Vector2(center.x, center.y-100), 'Select Difficulty', Color.aqua)
 	var touchrects = [{rect=rect_back, chart_idx=-1, enabled=true}]  # invisible back button
 	var x = center.x - (size*n + spacer_x*(n-1))/2
 
@@ -340,7 +341,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	ScoreText.update()
 
 	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*7), 'Early : Late')
-	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*8), '%3d%% : %3d%%'%[notecount_early*100/notecount_total, notecount_late*100/notecount_total])
+	draw_string_centered(TitleFont, Vector2(x, y2+y_spacing*8), '%3d%% : %3d%%'%[notecount_early*100/max(notecount_total, 1), notecount_late*100/max(notecount_total, 1)])
 
 	var rect_songselect := Rect2(x-100.0, y+660.0, 400.0, 100.0)
 	draw_rect(rect_songselect, Color.red)
