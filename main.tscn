@@ -234,9 +234,9 @@ margin_left = 10.0
 margin_top = 260.0
 margin_right = 250.0
 margin_bottom = 276.0
-min_value = -70.0
+min_value = -40.0
 max_value = 0.0
-tick_count = 8
+tick_count = 9
 ticks_on_borders = true
 __meta__ = {
 "_edit_use_anchors_": false
