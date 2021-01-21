@@ -15,22 +15,18 @@ class MultilangStr:
 			self.tl = translit
 		if english and not english.empty():
 			self.en = english
-#	func get_native() -> String:
-#		return n
-#	func get_translit() -> String:
-#		return tl if tl else n
-#	func get_english() -> String:
-#		return en if en else self.tl
 	func set_native(native) -> void:
 		n = native
 		if tl.empty():
-			tl = native
+			set_translit(native)
 	func set_translit(translit) -> void:
 		tl = translit
 		if en.empty():
-			en = translit
+			set_english(translit)
 	func set_english(english) -> void:
 		en = english
+	func _to_string() -> String:
+		return self[GameTheme.display_language]
 
 class Song:
 	var title: MultilangStr

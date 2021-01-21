@@ -159,7 +159,7 @@ func draw_songtile(song_key, position, size, title_text:=false, difficulty=selec
 	if disabled:
 		draw_string_centered(DiffNumFont, Vector2(position.x+size/2, position.y+size/2-16), 'No Chart!', diff_color)
 	if title_text:
-		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), Library.all_songs[song_key].title.n, diff_color.lightened(0.33))
+		draw_string_centered(TitleFont, Vector2(position.x+size/2.0, position.y+size), str(Library.all_songs[song_key].title), diff_color.lightened(0.33))
 	return rect
 
 func diff_f2str(difficulty: float):  # Convert .5 to +
@@ -230,7 +230,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 		var r = draw_songtile(selected_song_key, Vector2(x, center.y), size, false, i_diff, width, not chart_exists)
 		touchrects.append({rect=r, chart_idx=i_diff, enabled=chart_exists})
 		x += size + spacer_x
-	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), Library.all_songs[selected_song_key].title.n)
+	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), str(Library.all_songs[selected_song_key].title))
 
 	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:')
 	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM))
@@ -278,7 +278,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var judgement_text_height = 64 * judgement_text_scale
 
 	draw_songtile(song_key, Vector2(x_songtile-size/2.0, y), size, false, selected_difficulty, 3)
-	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), Library.all_songs[song_key].title.n)
+	draw_string_centered(TitleFont, Vector2(x_songtile, y+size), str(Library.all_songs[song_key].title))
 	var notestrs = ['Taps (%d):'%meta.num_taps, 'Holds (%d) Hit:'%meta.num_holds, 'Released:', 'Stars (%d):'%meta.num_slides, 'Slides:']
 	var notetypes = [0, 1, -1, 2, -2]
 	var note_spacing = [0.0, 1.25, 2.25, 3.5, 4.5]

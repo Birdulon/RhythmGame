@@ -242,6 +242,26 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Label4" type="Label" parent="InputHandler"]
+margin_top = 293.0
+margin_right = 133.0
+margin_bottom = 254.0
+text = "Language"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="BtnLanguage" type="OptionButton" parent="InputHandler"]
+margin_left = 65.0
+margin_top = 290.0
+margin_right = 200.0
+margin_bottom = 310.0
+text = "Native"
+align = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="VsyncButton" type="CheckButton" parent="InputHandler"]
 margin_top = 90.0
 margin_right = 117.0
