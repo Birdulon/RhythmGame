@@ -1,6 +1,8 @@
 tool
 extends Node
 
+signal screen_filter_changed(color)
+
 var tex_notes := preload('res://assets/spritesheet-2048.png')
 var tex_judgement_text := preload('res://assets/text-4k.png')
 var tex_slide_arrow := tex_notes
@@ -147,9 +149,25 @@ const NORMAL_ARRAY_8 := PoolVector3Array([
 
 var display_language = 'n'
 
-var screen_filter_min_alpha := 0.2
+var screen_filter_min_alpha := 0.2 setget set_screen_filter_min_alpha
+var screen_filter_alpha_scale := 1.0 setget set_screen_filter_alpha
 var screen_filter := Color(0.0, 0.0, 0.0, screen_filter_min_alpha)
-signal screen_filter_changed()
+
+func set_screen_filter_min_alpha(alpha: float):
+#	if alpha == screen_filter_min_alpha:
+#		return
+	screen_filter_min_alpha = alpha
+	set_screen_filter_alpha(screen_filter_alpha_scale)
+
+func set_screen_filter_alpha(alpha: float):
+#	if alpha == screen_filter_alpha_scale:
+#		return
+	# Scale to minimum alpha
+	var new_alpha = lerp(screen_filter_min_alpha, 1.0, alpha)
+	if new_alpha != screen_filter.a:
+		screen_filter = Color(screen_filter.r, screen_filter.g, screen_filter.b, new_alpha)
+		emit_signal("screen_filter_changed", screen_filter)
+
 var receptor_color := Color.blue
 var bezel_color := Color.black if not Engine.editor_hint else Color.red
 
@@ -157,13 +175,6 @@ var slide_trail_alpha := 0.88
 
 var RADIAL_COL_ANGLES := PoolRealArray()  # ideally const
 var RADIAL_UNIT_VECTORS := PoolVector2Array()  # ideally const
-
-func set_screen_filter_alpha(alpha: float):
-	# Scale to minimum alpha
-	var new_alpha = lerp(screen_filter_min_alpha, 1.0, alpha)
-	if new_alpha != screen_filter.a:
-		screen_filter = Color(screen_filter.r, screen_filter.g, screen_filter.b, new_alpha)
-		emit_signal("screen_filter_changed")
 
 var radial_values_initialized := false
 func init_radial_values():

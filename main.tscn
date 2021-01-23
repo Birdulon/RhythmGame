@@ -1,152 +1,25 @@
-[gd_scene load_steps=21 format=2]
+[gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://scripts/main.gd" type="Script" id=1]
-[ext_resource path="res://scripts/video.gd" type="Script" id=2]
-[ext_resource path="res://scripts/ScreenFilter.gd" type="Script" id=3]
-[ext_resource path="res://shaders/receptors.shader" type="Shader" id=4]
-[ext_resource path="res://scripts/Receptors.gd" type="Script" id=5]
-[ext_resource path="res://scripts/NoteHandler.gd" type="Script" id=6]
-[ext_resource path="res://scripts/NoteViewport.gd" type="Script" id=7]
-[ext_resource path="res://assets/text-4k.png" type="Texture" id=8]
-[ext_resource path="res://shaders/notemesh.shader" type="Shader" id=9]
-[ext_resource path="res://shaders/notelines.shader" type="Shader" id=10]
-[ext_resource path="res://scripts/NotePainter.gd" type="Script" id=11]
-[ext_resource path="res://Menu.tscn" type="PackedScene" id=12]
+[ext_resource path="res://RadialGame.tscn" type="PackedScene" id=1]
+[ext_resource path="res://scripts/TouchInput.gd" type="Script" id=2]
 [ext_resource path="res://OptionPanel.tscn" type="PackedScene" id=13]
-[ext_resource path="res://scripts/Bezel.gd" type="Script" id=15]
-[ext_resource path="res://scripts/InputHandler.gd" type="Script" id=17]
 
-[sub_resource type="ShaderMaterial" id=1]
-shader = ExtResource( 4 )
-shader_param/num_receptors = 8
-shader_param/receptor_offset = 0.392699
-shader_param/line_color = Color( 0, 0, 1, 1 )
-shader_param/dot_color = Color( 0, 0, 1, 1 )
-shader_param/shadow_color = Color( 0, 0, 0, 0.57 )
-shader_param/line_thickness = 0.00434783
-shader_param/dot_radius = 0.026087
-shader_param/shadow_thickness = 0.0173913
-shader_param/px = 0.00108696
-shader_param/px2 = 0.00217391
-shader_param/alpha = 1.0
-
-[sub_resource type="ArrayMesh" id=6]
-surfaces/0 = {
-"aabb": AABB( -481.834, -481.834, 0, 963.667, 963.667, 0 ),
-"array_data": PoolByteArray( 0, 0, 220, 67, 0, 0, 0, 0, 166, 59, 0, 0, 177, 234, 240, 67, 0, 0, 0, 0, 48, 60, 0, 0, 95, 168, 216, 67, 118, 207, 152, 66, 137, 59, 80, 49, 183, 65, 237, 67, 202, 86, 167, 66, 32, 60, 210, 49, 125, 187, 206, 67, 38, 125, 22, 67, 48, 59, 60, 53, 64, 99, 226, 67, 249, 203, 36, 67, 223, 59, 187, 53, 141, 134, 190, 67, 0, 0, 92, 67, 160, 58, 166, 55, 217, 163, 208, 67, 177, 234, 112, 67, 65, 59, 48, 56, 159, 135, 168, 67, 204, 105, 141, 67, 220, 57, 235, 56, 142, 141, 184, 67, 186, 219, 154, 67, 107, 58, 98, 57, 204, 105, 141, 67, 159, 135, 168, 67, 235, 56, 220, 57, 186, 219, 154, 67, 142, 141, 184, 67, 98, 57, 107, 58, 0, 0, 92, 67, 141, 134, 190, 67, 166, 55, 160, 58, 177, 234, 112, 67, 217, 163, 208, 67, 48, 56, 65, 59, 38, 125, 22, 67, 125, 187, 206, 67, 60, 53, 48, 59, 249, 203, 36, 67, 64, 99, 226, 67, 187, 53, 223, 59, 118, 207, 152, 66, 95, 168, 216, 67, 80, 49, 137, 59, 202, 86, 167, 66, 183, 65, 237, 67, 210, 49, 32, 60, 141, 172, 242, 40, 0, 0, 220, 67, 0, 0, 166, 59, 143, 223, 4, 41, 177, 234, 240, 67, 0, 0, 48, 60, 118, 207, 152, 194, 95, 168, 216, 67, 80, 177, 137, 59, 202, 86, 167, 194, 183, 65, 237, 67, 210, 177, 32, 60, 38, 125, 22, 195, 125, 187, 206, 67, 60, 181, 48, 59, 249, 203, 36, 195, 64, 99, 226, 67, 187, 181, 223, 59, 0, 0, 92, 195, 141, 134, 190, 67, 166, 183, 160, 58, 177, 234, 112, 195, 217, 163, 208, 67, 48, 184, 65, 59, 204, 105, 141, 195, 159, 135, 168, 67, 235, 184, 220, 57, 186, 219, 154, 195, 142, 141, 184, 67, 98, 185, 107, 58, 159, 135, 168, 195, 204, 105, 141, 67, 220, 185, 235, 56, 142, 141, 184, 195, 186, 219, 154, 67, 107, 186, 98, 57, 141, 134, 190, 195, 0, 0, 92, 67, 160, 186, 166, 55, 217, 163, 208, 195, 177, 234, 112, 67, 65, 187, 48, 56, 125, 187, 206, 195, 38, 125, 22, 67, 48, 187, 60, 53, 64, 99, 226, 195, 249, 203, 36, 67, 223, 187, 187, 53, 95, 168, 216, 195, 118, 207, 152, 66, 137, 187, 80, 49, 183, 65, 237, 195, 202, 86, 167, 66, 32, 188, 210, 49, 0, 0, 220, 195, 141, 172, 114, 41, 166, 187, 0, 0, 177, 234, 240, 195, 143, 223, 132, 41, 48, 188, 0, 0, 95, 168, 216, 195, 118, 207, 152, 194, 137, 187, 80, 177, 183, 65, 237, 195, 202, 86, 167, 194, 32, 188, 210, 177, 125, 187, 206, 195, 38, 125, 22, 195, 48, 187, 60, 181, 64, 99, 226, 195, 249, 203, 36, 195, 223, 187, 187, 181, 141, 134, 190, 195, 0, 0, 92, 195, 160, 186, 166, 183, 217, 163, 208, 195, 177, 234, 112, 195, 65, 187, 48, 184, 159, 135, 168, 195, 204, 105, 141, 195, 220, 185, 235, 184, 142, 141, 184, 195, 186, 219, 154, 195, 107, 186, 98, 185, 204, 105, 141, 195, 159, 135, 168, 195, 235, 184, 220, 185, 186, 219, 154, 195, 142, 141, 184, 195, 98, 185, 107, 186, 0, 0, 92, 195, 141, 134, 190, 195, 166, 183, 160, 186, 177, 234, 112, 195, 217, 163, 208, 195, 48, 184, 65, 187, 38, 125, 22, 195, 125, 187, 206, 195, 60, 181, 48, 187, 249, 203, 36, 195, 64, 99, 226, 195, 187, 181, 223, 187, 118, 207, 152, 194, 95, 168, 216, 195, 80, 177, 137, 187, 202, 86, 167, 194, 183, 65, 237, 195, 210, 177, 32, 188, 106, 1, 182, 169, 0, 0, 220, 195, 0, 0, 166, 187, 87, 79, 199, 169, 177, 234, 240, 195, 0, 0, 48, 188, 118, 207, 152, 66, 95, 168, 216, 195, 80, 49, 137, 187, 202, 86, 167, 66, 183, 65, 237, 195, 210, 49, 32, 188, 38, 125, 22, 67, 125, 187, 206, 195, 60, 53, 48, 187, 249, 203, 36, 67, 64, 99, 226, 195, 187, 53, 223, 187, 0, 0, 92, 67, 141, 134, 190, 195, 166, 55, 160, 186, 177, 234, 112, 67, 217, 163, 208, 195, 48, 56, 65, 187, 204, 105, 141, 67, 159, 135, 168, 195, 235, 56, 220, 185, 186, 219, 154, 67, 142, 141, 184, 195, 98, 57, 107, 186, 159, 135, 168, 67, 204, 105, 141, 195, 220, 57, 235, 184, 142, 141, 184, 67, 186, 219, 154, 195, 107, 58, 98, 185, 141, 134, 190, 67, 0, 0, 92, 195, 160, 58, 166, 183, 217, 163, 208, 67, 177, 234, 112, 195, 65, 59, 48, 184, 125, 187, 206, 67, 38, 125, 22, 195, 48, 59, 60, 181, 64, 99, 226, 67, 249, 203, 36, 195, 223, 59, 187, 181, 95, 168, 216, 67, 118, 207, 152, 194, 137, 59, 80, 177, 183, 65, 237, 67, 202, 86, 167, 194, 32, 60, 210, 177, 0, 0, 220, 67, 0, 0, 0, 0, 166, 59, 0, 0, 177, 234, 240, 67, 0, 0, 0, 0, 48, 60, 0, 0 ),
-"array_index_data": PoolByteArray(  ),
-"blend_shape_data": [  ],
-"format": 359441,
-"index_count": 0,
-"primitive": 5,
-"skeleton_aabb": [  ],
-"vertex_count": 74
-}
-
-[sub_resource type="ShaderMaterial" id=3]
-shader = ExtResource( 9 )
-shader_param/bps = null
-shader_param/star_color = null
-shader_param/held_color = null
-shader_param/screen_size = null
-
-[sub_resource type="ShaderMaterial" id=4]
-shader = ExtResource( 10 )
-shader_param/line_color = Color( 0.8, 0.8, 1, 0.8 )
-shader_param/line_color_double = Color( 1, 1, 0.6, 0.9 )
-shader_param/dot_color = Color( 1, 1, 1, 0.8 )
-shader_param/bps = 1.0
-shader_param/line_thickness = 0.012
-shader_param/line_thickness_min = 0.0
-shader_param/dot_thickness = 0.033
-shader_param/dot_fullbright_thickness = 0.013
-shader_param/max_angle = 1.0708
-shader_param/max_dist = 1.25
-shader_param/array_postmul = Vector3( 1, 1, 1 )
-shader_param/array_sidelen = 16
-shader_param/array_size = 256
-
-[sub_resource type="CanvasItemMaterial" id=5]
-blend_mode = 4
-
-[node name="main" type="Node2D"]
-position = Vector2( 540, 540 )
-script = ExtResource( 1 )
+[node name="main" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
 __meta__ = {
-"_edit_horizontal_guides_": [  ],
-"_edit_vertical_guides_": [  ]
+"_edit_use_anchors_": false
 }
 
-[node name="music" type="AudioStreamPlayer" parent="."]
-bus = "Music"
+[node name="RadialGame" parent="." instance=ExtResource( 1 )]
 
-[node name="video" type="VideoPlayer" parent="."]
-margin_left = -540.0
-margin_top = -540.0
-margin_right = 540.0
-margin_bottom = 540.0
-grow_horizontal = 2
-grow_vertical = 2
-rect_pivot_offset = Vector2( 540, 540 )
-mouse_filter = 2
-volume_db = -80.0
-bus = "Music"
+[node name="OptionPanel" parent="." instance=ExtResource( 13 )]
+
+[node name="TouchInput" type="Control" parent="."]
+margin_right = 40.0
+margin_bottom = 40.0
+mouse_filter = 1
 script = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
-
-[node name="ScreenFilter" type="Node2D" parent="."]
-script = ExtResource( 3 )
-
-[node name="Receptors" type="MeshInstance2D" parent="."]
-material = SubResource( 1 )
-mesh = SubResource( 6 )
-script = ExtResource( 5 )
-
-[node name="Tween" type="Tween" parent="Receptors"]
-
-[node name="NoteHandler" type="Node2D" parent="."]
-script = ExtResource( 6 )
-
-[node name="Viewport" type="Viewport" parent="NoteHandler"]
-size = Vector2( 1080, 1080 )
-transparent_bg = true
-usage = 1
-render_target_v_flip = true
-script = ExtResource( 7 )
-
-[node name="Center" type="Node2D" parent="NoteHandler/Viewport"]
-position = Vector2( 540, 540 )
-
-[node name="SlideTrailHandler" type="Node2D" parent="NoteHandler/Viewport/Center"]
-
-[node name="JudgeText" type="MeshInstance2D" parent="NoteHandler/Viewport/Center"]
-texture = ExtResource( 8 )
-
-[node name="meshinstance" type="MeshInstance2D" parent="NoteHandler/Viewport/Center"]
-material = SubResource( 3 )
-
-[node name="notelines" type="MeshInstance2D" parent="NoteHandler/Viewport/Center"]
-material = SubResource( 4 )
-
-[node name="Painter" type="Node2D" parent="NoteHandler"]
-material = SubResource( 5 )
-script = ExtResource( 11 )
-
-[node name="Menu" parent="." instance=ExtResource( 12 )]
-
-[node name="Bezel" type="Node2D" parent="."]
-script = ExtResource( 15 )
-
-[node name="InputHandler" type="Control" parent="."]
-margin_left = -540.0
-margin_top = -540.0
-margin_right = 540.0
-margin_bottom = 540.0
-script = ExtResource( 17 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="OptionPanel" parent="." instance=ExtResource( 13 )]

@@ -7,9 +7,9 @@ signal finished_song(song_key, score_data)
 var running := false
 var song_key = ''
 
-export var MusicPlayerPath := @'/root/main/music'
-export var VideoPlayerPath := @'/root/main/video'
-export var InputHandlerPath := @'/root/main/InputHandler'
+export var MusicPlayerPath := @'../../music'
+export var VideoPlayerPath := @'../../video'
+export var InputHandlerPath := @'../../InputHandler'
 onready var MusicPlayer := get_node(MusicPlayerPath)
 onready var VideoPlayer := get_node(VideoPlayerPath)
 onready var InputHandler := get_node(InputHandlerPath)

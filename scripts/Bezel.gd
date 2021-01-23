@@ -1,5 +1,5 @@
 tool
-extends Node2D
+extends Control
 
 # Draw the bezel for radial gamemode
 var center := Vector2(0.0, 0.0)

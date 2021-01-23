@@ -2,8 +2,10 @@
 #extends Node2D
 extends Control
 
-export var NoteHandlerPath := @'/root/main/NoteHandler'
+export var NoteHandlerPath := @'../Center/NoteHandler'
+export var ReceptorsPath := @'../Center/Receptors'
 onready var NoteHandler := get_node(NoteHandlerPath)
+onready var Receptors := get_node(ReceptorsPath)
 onready var ScoreText := $ScoreText
 onready var PVMusic := $PVMusic
 
@@ -435,7 +437,7 @@ func _draw():
 				ScoreText.show()
 
 func set_menu_mode(mode):
-	$'../Receptors'.fade(mode == MenuMode.GAMEPLAY)
+	Receptors.fade(mode == MenuMode.GAMEPLAY)
 	if mode == MenuMode.GAMEPLAY:
 		PVMusic.stop()
 		rect_clip_content = false
@@ -501,7 +503,8 @@ func finished_song(song_key, score_data):
 func _input(event):
 	if !visible:
 		return
-	if (event is InputEventScreenTouch) or (event is InputEventMouseButton):
+	if (event is InputEventMouseButton):  # Add this if we ever manage to be rid of the curse of Touch->Mouse emulation: (event is InputEventScreenTouch)
+		print(event)
 		if event.pressed:
 			var pos = event.position - get_global_transform_with_canvas().get_origin()
 			match menu_mode:
