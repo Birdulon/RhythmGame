@@ -1,4 +1,4 @@
-extends Label
+extends Control
 
 var touch_points = {} 								# dict containing all points touched on the screen
 var touch_positions = []							# array of above
@@ -36,44 +36,12 @@ func _ready():
 	set_process_unhandled_input(true)  # process user input
 	set_fingers(0)
 #	connect('button_pressed', self, 'print_pressed')
-	$'/root'.connect('size_changed', self, 'resize')
-	$VsyncButton.connect('toggled', self, 'update_vsync')
-	$WakelockButton.connect('toggled', self, 'update_wakelock')
-	$FilterSlider.connect('value_changed', self, 'update_filter')
-	$VolumeSlider.connect('value_changed', self, 'update_volume')
-	$SSXSlider.connect('value_changed', Settings, 'SSX_set')
-	$SSYSlider.connect('value_changed', Settings, 'SSY_set')
-	$BtnLanguage.add_item('Native')
-	$BtnLanguage.add_item('Romaji')
-	$BtnLanguage.add_item('English')
-	$BtnLanguage.connect('item_selected', self, 'update_display_language')
 	resize()
-
-func update_vsync(setting: bool):
-	OS.vsync_enabled = setting
-
-func update_wakelock(setting: bool):
-	OS.keep_screen_on = setting  # This is waiting on godotengine/godot#35536 to be merged to do anything in Linux :(
-
-func update_filter(alpha: float):
-	GameTheme.screen_filter_min_alpha = alpha
-
-func update_volume(volume: float):
-	AudioServer.set_bus_volume_db(0, volume)
-
-func update_display_language(index: int):
-	GameTheme.display_language = ['n', 'tl', 'en'][index]
 
 func print_pressed(col: int):
 	print('Pressed %d'%col)
 
-
-##########################################################################
-# draw fingers points on screen
-var fps: float = 0.0
-var audio_latency: float = 0.0
-func _draw():
-	set_text('FPS: %.0f\nAudio Latency: %.2fms'%[fps, audio_latency*1000])
+func _draw():  # draw fingers points on screen
 #	var swipe_origin = Vector2(300, 540)
 #	draw_line(swipe_origin, swipe_origin+swipe_momentum, Color.red)
 
@@ -90,16 +58,10 @@ func _draw():
 #			# Draw line
 #			draw_line(touch_positions[i], touch_positions[i+1], Color(1,1,1,1))
 
-var last_latency_check := 0.0
 func _process(delta):
 	swipe_momentum *= max(1.0 - 5.0*delta, 0)
 	if swipe_momentum.length_squared() < 1.0:
 		swipe_momentum = Vector2.ZERO
-	last_latency_check += delta
-	fps = Engine.get_frames_per_second()
-	if last_latency_check > 3.0:
-		last_latency_check = 0.0
-		audio_latency = AudioServer.get_output_latency()  # Note that on official godot builds this will only work ONCE for PulseAudio
 	update()
 
 func update_data():
