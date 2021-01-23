@@ -21,13 +21,13 @@ var currently_playing := false
 var selected_genre: int = 0
 var selected_genre_vis: int = 0
 var selected_genre_delta: float = 0.0  # For floaty display scrolling
-var target_song_idx: int = 0 setget set_target_song_idx
+var target_song_idx: float = 0.0 setget set_target_song_idx
 var target_song_delta: float = 0.0  # For floaty display scrolling
 var selected_song_idx: int setget , get_song_idx
 var selected_song_key: String setget , get_song_key
 var selected_difficulty = ChartDifficulty.ADV
 
-func set_target_song_idx(index: int):
+func set_target_song_idx(index):
 	target_song_delta -= index - target_song_idx
 	target_song_idx = index
 
@@ -36,7 +36,7 @@ func get_song_idx() -> int:
 
 func get_song_key() -> String:
 	var songslist = genres[genres.keys()[selected_genre]]
-	return songslist[self.target_song_idx % len(songslist)]
+	return songslist[int(round(self.target_song_idx)) % len(songslist)]
 
 var scorescreen_song_key := ''
 var scorescreen_score_data := {}
@@ -117,8 +117,11 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+#	var swipe: Vector2 = $'../InputHandler'.swipe_momentum
+#	if abs(swipe.x) > 10:
+#		target_song_delta += swipe.x * 0.1 * delta
+#	else:
 	target_song_delta -= ease_curve.interpolate(clamp(target_song_delta, -2, 2)*0.5) * 10 * delta
-#	target_song_delta += $'../InputHandler'.swipe_momentum.x * 1
 	if abs(target_song_delta) < 0.02:  # Snap
 		target_song_delta = 0.0
 
@@ -137,10 +140,9 @@ func _process(delta):
 	menu_mode_prev_fade_timer = max(0.0, menu_mode_prev_fade_timer - delta)
 	update()
 	if (menu_mode == MenuMode.GAMEPLAY) and (menu_mode_prev_fade_timer <= 0.0) and not NoteHandler.running:
-		var songslist = genres[genres.keys()[selected_genre]]
-		var song_key = songslist[self.target_song_idx % len(songslist)]
-		NoteHandler.load_track(song_key, Library.Song.default_difficulty_keys[selected_difficulty])
+		NoteHandler.load_track(self.selected_song_key, Library.Song.default_difficulty_keys[selected_difficulty])
 		NoteHandler.running = true
+
 
 func draw_string_centered(font, position, string, color := GameTheme.COLOR_MENU_TEXT):
 	draw_string(font, Vector2(position.x - font.get_string_size(string).x/2.0, position.y + font.get_ascent()).round(), string, color)
@@ -499,7 +501,7 @@ func finished_song(song_key, score_data):
 func _input(event):
 	if !visible:
 		return
-	if event is InputEventScreenTouch:
+	if (event is InputEventScreenTouch) or (event is InputEventMouseButton):
 		if event.pressed:
 			var pos = event.position - get_global_transform_with_canvas().get_origin()
 			match menu_mode:

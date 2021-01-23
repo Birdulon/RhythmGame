@@ -74,8 +74,8 @@ var fps: float = 0.0
 var audio_latency: float = 0.0
 func _draw():
 	set_text('FPS: %.0f\nAudio Latency: %.2fms'%[fps, audio_latency*1000])
-	var swipe_origin = Vector2(300, 540)
-	draw_line(swipe_origin, swipe_origin+swipe_momentum, Color.red)
+#	var swipe_origin = Vector2(300, 540)
+#	draw_line(swipe_origin, swipe_origin+swipe_momentum, Color.red)
 
 	# draw points
 	for i in touch_points:
