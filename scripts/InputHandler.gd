@@ -139,9 +139,11 @@ func _input(event):
 	# Unfortunately event.device does NOT differentiate touchscreen inputs on X11, Godot v3.1.1
 	# As such, we'll need to do some fancy mapping for multiple inputs
 	if (event is InputEventScreenDrag):
+		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 		touch_points[event.index] = {pressed = true, position = event.position}
 		swipe_momentum = event.speed
 	elif (event is InputEventScreenTouch):
+		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 		if event.pressed:
 			if not touch_points.has(event.index):
 				touch_points[event.index] = {}
@@ -150,6 +152,8 @@ func _input(event):
 		else:
 			if touch_points.has(event.index):
 				touch_points.erase(event.index)
+	elif (event is InputEventMouse):
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	update_data()
 
 ##########################################################################
