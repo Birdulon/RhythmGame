@@ -3,21 +3,21 @@
 [ext_resource path="res://assets/NotoSans-Regular.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://scripts/OptionPanel.gd" type="Script" id=2]
 
-[sub_resource type="DynamicFont" id=4]
+[sub_resource type="DynamicFont" id=1]
 outline_size = 1
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 1 )
 
-[sub_resource type="Theme" id=5]
-default_font = SubResource( 4 )
+[sub_resource type="Theme" id=2]
+default_font = SubResource( 1 )
 
-[sub_resource type="DynamicFont" id=1]
+[sub_resource type="DynamicFont" id=3]
 size = 24
 outline_size = 1
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 1 )
 
-[sub_resource type="GDScript" id=2]
+[sub_resource type="GDScript" id=4]
 script/source = "extends Label
 
 var fps: float = 0.0
@@ -30,7 +30,7 @@ func _process(delta):
 	update()
 "
 
-[sub_resource type="GDScript" id=3]
+[sub_resource type="GDScript" id=5]
 script/source = "extends Label
 
 var audio_latency: float = 0.0
@@ -51,7 +51,7 @@ margin_right = 269.0
 margin_bottom = 234.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme = SubResource( 5 )
+theme = SubResource( 2 )
 script = ExtResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -60,9 +60,9 @@ __meta__ = {
 [node name="lbl_fps" type="Label" parent="."]
 margin_right = 281.0
 margin_bottom = 34.0
-custom_fonts/font = SubResource( 1 )
+custom_fonts/font = SubResource( 3 )
 text = "FPS: "
-script = SubResource( 2 )
+script = SubResource( 4 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -72,7 +72,7 @@ margin_top = 38.0
 margin_right = 281.0
 margin_bottom = 61.0
 text = "Audio Latency: "
-script = SubResource( 3 )
+script = SubResource( 5 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -204,7 +204,18 @@ margin_left = 87.0
 margin_right = 281.0
 margin_bottom = 29.0
 size_flags_horizontal = 3
+text = "Native"
 align = 1
+items = [ "Native", null, false, 0, null, "Romaji", null, false, 1, null, "English", null, false, 2, null ]
+selected = 0
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[connection signal="toggled" from="HBoxContainer/btn_vsync" to="." method="_on_btn_vsync_toggled"]
+[connection signal="toggled" from="HBoxContainer/btn_wakelock" to="." method="_on_btn_wakelock_toggled"]
+[connection signal="value_changed" from="sl_SSX" to="." method="_on_sl_SSX_value_changed"]
+[connection signal="value_changed" from="sl_SSY" to="." method="_on_sl_SSY_value_changed"]
+[connection signal="value_changed" from="sl_screenfilter" to="." method="_on_sl_screenfilter_value_changed"]
+[connection signal="value_changed" from="sl_volume" to="." method="_on_sl_volume_value_changed"]
+[connection signal="item_selected" from="hbox_language/btn_language" to="." method="_on_btn_language_item_selected"]

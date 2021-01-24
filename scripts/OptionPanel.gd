@@ -1,25 +1,22 @@
 extends VBoxContainer
 
-export var btn_language: NodePath = @"hbox_language/btn_language"
-onready var BtnLanguage = get_node(btn_language)
-func _ready() -> void:
-	$HBoxContainer/btn_vsync.connect('toggled', OS, 'set_use_vsync')
-	$HBoxContainer/btn_wakelock.connect('toggled', OS, 'set_keep_screen_on')  # This is waiting on godotengine/godot#35536 to be merged to do anything in Linux :(
-	$sl_screenfilter.connect('value_changed', self, 'update_filter')
-	$sl_volume.connect('value_changed', self, 'update_volume')
-	$sl_SSX.connect('value_changed', Settings, 'SSX_set')
-	$sl_SSY.connect('value_changed', Settings, 'SSY_set')
-	BtnLanguage.add_item('Native')
-	BtnLanguage.add_item('Romaji')
-	BtnLanguage.add_item('English')
-	BtnLanguage.connect('item_selected', self, 'update_display_language')
+func _on_btn_vsync_toggled(button_pressed: bool) -> void:
+	OS.set_use_vsync(button_pressed)
 
+func _on_btn_wakelock_toggled(button_pressed: bool) -> void:
+	OS.set_keep_screen_on(button_pressed)  # This is waiting on godotengine/godot#35536 to be merged to do anything in Linux :(
 
-func update_filter(alpha: float):
-	GameTheme.screen_filter_min_alpha = alpha
-
-func update_volume(volume: float):
-	AudioServer.set_bus_volume_db(0, volume)
-
-func update_display_language(index: int):
+func _on_btn_language_item_selected(index: int) -> void:
 	GameTheme.display_language = ['n', 'tl', 'en'][index]
+
+func _on_sl_volume_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(0, value)
+
+func _on_sl_screenfilter_value_changed(value: float) -> void:
+	GameTheme.screen_filter_min_alpha = value
+
+func _on_sl_SSX_value_changed(value: float) -> void:
+	Settings.SSX_set(value)
+
+func _on_sl_SSY_value_changed(value: float) -> void:
+	Settings.SSY_set(value)
