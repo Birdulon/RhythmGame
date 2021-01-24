@@ -149,7 +149,7 @@ const NORMAL_ARRAY_8 := PoolVector3Array([
 
 var display_language = 'n'
 
-var screen_filter_min_alpha := 0.2 setget set_screen_filter_min_alpha
+var screen_filter_min_alpha := 0.3 setget set_screen_filter_min_alpha
 var screen_filter_alpha_scale := 1.0 setget set_screen_filter_alpha
 var screen_filter := Color(0.0, 0.0, 0.0, screen_filter_min_alpha)
 
