@@ -12,6 +12,12 @@ func _on_btn_language_item_selected(index: int) -> void:
 func _on_sl_volume_value_changed(value: float) -> void:
 	AudioServer.set_bus_volume_db(0, value)
 
+func _on_sl_vol_music_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(1, value)
+
+func _on_sl_vol_sfx_value_changed(value: float) -> void:
+	AudioServer.set_bus_volume_db(2, value)
+
 func _on_sl_screenfilter_value_changed(value: float) -> void:
 	GameTheme.screen_filter_min_alpha = value
 
