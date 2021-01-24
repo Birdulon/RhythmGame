@@ -10,7 +10,7 @@ var song_key = ''
 export var MusicPlayerPath := @'../../music'
 export var VideoPlayerPath := @'../../video'
 export var InputHandlerPath := @'../../InputHandler'
-onready var MusicPlayer := get_node(MusicPlayerPath)
+onready var MusicPlayer := SFXPlayer.music_player
 onready var VideoPlayer := get_node(VideoPlayerPath)
 onready var InputHandler := get_node(InputHandlerPath)
 

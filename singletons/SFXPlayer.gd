@@ -36,3 +36,10 @@ func play(type: int, parent: Node, stream: AudioStream, volume_db: float = 0.0, 
 	audio_stream_player.pitch_scale = pitch_scale
 	audio_stream_player.play()
 	audio_stream_player.connect("finished", audio_stream_player, "queue_free")
+
+
+# This singleton and API will need renaming later to reflect the new purposes
+var music_player := AudioStreamPlayer.new()
+func _ready() -> void:
+	add_child(music_player)
+	music_player.bus = "Music"
