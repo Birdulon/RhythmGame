@@ -7,12 +7,9 @@ signal finished_song(song_key, score_data)
 var running := false
 var song_key = ''
 
-export var MusicPlayerPath := @'../../music'
 export var VideoPlayerPath := @'../../video'
-export var InputHandlerPath := @'../../InputHandler'
 onready var MusicPlayer := SFXPlayer.music_player
 onready var VideoPlayer := get_node(VideoPlayerPath)
-onready var InputHandler := get_node(InputHandlerPath)
 
 onready var Painter = $Painter
 onready var SlideTrailHandler = $'Viewport/Center/SlideTrailHandler'
@@ -257,8 +254,6 @@ func button_pressed(col):
 				if -hit_delta <= Rules.JUDGEMENT_TIMES_PRE[i]:
 					activate_note(note, -i)
 					return
-func touchbutton_pressed(col):
-	button_pressed(col)
 
 
 func do_hold_release(note):
@@ -298,15 +293,6 @@ func check_hold_release(col):
 		if note.type == Note.NOTE_HOLD:
 			if note.is_held == true:
 				do_hold_release(note)  # Separate function since there's no need to 'consume' releases
-
-func button_released(col):
-	# We only care about hold release.
-	# For that particular case, we want both to be unheld.
-	if InputHandler.touchbuttons_pressed[col] == 0:
-		check_hold_release(col)
-func touchbutton_released(col):
-	if InputHandler.buttons_pressed[col] == 0:
-		check_hold_release(col)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 const arr_div := Vector3(2.0, float(Rules.COLS), TAU)
@@ -470,11 +456,6 @@ func _ready():
 	noteline_array_image.create(16, 16, false, Image.FORMAT_RGBF)
 	noteline_array_image.fill(Color(0.0, 0.0, 0.0))
 	# Format: first 15 rows are for hit events, last row is for releases only (no ring glow)
-
-	InputHandler.connect('button_pressed', self, 'button_pressed')
-	InputHandler.connect('touchbutton_pressed', self, 'touchbutton_pressed')
-	InputHandler.connect('button_released', self, 'button_released')
-	InputHandler.connect('touchbutton_released', self, 'touchbutton_released')
 
 	meshinstance.material.set_shader_param('star_color', GameTheme.COLOR_STAR)
 	meshinstance.material.set_shader_param('held_color', GameTheme.COLOR_HOLD_HELD)
@@ -648,3 +629,10 @@ func _process(delta):
 	meshinstance.material.set_shader_param('screen_size', get_viewport().get_size())
 	update()
 	Painter.update()
+
+
+func _on_InputHandler_column_pressed(column) -> void:
+	button_pressed(column)
+
+func _on_InputHandler_column_released(column) -> void:
+	check_hold_release(column)

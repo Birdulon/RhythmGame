@@ -2,10 +2,12 @@ extends Control
 
 var buttons_pressed := PoolByteArray()
 var touchbuttons_pressed := PoolByteArray()
-signal button_pressed(index)  # Add int type to these once Godot supports typed signals
-signal button_released(index)
-signal touchbutton_pressed(index)
-signal touchbutton_released(index)
+signal button_pressed(column)  # Add int type to these once Godot supports typed signals
+signal button_released(column)
+signal touchbutton_pressed(column)
+signal touchbutton_released(column)
+signal column_pressed(column)  # This will trigger when either is pressed
+signal column_released(column)  # This will trigger when both are released
 const TOUCHBUTTON_MIN_DIST := 0.8
 const TOUCHBUTTON_MAX_DIST := 1.075
 const BUTTON_MIN_DIST := 0.925
@@ -20,6 +22,10 @@ func _init():
 	for i in Rules.COLS:
 		buttons_pressed[i] = 0
 		touchbuttons_pressed[i] = 0
+	connect('button_pressed', self, '_on_button_pressed')
+	connect('touchbutton_pressed', self, '_on_button_pressed')
+	connect('button_released', self, '_on_button_released')
+	connect('touchbutton_released', self, '_on_touchbutton_released')
 
 func print_pressed(col: int):
 	print('Pressed %d'%col)
@@ -68,3 +74,14 @@ func set_touchbutton_state(index: int, state: bool):
 		-1:
 			emit_signal('touchbutton_released', index)
 	touchbuttons_pressed[index] = new_state
+
+func _on_button_pressed(column: int):
+	emit_signal('column_pressed', column)
+
+func _on_button_released(column: int):
+	if touchbuttons_pressed[column] == 0:
+		emit_signal('column_released', column)
+
+func _on_touchbutton_released(column: int):
+	if buttons_pressed[column] == 0:
+		emit_signal('column_released', column)
