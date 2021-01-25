@@ -217,10 +217,10 @@ func _draw_song_select(center: Vector2) -> Array:
 			touchrects.append({rect=r, song_idx=ssid-i, genre_idx=g})
 		gy += size*scales.value(0) + spacer_y + (title_spacer_y if selected else 0)
 	var b = 600
-	var v1 = -380
-	var v2 = 0
+	var v1 = -430
+	var v2 = -20
 	var v4 = 370
-	var v3 = 700
+	var v3 = 750
 	var ps = PoolVector2Array([center+Vector2(-b, v1), center+Vector2(b, v1), center+Vector2(b, v2), center+Vector2(-b, v2)])
 	var ps2 = PoolVector2Array([center+Vector2(-b, v3), center+Vector2(b, v3), center+Vector2(b, v4), center+Vector2(-b, v4)])
 	var cs = PoolColorArray([Color(0,0,0.1,1.05), Color(0,0,0.1,1.05), Color(0,0,0,0), Color(0,0,0,0)])
@@ -408,8 +408,8 @@ func _draw():
 
 	if menu_mode_prev_fade_timer > 0.0:
 		var progress = 1.0 - menu_mode_prev_fade_timer/menu_mode_prev_fade_timer_duration
-		var center_prev = lerp(center, center+Vector2(0.0, 900.0), progress)
-		var center_next = lerp(center+Vector2(0.0, -900.0), center, progress)
+		var center_prev = lerp(center, center+Vector2(0.0, 1200.0), progress)
+		var center_next = center_prev + Vector2(0.0, -1200.0)
 		match menu_mode_prev:
 			MenuMode.SONG_SELECT:
 				_draw_song_select(center_prev)
@@ -519,7 +519,7 @@ func _input(event):
 	if !visible:
 		return
 	if (event is InputEventMouseButton):  # Add this if we ever manage to be rid of the curse of Touch->Mouse emulation: (event is InputEventScreenTouch)
-		print(event)
+#		print(event)
 		if event.pressed:
 			var pos = event.position - get_global_transform_with_canvas().get_origin()
 			match menu_mode:
