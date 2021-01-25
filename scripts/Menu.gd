@@ -180,7 +180,7 @@ func _draw_song_select(center: Vector2) -> Array:
 	var spacer_x = 12
 	var spacer_y = 64
 	var title_spacer_y = 48
-	var gy: float = center.y - 395 - size*selected_genre_delta
+	var gy: float = center.y - 395 - size*selected_genre_delta - 160
 	var touchrects := []
 
 	var ssid = self.selected_song_idx
@@ -217,17 +217,17 @@ func _draw_song_select(center: Vector2) -> Array:
 			touchrects.append({rect=r, song_idx=ssid-i, genre_idx=g})
 		gy += size*scales.value(0) + spacer_y + (title_spacer_y if selected else 0)
 	var b = 600
-	var v1 = -430
-	var v2 = -20
-	var v4 = 370
-	var v3 = 750
+	var v1 = -590
+	var v2 = -230
+	var v4 = -v2
+	var v3 = -v1
 	var ps = PoolVector2Array([center+Vector2(-b, v1), center+Vector2(b, v1), center+Vector2(b, v2), center+Vector2(-b, v2)])
 	var ps2 = PoolVector2Array([center+Vector2(-b, v3), center+Vector2(b, v3), center+Vector2(b, v4), center+Vector2(-b, v4)])
-	var cs = PoolColorArray([Color(0,0,0.1,1.05), Color(0,0,0.1,1.05), Color(0,0,0,0), Color(0,0,0,0)])
+	var cs = PoolColorArray([Color(0,0,0.1,1.25), Color(0,0,0.1,1.25), Color(0,0,0,0), Color(0,0,0,0)])
 	draw_polygon(ps, cs)
 	draw_polygon(ps2, cs)
-	draw_string_centered(GenreFont, Vector2(center.x, center.y-280), 'Select Song', Color.aqua)
-	draw_string_centered(DiffNumFont, Vector2(center.x, center.y-230), 'Tap to scroll, tap focused to select', Color.lightgreen)
+	draw_string_centered(GenreFont, Vector2(center.x, center.y-440), 'Select Song', Color.aqua)
+	draw_string_centered(DiffNumFont, Vector2(center.x, center.y-390), 'Tap to scroll, tap focused to select', Color.lightgreen)
 	return touchrects
 
 func _draw_chart_select(center: Vector2) -> Array:
@@ -238,11 +238,11 @@ func _draw_chart_select(center: Vector2) -> Array:
 	var n = len(diffs)
 	var spacer_x = max(14, 70/n)
 	var size = min(192, (1000-spacer_x*(n-1))/n)
-	var rect_back = Rect2(center.x-300.0, center.y+550.0, 600.0, 140.0)
+	var rect_back = Rect2(center.x-300.0, center.y+390.0, 600.0, 140.0)
 	draw_rect(rect_back, Color.red)
 	draw_string_centered(TitleFont, rect_back.position+rect_back.size/2-Vector2(0,26), 'Back to song selection')
-	draw_string_centered(GenreFont, Vector2(center.x, center.y-200), 'Select Difficulty', Color.aqua)
-	draw_string_centered(DiffNumFont, Vector2(center.x, center.y-140), 'Tap to show stats, tap focused to play', Color.lightgreen)
+	draw_string_centered(GenreFont, Vector2(center.x, center.y-360), 'Select Difficulty', Color.aqua)
+	draw_string_centered(DiffNumFont, Vector2(center.x, center.y-300), 'Tap to show stats, tap focused to play', Color.lightgreen)
 	var touchrects = [{rect=rect_back, chart_idx=-1, enabled=true}]  # invisible back button
 	var x = center.x - (size*n + spacer_x*(n-1))/2
 
@@ -250,13 +250,13 @@ func _draw_chart_select(center: Vector2) -> Array:
 		var i_diff = Library.Song.difficulty_key_ids.get(diff, 0)
 		var width = 8 if i_diff == selected_difficulty else 3
 		var chart_exists: bool = (diff in charts)
-		var r = draw_songtile(self.selected_song_key, Vector2(x, center.y), size, false, i_diff, width, not chart_exists)
+		var r = draw_songtile(self.selected_song_key, Vector2(x, center.y-160), size, false, i_diff, width, not chart_exists)
 		touchrects.append({rect=r, chart_idx=i_diff, enabled=chart_exists})
 		x += size + spacer_x
-	draw_string_centered(TitleFont, Vector2(center.x, center.y+size+32), str(Library.all_songs[self.selected_song_key].title))
+	draw_string_centered(TitleFont, Vector2(center.x, center.y+size-128), str(Library.all_songs[self.selected_song_key].title))
 
-	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+80), 'BPM:')
-	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+80), str(song_data.BPM))
+	draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size-80), 'BPM:')
+	draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size-80), str(song_data.BPM))
 
 	if len(charts) > 0:
 		var sel_chart: Array = charts.values()[min(selected_difficulty, len(charts)-1)]
@@ -267,10 +267,10 @@ func _draw_chart_select(center: Vector2) -> Array:
 		var notetypes = [0, 1, 2]
 		var note_counts = [meta.num_taps, meta.num_holds, meta.num_slides]
 		for i in len(notestrs):
-			draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size+148+i*50), notestrs[i])
-			draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size+148+i*50), str(note_counts[notetypes[i]]))
+			draw_string_centered(TitleFont, Vector2(center.x-50, center.y+size-12+i*50), notestrs[i])
+			draw_string_centered(TitleFont, Vector2(center.x+50, center.y+size-12+i*50), str(note_counts[notetypes[i]]))
 	else:
-		draw_string_centered(TitleFont, Vector2(center.x, center.y+size+148), 'No available charts!', Color.red)
+		draw_string_centered(TitleFont, Vector2(center.x, center.y+size-12), 'No available charts!', Color.red)
 
 	return touchrects
 
@@ -286,7 +286,7 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var meta: Dictionary = chart[0]
 
 	var x = center.x
-	var y = center.y - 200
+	var y = center.y - 360
 	var x_songtile = x - 120
 	var x_score = x + 120
 	var x2 = x - 360
@@ -380,17 +380,15 @@ func _draw_score_screen(center: Vector2) -> Array:
 		draw_rect(rect_save, Color.darkgray)
 		draw_string_centered(TitleFont, Vector2(x-210, y+680), 'Saved')
 
-	draw_string_centered(GenreFont, Vector2(center.x, center.y-330), 'Results', Color.aqua)
+	draw_string_centered(GenreFont, Vector2(center.x, center.y-490), 'Results', Color.aqua)
 	return touchrects
 
 func _draw_gameplay(center: Vector2) -> Array:
 	var touchrects = []
-	var x = center.x
-	var y = center.y
 
-	var rect_songselect := Rect2(x-960.0, y+440.0, 100.0, 50.0)
+	var rect_songselect := Rect2(center+Vector2(-960.0, 280.0), Vector2(100.0, 50.0))
 	draw_rect(rect_songselect, Color.red)
-	draw_string_centered(TitleFont, center+Vector2(-910, 438), 'Stop')
+	draw_string_centered(TitleFont, center+Vector2(-910, 278), 'Stop')
 	touchrects.append({rect=rect_songselect, action='stop'})
 	return touchrects
 
@@ -400,7 +398,7 @@ func _draw():
 	var score_screen_filter_alpha := 0.65
 	var size = 216
 	var outline_px = 3
-	var center = Vector2(540.0, 540.0-160.0)  # Vector2(0.0, -160.0)
+	var center = rect_size * 0.5
 	touch_rects = []
 	ScoreText.hide()
 	for i in MenuMode:
