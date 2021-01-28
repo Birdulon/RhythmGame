@@ -193,7 +193,7 @@ func _draw_song_select(center: Vector2) -> Array:
 		var subsize = size * scales.value(abs(s_delta))
 		var gx = center.x - (subsize + spacer_x) * s_delta
 		var songslist = Library.genre_songs[g].keys()
-		var genre_str = '%s (%d)'%[genres.keys()[g], len(songslist)]
+		var genre_str = '%s (%d songs)'%[genres.keys()[g], len(songslist)]
 		draw_string_centered(GenreFont, Vector2(center.x, gy), genre_str, Color.lightblue)
 		var s = len(songslist)
 		var key = songslist[self.selected_song_idx % s]
@@ -462,46 +462,46 @@ func set_menu_mode(mode):
 
 func touch_select_song(touchdict):
 	if (self.selected_genre == touchdict.genre_idx) and (self.selected_song_idx == touchdict.song_idx):
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		# var songslist = genres[genres.keys()[selected_genre]]
 		# selected_song_key = songslist[self.target_song_idx % len(songslist)]
 		set_menu_mode(MenuMode.CHART_SELECT)
 	else:
 		self.selected_genre = touchdict.genre_idx
 		self.target_song_idx = touchdict.song_idx
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
 		load_preview()
 
 func touch_select_chart(touchdict):
 	if touchdict.chart_idx == selected_difficulty:
 		if touchdict.enabled:
-			SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+			SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 			set_menu_mode(MenuMode.GAMEPLAY)
 		else:
-			SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_error, 0.0)
+			SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_error, 0.0)
 	elif touchdict.chart_idx < 0:
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -3.0, 0.7)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, -3.0, 0.7)
 		set_menu_mode(MenuMode.SONG_SELECT)
 	else:
 		self.selected_difficulty = touchdict.chart_idx
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, -4.5)
 
 func touch_gameplay(touchdict):
 	if touchdict.has('action'):
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		if touchdict.action == 'stop':
 			NoteHandler.stop()
 
 func touch_score_screen(touchdict):
 	if touchdict.has('next_menu'):
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		set_menu_mode(touchdict.next_menu)
 		ScoreText.score = ''
 		ScoreText.score_sub = ''
 		# TODO: time this to coincide with the menu going fully offscreen
 		ScoreText.update()
 	elif touchdict.has('action'):
-		SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
+		SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, snd_interact, 0.0)
 		if touchdict.action == 'save':
 			save_score()
 

@@ -30,7 +30,7 @@ Rules="*res://singletons/Rules.gd"
 FileLoader="*res://singletons/FileLoader.gd"
 Library="*res://singletons/Library.gd"
 GameTheme="*res://singletons/GameTheme.gd"
-SFXPlayer="*res://singletons/SFXPlayer.gd"
+SoundPlayer="*res://singletons/SoundPlayer.gd"
 
 [debug]
 
@@ -59,6 +59,7 @@ singletons_disabled=[  ]
 [rendering]
 
 vram_compression/import_etc=true
+environment/default_clear_color=Color( 0.11, 0.11, 0.11, 1 )
 quality/filters/msaa=1
 environment/default_environment="res://default_env.tres"
 quality/subsampling/x=1.0

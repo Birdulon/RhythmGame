@@ -8,7 +8,7 @@ var running := false
 var song_key = ''
 
 export var VideoPlayerPath := @'../../video'
-onready var MusicPlayer := SFXPlayer.music_player
+onready var MusicPlayer := SoundPlayer.music_player
 onready var VideoPlayer := get_node(VideoPlayerPath)
 
 onready var Painter = $Painter
@@ -203,12 +203,12 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 #----------------------------------------------------------------------------------------------------------------------------------------------
 func make_judgement_column(judgement, column: int):
 	active_judgement_texts.append({col=column, judgement=judgement, time=t})
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_judgement[judgement], GameTheme.db_judgement[judgement], GameTheme.pitch_judgement[judgement])
+	SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_judgement[judgement], GameTheme.db_judgement[judgement], GameTheme.pitch_judgement[judgement])
 
 func make_judgement_pos(judgement, pos: Vector2):
 	# Positional judgement text not yet implemented, will do if touches are ever added
 	#active_judgement_texts.append({judgement=judgement, time=t})
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_judgement[judgement], GameTheme.db_judgement[judgement], GameTheme.pitch_judgement[judgement])
+	SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_judgement[judgement], GameTheme.db_judgement[judgement], GameTheme.pitch_judgement[judgement])
 
 
 func activate_note(note, judgement):
@@ -497,7 +497,7 @@ func stop():
 	next_note_to_load = 10000000  # Hacky but whatever
 
 func intro_click():
-	SFXPlayer.play(SFXPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_count_in)
+	SoundPlayer.play(SoundPlayer.Type.NON_POSITIONAL, self, GameTheme.snd_count_in)
 
 func get_realtime_precise() -> float:
 	# Usually we only update the gametime once per process loop, but for input callbacks it's good to have msec precision
