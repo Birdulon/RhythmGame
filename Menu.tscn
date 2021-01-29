@@ -13,6 +13,9 @@ _data = [ Vector2( -1, -1 ), 0.0, 0.0, 0, 0, Vector2( 0, 0 ), 2.0, 2.0, 1, 1, Ve
 material = ExtResource( 3 )
 rect_clip_content = true
 script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 ease_curve = SubResource( 1 )
 
 [node name="ScoreText" type="Node2D" parent="."]
