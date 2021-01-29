@@ -7,9 +7,8 @@ signal finished_song(song_key, score_data)
 var running := false
 var song_key = ''
 
-export var VideoPlayerPath := @'../../video'
 onready var MusicPlayer := SoundPlayer.music_player
-onready var VideoPlayer := get_node(VideoPlayerPath)
+onready var VideoPlayer := Video.video
 
 onready var Painter = $Painter
 onready var SlideTrailHandler = $'Viewport/Center/SlideTrailHandler'
@@ -480,7 +479,6 @@ func load_track(song_key: String, difficulty_key: String):
 	var videostream = FileLoader.load_video('songs/' + data.filepath.rstrip('/') + '/' + data.video_filelist[0])
 	MusicPlayer.set_stream(FileLoader.load_ogg('songs/' + data.filepath.rstrip('/') + '/' + data.audio_filelist[0]))
 	VideoPlayer.set_stream(videostream)
-	VideoPlayer.update_aspect_ratio(data.video_dimensions[0]/data.video_dimensions[1])
 #	all_notes = FileLoader.Test.stress_pattern()
 
 	Note.process_note_list(all_notes, false)

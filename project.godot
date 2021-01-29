@@ -31,6 +31,7 @@ FileLoader="*res://singletons/FileLoader.gd"
 Library="*res://singletons/Library.gd"
 GameTheme="*res://singletons/GameTheme.gd"
 SoundPlayer="*res://singletons/SoundPlayer.gd"
+Video="*res://singletons/Video.gd"
 
 [debug]
 

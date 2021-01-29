@@ -71,7 +71,7 @@ __meta__ = {
 [node name="PanelContainer" type="PanelContainer" parent="."]
 margin_top = 38.0
 margin_right = 267.0
-margin_bottom = 374.0
+margin_bottom = 626.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -80,7 +80,7 @@ __meta__ = {
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 260.0
-margin_bottom = 329.0
+margin_bottom = 581.0
 
 [node name="cb_qsettings" type="CheckBox" parent="PanelContainer/VBoxContainer"]
 margin_right = 253.0
@@ -300,6 +300,23 @@ ticks_on_borders = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBoxContainer"]
+margin_top = 326.0
+margin_right = 253.0
+margin_bottom = 330.0
+
+[node name="VidTextureRect" type="TextureRect" parent="PanelContainer/VBoxContainer" groups=[
+"VideoTexRects",
+]]
+margin_top = 334.0
+margin_right = 253.0
+margin_bottom = 574.0
+rect_min_size = Vector2( 240, 240 )
+size_flags_horizontal = 7
+size_flags_vertical = 7
+expand = true
+stretch_mode = 6
 
 [connection signal="toggled" from="PanelContainer/VBoxContainer/cb_qsettings" to="PanelContainer/VBoxContainer/vbox_qsettings" method="set_visible"]
 [connection signal="item_selected" from="PanelContainer/VBoxContainer/vbox_qsettings/hbox_language/btn_language" to="." method="_on_btn_language_item_selected"]

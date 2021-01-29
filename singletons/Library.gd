@@ -45,7 +45,6 @@ class Song:
 	var audio_offsets: Array
 	var video_offsets: Array
 	var audio_preview_times: Array
-	var video_dimensions: Array
 	var chart_difficulties := {}
 	const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R', '宴']
 	const difficulty_key_ids = {'Z':0, 'B':1, 'A':2, 'E':3, 'M':4, 'R':5, '宴':6}
@@ -70,8 +69,7 @@ class Song:
 		video_filelist = values.get('video_filelist', ['%s.webm'%values.get('index', 'video')])
 		audio_offsets = values.get('audio_filelist', [0.0, 240.0/BPM])
 		video_offsets = values.get('video_filelist', [0.0, 240.0/BPM])
-		video_dimensions = values.get('video_dimensions', [1.0, 1.0])
-		audio_preview_times = values.get('video_dimensions', [1.0, 1.0])
+		audio_preview_times = values.get('audio_preview_times', [1.0, 1.0])
 		genre = values.get('genre', 'None')
 
 		chart_filelist = values.get('chart_filelist', ['%s.rgtm'%values.get('index', 'charts')])

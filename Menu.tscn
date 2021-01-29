@@ -11,17 +11,8 @@ _data = [ Vector2( -1, -1 ), 0.0, 0.0, 0, 0, Vector2( 0, 0 ), 2.0, 2.0, 1, 1, Ve
 
 [node name="Menu" type="Control"]
 material = ExtResource( 3 )
-margin_left = -540.0
-margin_top = -540.0
-margin_right = 540.0
-margin_bottom = 540.0
-rect_pivot_offset = Vector2( 540, 540 )
 rect_clip_content = true
 script = ExtResource( 2 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-NoteHandlerPath = NodePath("../NoteHandler")
 ease_curve = SubResource( 1 )
 
 [node name="ScoreText" type="Node2D" parent="."]
