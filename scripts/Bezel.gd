@@ -12,31 +12,26 @@ func arc_point_list(center: Vector2, radius: float, angle_from:=0.0, angle_to:=3
 	return point_list
 
 func _draw():
+	center = rect_size*0.5
 	var bezel_colors := PoolColorArray([GameTheme.bezel_color])
 	var bezel_points: PoolVector2Array
+	var dim = rect_size.x
+	var dim2 = center.x
 
-	var screen_size = $"/root".get_visible_rect().size
-	var screen_height = 1080 # min(screen_size.x, screen_size.y)
-
-	var screen_height2 = screen_height/2.0
-
-#	draw_rect(Rect2(-screen_height2, -screen_height2, -x_margin, screen_height), GameTheme.bezel_color)
-#	draw_rect(Rect2(screen_height2, -screen_height2, x_margin, screen_height), GameTheme.bezel_color)
-
-	bezel_points = arc_point_list(center, screen_height2, 0, -90)
-	bezel_points.push_back(Vector2(screen_height2, -screen_height2))
+	bezel_points = arc_point_list(center, dim2, 0, -90)
+	bezel_points.push_back(Vector2(dim, 0))
 	draw_polygon(bezel_points, bezel_colors)
 
-	bezel_points = arc_point_list(center, screen_height2, -90, -180)
-	bezel_points.push_back(Vector2(-screen_height2, -screen_height2))
+	bezel_points = arc_point_list(center, dim2, -90, -180)
+	bezel_points.push_back(Vector2(0, 0))
 	draw_polygon(bezel_points, bezel_colors)
 
-	bezel_points = arc_point_list(center, screen_height2, -180, -270)
-	bezel_points.push_back(Vector2(-screen_height2, screen_height2))
+	bezel_points = arc_point_list(center, dim2, -180, -270)
+	bezel_points.push_back(Vector2(0, dim))
 	draw_polygon(bezel_points, bezel_colors)
 
-	bezel_points = arc_point_list(center, screen_height2, -270, -360)
-	bezel_points.push_back(Vector2(screen_height2, screen_height2))
+	bezel_points = arc_point_list(center, dim2, -270, -360)
+	bezel_points.push_back(Vector2(dim, dim))
 	draw_polygon(bezel_points, bezel_colors)
 
 func _ready():

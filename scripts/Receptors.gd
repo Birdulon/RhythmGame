@@ -1,5 +1,8 @@
 tool
-extends MeshInstance2D
+extends Control
+
+var tween := Tween.new()
+var mesh := Mesh.new()
 
 export var ring_px := 4  # Analogous to diameter
 export var receptor_px := 24  # Diameter
@@ -128,6 +131,8 @@ func _draw():
 	material.set_shader_param("shadow_color", shadow_color)
 	material.set_shader_param("alpha", alpha)
 
+	draw_mesh(mesh, null, null, Transform2D(0.0, rect_size*0.5))
+
 func set_ring_vertex_count(num: int):
 	assert(num > 3)
 	ring_vertex_count = num
@@ -142,6 +147,7 @@ func set_receptor_positions(skew:=0.0):
 	material.set_shader_param("receptor_offset", PI/Rules.COLS)
 
 func _ready():
+	add_child(tween)
 	set_receptor_positions()
 	update_ring_mesh()
 	set_alpha(float(Engine.editor_hint))
@@ -152,5 +158,5 @@ func set_alpha(a):
 	material.set_shader_param("alpha", alpha)
 
 func fade(visible: bool):
-	$Tween.interpolate_method(self, "set_alpha", alpha, float(visible), abs(alpha-float(visible))*2.0)
-	$Tween.start()
+	tween.interpolate_method(self, "set_alpha", alpha, float(visible), abs(alpha-float(visible))*2.0)
+	tween.start()
