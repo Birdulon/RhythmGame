@@ -156,7 +156,7 @@ func _ready():
 	$"/root".connect("size_changed", self, "update")
 
 func set_alpha(a):
-	alpha = 1.0  #a
+	alpha = a
 	material.set_shader_param("alpha", alpha)
 
 func fade(visible: bool):
