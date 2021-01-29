@@ -10,7 +10,7 @@ var song_key = ''
 onready var MusicPlayer := SoundPlayer.music_player
 onready var VideoPlayer := Video.video
 
-onready var Painter = $Painter
+onready var Painter = $'../Painter'
 onready var SlideTrailHandler = $'Viewport/Center/SlideTrailHandler'
 onready var JudgeText = $'Viewport/Center/JudgeText'
 onready var notelines = $'Viewport/Center/notelines'
@@ -399,10 +399,13 @@ func _input(event):
 	else:
 		return
 
+	pos /= rect_size*0.5  # Normalize to unit circle
+	pos -= Vector2(1.0, 1.0)  # Normalize to center
+	pos *= GameTheme.receptor_ring_radius_normalized_inv  # Normalize to receptor ring as slides are
 	for i in range(len(active_slide_trails)-1, -1, -1):  # Iterate backwards as we are potentially deleting entries
 		var note = active_slide_trails[i]
-		var center = note.get_position(note.progress) * GameTheme.receptor_ring_radius
-		var center2 = note.get_position(min(note.progress+0.06, 1.0)) * GameTheme.receptor_ring_radius
+		var center = note.get_position(note.progress)
+		var center2 = note.get_position(min(note.progress+0.06, 1.0))
 		if ((pos - center).length_squared() < Rules.SLIDE_RADIUS2) or ((pos - center2).length_squared() < Rules.SLIDE_RADIUS2):
 			note.progress += 0.09
 			if note.progress >= 1.0:

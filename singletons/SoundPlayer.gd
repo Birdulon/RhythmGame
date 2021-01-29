@@ -39,6 +39,9 @@ func play(type: int, parent: Node, stream: AudioStream, volume_db: float = 0.0, 
 
 
 var music_player := AudioStreamPlayer.new()
+var music_player_pv := AudioStreamPlayer.new()
 func _ready() -> void:
 	add_child(music_player)
 	music_player.bus = "Music"
+	add_child(music_player_pv)
+	music_player_pv.bus = "Preview"

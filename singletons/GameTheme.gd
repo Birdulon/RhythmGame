@@ -43,6 +43,8 @@ var pitch_judgement := {
 }
 
 var receptor_ring_radius := 460.0
+var receptor_ring_radius_normalized := 460.0/540.0
+var receptor_ring_radius_normalized_inv := 540.0/460.0
 var note_forecast_beats := 2.0  # Notes start to appear this many beats before you need to tap them
 const INNER_NOTE_CIRCLE_RATIO := 0.3  # Notes under this far from the center will zoom into existence
 const SLIDE_DELAY := 0.5  #0.125  #0.5  # Time in beats between the tap of the star and the start of the visual slide

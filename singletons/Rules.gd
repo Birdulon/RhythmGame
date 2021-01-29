@@ -22,7 +22,8 @@ const JUDGEMENT_SCORES = [1.0, 0.9, 0.75, 0.5, 0.0]
 const SCORE_STRINGS =  ['SSS', 'SS', 'S', 'A⁺', 'A', 'B⁺', 'B', 'C⁺', 'C', 'F']
 const SCORE_CUTOFFS = [1.0, 0.975, 0.95, 0.9, 0.85, 0.8, 0.7, 0.6, 0.5]
 
-const SLIDE_RADIUS2 = 10000.0  # Radius of 100px
+const SLIDE_RADIUS := 100.0/540.0  # Radius of 100px at 1080p, normalized
+const SLIDE_RADIUS2 = pow(SLIDE_RADIUS, 2)
 
 # Not really a fan of Simply Love grading
 # Scoring can probably be fine with a strictly positive scheme, but I really dislike having so many grades and the ± feels meaningless.

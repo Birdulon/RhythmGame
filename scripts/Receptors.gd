@@ -111,6 +111,19 @@ func update_ring_mesh():
 	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, mesh_arrays)
 	mesh = temp_mesh
 
+func set_ring_vertex_count(num: int):
+	assert(num > 3)
+	ring_vertex_count = num
+	update_ring_mesh()
+
+func set_ring_skew(skew: int):
+	ring_skew = skew
+	update_ring_mesh()
+
+func set_receptor_positions(skew:=0.0):
+	material.set_shader_param("num_receptors", Rules.COLS)
+	material.set_shader_param("receptor_offset", PI/Rules.COLS)
+
 
 func _draw():
 #	draw_old(true, true)
@@ -131,20 +144,9 @@ func _draw():
 	material.set_shader_param("shadow_color", shadow_color)
 	material.set_shader_param("alpha", alpha)
 
-	draw_mesh(mesh, null, null, Transform2D(0.0, rect_size*0.5))
-
-func set_ring_vertex_count(num: int):
-	assert(num > 3)
-	ring_vertex_count = num
-	update_ring_mesh()
-
-func set_ring_skew(skew: int):
-	ring_skew = skew
-	update_ring_mesh()
-
-func set_receptor_positions(skew:=0.0):
-	material.set_shader_param("num_receptors", Rules.COLS)
-	material.set_shader_param("receptor_offset", PI/Rules.COLS)
+	var scale = rect_size.x/1080.0
+	draw_mesh(mesh, null, null, Transform2D(Vector2(scale,0), Vector2(0,scale), rect_size*0.5))  #rect_size*0.5))
+#	draw_mesh(mesh, null, null, Transform2D(0.0, rect_size*0.5))
 
 func _ready():
 	add_child(tween)
@@ -154,7 +156,7 @@ func _ready():
 	$"/root".connect("size_changed", self, "update")
 
 func set_alpha(a):
-	alpha = a
+	alpha = 1.0  #a
 	material.set_shader_param("alpha", alpha)
 
 func fade(visible: bool):

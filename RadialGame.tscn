@@ -102,10 +102,8 @@ __meta__ = {
 }
 
 [node name="NoteHandler" type="Control" parent="Square"]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource( 8 )
 __meta__ = {
 "_edit_use_anchors_": false
@@ -132,9 +130,14 @@ material = SubResource( 2 )
 [node name="notelines" type="MeshInstance2D" parent="Square/NoteHandler/Viewport/Center"]
 material = SubResource( 3 )
 
-[node name="Painter" type="Node2D" parent="Square/NoteHandler"]
+[node name="Painter" type="Control" parent="Square"]
 material = SubResource( 4 )
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource( 6 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Menu" parent="Square" instance=ExtResource( 15 )]
 anchor_right = 1.0
@@ -159,5 +162,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[connection signal="item_rect_changed" from="Square" to="Square/NoteHandler/Viewport" method="_on_Square_item_rect_changed"]
 [connection signal="column_pressed" from="Square/InputHandler" to="Square/NoteHandler" method="_on_InputHandler_column_pressed"]
 [connection signal="column_released" from="Square/InputHandler" to="Square/NoteHandler" method="_on_InputHandler_column_released"]

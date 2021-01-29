@@ -40,8 +40,9 @@ func _check_buttons(touch_positions):
 	var global_center = rect_global_position + rect_size*0.5
 	for pos in touch_positions:
 		pos -= global_center
+		pos /= rect_size.x * 0.5
 		var pol = cartesian2polar(pos.x, pos.y)
-		var dist = pol.x/GameTheme.receptor_ring_radius
+		var dist = pol.x/GameTheme.receptor_ring_radius_normalized
 		var angle = rad2deg(pol.y)
 		if dist < TOUCHBUTTON_MIN_DIST:  # Short circuit out to save some logic
 			continue

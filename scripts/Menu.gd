@@ -7,7 +7,7 @@ export var ReceptorsPath := @'../Center/Receptors'
 onready var NoteHandler := get_node(NoteHandlerPath)
 onready var Receptors := get_node(ReceptorsPath)
 onready var ScoreText := $ScoreText
-onready var PVMusic := $PVMusic
+onready var PVMusic := SoundPlayer.music_player_pv
 
 var genres = {}
 
