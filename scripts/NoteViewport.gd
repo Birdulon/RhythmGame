@@ -14,12 +14,13 @@ func set_render_scale(scale: Vector2):
 func _ready():
 	Settings.connect('subsampling_changed', self, 'set_render_scale')
 	set_render_scale(Settings.subsampling)
+	_on_Square_item_rect_changed()
 
 
 onready var Square := $'../../'
 onready var Root := $'/root'
 onready var Main := $'/root/main'
 func _on_Square_item_rect_changed() -> void:
-	var winscale = Root.size.x/Main.rect_size.x
+	var winscale = min(Root.size.x, Root.size.y)/base_height
 	container_size = Square.rect_size * winscale
 	set_render_scale(scale)
