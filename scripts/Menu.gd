@@ -85,6 +85,9 @@ class lerp_array extends Resource:
 		return len(array)
 
 
+func get_rect_center(rect: Rect2) -> Vector2:
+	return rect.position + rect.size*0.5
+
 func scan_library():
 	var results = FileLoader.scan_library()
 	genres = results.genres
@@ -164,8 +167,8 @@ func draw_string_centered(font: Font, position: Vector2, string: String, color :
 	# Draws horizontally centered from the baseline. Can vcenter via ascent but not perfectly reliable.
 	# Returns size of the string.
 	var ss := font.get_string_size(string)
-	var ascent := font.get_ascent() if vcenter else 0.0
-	draw_string(font, Vector2(position.x - ss.x*0.5, position.y + ascent*0.5).round(), string, color)
+	var v := -(font.get_descent() - font.get_height()*0.475) if vcenter else 0.0  # This VCentering is a little fudgey but works for our current fonts
+	draw_string(font, Vector2(position.x - ss.x*0.5, position.y + v).round(), string, color)
 	return ss
 
 func draw_string_ralign(font: Font, position: Vector2, string: String, color := GameTheme.COLOR_MENU_TEXT, vcenter := false) -> Vector2:
@@ -270,7 +273,7 @@ func _draw_chart_select(center: Vector2) -> Array:
 	var size = min(192, (1000-spacer_x*(n-1))/n) * f_scale
 	var rect_back = Rect2(center + Vector2(-300.0, 390.0)*f_scale, Vector2(600.0, 140.0)*f_scale)
 	draw_rect(rect_back, Color.red)
-	draw_string_centered(TitleFont, rect_back.position+rect_back.size/2, 'Back to song selection')
+	draw_string_centered(TitleFont, get_rect_center(rect_back), 'Back to song selection', Color.white, true)
 	draw_string_centered(GenreFont, center+Vector2(0, -360*f_scale), 'Select Difficulty', Color.aqua)
 	draw_string_centered(DiffNumFont, center+Vector2(0, -300*f_scale), 'Tap to show stats, tap focused to play', Color.lightgreen)
 	var touchrects = [{rect=rect_back, chart_idx=-1, enabled=true}]  # invisible back button
@@ -396,17 +399,17 @@ func _draw_score_screen(center: Vector2) -> Array:
 	var txt_offset = Vector2.DOWN*10*f_scale
 	var rect_songs := Rect2(center+Vector2(-100.0, 300.0)*f_scale, Vector2(400.0, 100.0)*f_scale)
 	draw_rect(rect_songs, Color.red)
-	draw_string_centered(TitleFont, rect_songs.position + rect_songs.size*0.5 + txt_offset, 'Song Select')
+	draw_string_centered(TitleFont, get_rect_center(rect_songs), 'Song Select', Color.white, true)
 	touchrects.append({rect=rect_songs, next_menu=MenuMode.SONG_SELECT})
 
 	var rect_save := Rect2(center+Vector2(-300.0, 300.0)*f_scale, Vector2(180.0, 100.0)*f_scale)
 	if not scorescreen_saved:
 		draw_rect(rect_save, Color(0.0, 0.01, 1.0))
-		draw_string_centered(TitleFont, rect_save.position + rect_save.size*0.5 + txt_offset, 'Save')
+		draw_string_centered(TitleFont, get_rect_center(rect_save), 'Save', Color.white, true)
 		touchrects.append({rect=rect_save, action='save'})
 	else:
 		draw_rect(rect_save, Color.darkgray)
-		draw_string_centered(TitleFont, rect_save.position + rect_save.size*0.5 + txt_offset, 'Saved')
+		draw_string_centered(TitleFont, get_rect_center(rect_save), 'Saved', Color.white, true)
 
 	draw_string_centered(GenreFont, center+Vector2.UP*410*f_scale, 'Results', Color.aqua)
 	return touchrects
@@ -416,7 +419,7 @@ func _draw_gameplay(center: Vector2) -> Array:
 
 	var rect_songselect := Rect2(center+Vector2(+860.0, 480.0)*f_scale, Vector2(100.0, 50.0)*f_scale)
 	draw_rect(rect_songselect, Color.red)
-	draw_string_centered(TitleFont, center+Vector2(+910, 514)*f_scale, 'Stop')
+	draw_string_centered(TitleFont, get_rect_center(rect_songselect), 'Stop', Color.white, true)
 	touchrects.append({rect=rect_songselect, action='stop'})
 	return touchrects
 
