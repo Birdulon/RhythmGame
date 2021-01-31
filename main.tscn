@@ -14,16 +14,17 @@ __meta__ = {
 }
 
 [node name="RadialGame" parent="." instance=ExtResource( 1 )]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -540.0
-margin_top = -540.0
-margin_right = 540.0
-margin_bottom = 540.0
+anchor_right = 0.0
+margin_right = 600.0
+rect_min_size = Vector2( 1080, 0 )
 
 [node name="OptionPanel" parent="." instance=ExtResource( 13 )]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -254.0
+margin_right = 0.0
+margin_bottom = 0.0
 
 [node name="TouchInput" type="Control" parent="."]
 margin_right = 40.0
