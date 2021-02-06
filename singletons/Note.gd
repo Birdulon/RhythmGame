@@ -242,9 +242,18 @@ static func process_note_list(note_array: Array, check_doubles:=true):
 		# Doubles
 		if check_doubles:
 			for i in len(note_array)-1:
-				if note_array[i].time_hit == note_array[i+1].time_hit:
-					note_array[i].double_hit = true
-					note_array[i+1].double_hit = true
+				var note1 = note_array[i]
+				if not note1.hittable:
+					continue
+				for j in len(note_array)-1-i:
+					var note2 = note_array[i+j+1]
+					if not note2.hittable:
+						continue
+					if note1.time_hit == note2.time_hit:
+						note1.double_hit = true
+						note2.double_hit = true
+					else:
+						break
 		# Slides
 		for i in len(note_array):
 			if note_array[i].type == NOTE_SLIDE:

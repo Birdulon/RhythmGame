@@ -167,13 +167,17 @@ class SRT:
 		if err != OK:
 			print(err)
 			return err
-		var notes = []
+		var metadata := {}
+		var num_taps := 0
+		var num_holds := 0
+		var num_slides := 0
+		var notes := []
 		var beats_per_measure := 4
 		var length = file.get_len()
 		var slide_ids = {}
 		while (file.get_position() < (length-2)):
 			var noteline = file.get_csv_line()
-			var time_hit := (float(noteline[0]) + (float(noteline[1]))-1.0) * beats_per_measure
+			var time_hit := (float(noteline[0]) + (float(noteline[1]))) * beats_per_measure
 			var duration := float(noteline[2]) * beats_per_measure
 			var column := int(noteline[3])
 			var id := int(noteline[4])
@@ -183,8 +187,10 @@ class SRT:
 			match id:
 				ID_HOLD:
 					notes.push_back(Note.NoteHold.new(time_hit, column, duration))
+					num_holds += 1
 				ID_BREAK:
 					notes.push_back(Note.NoteTap.new(time_hit, column, true))
+					num_taps += 1
 				ID_SLIDE_END:
 					# id2 is slide ID
 					if id2 in slide_ids:
@@ -193,6 +199,7 @@ class SRT:
 				_:
 					if id2 == 0:
 						notes.push_back(Note.NoteTap.new(time_hit, column))
+						num_taps += 1
 					else:
 						# id2 is slide ID, id3 is slide pattern
 						# In order to properly declare the slide, we need the paired endcap which may not be the next note
@@ -207,12 +214,16 @@ class SRT:
 							_:
 								print('Unknown slide type: ', id3)
 						var note = Note.NoteStar.new(time_hit, column)
+						num_slides += 1
 						note.duration = duration
 						notes.push_back(note)
 						var slide = Note.NoteSlide.new(time_hit, column, duration, -1, slide_type)
 						notes.push_back(slide)
 						slide_ids[id2] = slide
-		return notes
+		metadata['num_taps'] = num_taps
+		metadata['num_holds'] = num_holds
+		metadata['num_slides'] = num_slides
+		return [metadata, notes]
 
 
 class RGT:
@@ -280,11 +291,11 @@ class RGT:
 
 		match format:
 			Format.RGTS:
-				var notes = parse_rgts(lines[0])
-				return notes
+				var metadata_and_notes = parse_rgts(lines[0])
+				return metadata_and_notes
 			Format.RGTX:
-				var notes = parse_rgtx(lines[0])
-				return notes
+				var metadata_and_notes = parse_rgtx(lines[0])
+				return metadata_and_notes
 			Format.RGTM:
 				lines.pop_front()  # Anything before the first [header] is meaningless
 				var charts = {}
@@ -631,7 +642,9 @@ func load_filelist(filelist: Array, directory=''):
 					charts[key] = RGT.load_file(filename)
 					key += 1
 				'srt':  # maimai, single chart
-					charts[key] = SRT.load_file(filename)
+					var metadata_and_notes = SRT.load_file(filename)
+					Note.process_note_list(metadata_and_notes[1])  # SRT doesn't handle doubles
+					charts[key] = metadata_and_notes
 					key += 1
 				'sm':  # Stepmania, multiple charts
 					var res = SM.load_file(filename)

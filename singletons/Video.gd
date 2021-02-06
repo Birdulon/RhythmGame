@@ -12,6 +12,7 @@ func _ready():
 	video.expand = false
 	add_child(video)  # Needs to be in scene tree to make the textures
 	video.visible = false  # Luckily this is enough to make the textures without rendering
+	video.volume = 0.0
 
 func _process(delta: float) -> void:
 	get_tree().call_group('VideoTexRects', 'set_texture', self.texture)

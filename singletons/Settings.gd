@@ -25,3 +25,18 @@ func SSY_get() -> float:
 	return ProjectSettings.get_setting('rendering/quality/subsampling/y')
 func SSXY_get() -> Vector2:
 	return Vector2(self.subsampling_x, self.subsampling_y)
+
+
+
+const SETTINGS_FILENAME = 'user://settings.conf'
+
+func load_settings():
+	var config := ConfigFile.new()
+	match config.load(SETTINGS_FILENAME):
+		OK:
+			pass
+		ERR_FILE_NOT_FOUND:
+			save_settings()
+
+func save_settings():
+	pass
