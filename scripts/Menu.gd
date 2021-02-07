@@ -393,8 +393,9 @@ func _draw_score_screen(center: Vector2) -> Array:
 	ScoreText.score_sub = '%2.3f%%'%(overall_score*100.0)
 	ScoreText.update()
 
-	draw_string_centered(TitleFont, center+Vector2(0, y3+y_spacing*7), 'Early : Late')
-	draw_string_centered(TitleFont, center+Vector2(0, y3+y_spacing*8), '%3d%% : %3d%%'%[notecount_early*100/max(notecount_total, 1), notecount_late*100/max(notecount_total, 1)])
+	draw_string_centered(TitleFont, center+Vector2(-150, y3+y_spacing*7), 'Early : Late')
+	draw_string_centered(TitleFont, center+Vector2(-150, y3+y_spacing*8), '%3d%% : %3d%%'%[notecount_early*100/max(notecount_total, 1), notecount_late*100/max(notecount_total, 1)])
+	draw_string_centered(TitleFont, center+Vector2(150, y3+y_spacing*7.5), 'Max Combo: %d'%scorescreen_score_data.get('max_combo', 0))  # Safety for older saves
 
 	var txt_offset = Vector2.DOWN*10*f_scale
 	var rect_songs := Rect2(center+Vector2(-100.0, 300.0)*f_scale, Vector2(400.0, 100.0)*f_scale)

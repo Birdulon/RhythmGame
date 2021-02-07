@@ -4,6 +4,7 @@ var screen_height := 1080
 
 # This script will draw all note events.
 signal finished_song(song_key, score_data)
+signal combo_changed(value)
 var running := false
 var song_key = ''
 
@@ -15,6 +16,7 @@ onready var SlideTrailHandler = $'Viewport/Center/SlideTrailHandler'
 onready var JudgeText = $'Viewport/Center/JudgeText'
 onready var notelines = $'Viewport/Center/notelines'
 onready var meshinstance = $'Viewport/Center/meshinstance'
+onready var lbl_combo = $lbl_combo
 
 const SQRT2 := sqrt(2)
 const DEG45 := deg2rad(45.0)
@@ -71,6 +73,16 @@ const TextJudgementStraight := {
 	'MISS': TextWord.MISS + TextStyle.STRAIGHT
 }
 
+var current_combo := 0
+func increment_combo():
+	current_combo += 1
+	emit_signal('combo_changed', current_combo)  # Make text or something?
+func end_combo(no_reset := false):
+	scores['max_combo'] = max(current_combo, scores.get('max_combo', 0))
+	if not no_reset:  # A bit hacky, but we want the ability to cash in the max combo without resetting the counter for... playlist reasons?
+		current_combo = 0
+		emit_signal('combo_changed', 0)  # Womp womp effect somewhere?
+
 func initialise_scores():
 	scores = {}
 	for type in [Note.NOTE_TAP, Note.NOTE_HOLD, Note.NOTE_STAR]:
@@ -82,6 +94,8 @@ func initialise_scores():
 		scores[Note.RELEASE_SCORE_TYPES[type]] = {}
 		for key in TextJudgement:
 			scores[Note.RELEASE_SCORE_TYPES[type]][key] = 0
+	scores['max_combo'] = 0
+	current_combo = 0
 
 func make_text_mesh(mesh: ArrayMesh, text_id: int, pos: Vector2, angle: float, alpha:=1.0, scale:=1.0):
 	var r := GameTheme.judge_text_size2 * scale
@@ -218,6 +232,11 @@ func activate_note(note, judgement):
 	match note.type:
 		Note.NOTE_HOLD:
 			note.is_held = true
+
+	if abs(judgement) < 3:
+		increment_combo()  # For now, only hits count toward building and maintaining combo. Releases and slides do not.
+	else:
+		end_combo()
 
 func activate_note_release(note, judgement):
 	# Only for Hold, Slide
@@ -582,6 +601,7 @@ func _process(delta):
 		elif note.time_activated == INF:  # Check if notes have been missed
 			if ((t-note.time_hit) > miss_time) and not note.missed:
 				note.missed = true
+				end_combo()
 				make_judgement_column('MISS', note.column)
 				scores[note.type]['MISS'] += 1
 				if Note.RELEASE_SCORE_TYPES.has(note.type):
@@ -624,6 +644,7 @@ func _process(delta):
 	):
 		self.running = false
 		self.timers_set = false
+		end_combo(true)
 		emit_signal('finished_song', song_key, scores)
 
 	# Redraw

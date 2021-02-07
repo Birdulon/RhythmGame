@@ -1,7 +1,8 @@
-[gd_scene load_steps=18 format=2]
+[gd_scene load_steps=21 format=2]
 
 [ext_resource path="res://scripts/InputHandler.gd" type="Script" id=1]
 [ext_resource path="res://assets/text-4k.png" type="Texture" id=2]
+[ext_resource path="res://assets/fonts/Sniglet-Regular.ttf" type="DynamicFontData" id=3]
 [ext_resource path="res://scripts/ScreenFilter.gd" type="Script" id=4]
 [ext_resource path="res://scripts/NoteViewport.gd" type="Script" id=5]
 [ext_resource path="res://scripts/NotePainter.gd" type="Script" id=6]
@@ -50,10 +51,32 @@ shader_param/array_postmul = Vector3( 1, 1, 1 )
 shader_param/array_sidelen = 16
 shader_param/array_size = 256
 
-[sub_resource type="CanvasItemMaterial" id=4]
+[sub_resource type="DynamicFont" id=4]
+size = 48
+outline_size = 2
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 3 )
+
+[sub_resource type="GDScript" id=7]
+script/source = "extends Label
+
+const colors = [Color.gray, Color.lightgray, Color.aqua, Color.gold]
+
+
+func _on_NoteHandler_combo_changed(value) -> void:
+	text = str(value)
+	visible = (value > 0)
+	add_color_override('font_color', colors[int(min(3, value/50))])
+
+
+func _on_NoteHandler_finished_song(song_key, score_data) -> void:
+	visible = false
+"
+
+[sub_resource type="CanvasItemMaterial" id=5]
 blend_mode = 4
 
-[sub_resource type="Curve" id=5]
+[sub_resource type="Curve" id=6]
 min_value = -1.0
 _data = [ Vector2( -1, -1 ), 0.0, 0.0, 0, 0, Vector2( 0, 0 ), 2.0, 2.0, 1, 1, Vector2( 1, 1 ), 0.0, 0.0, 0, 0 ]
 
@@ -130,8 +153,29 @@ material = SubResource( 2 )
 [node name="notelines" type="MeshInstance2D" parent="Square/NoteHandler/Viewport/Center"]
 material = SubResource( 3 )
 
+[node name="lbl_combo" type="Label" parent="Square/NoteHandler"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -20.0
+margin_top = -7.0
+margin_right = 20.0
+margin_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+custom_fonts/font = SubResource( 4 )
+text = "0"
+align = 1
+valign = 1
+script = SubResource( 7 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="Painter" type="Control" parent="Square"]
-material = SubResource( 4 )
+material = SubResource( 5 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource( 6 )
@@ -144,7 +188,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 NoteHandlerPath = NodePath("../NoteHandler")
 ReceptorsPath = NodePath("../Receptors")
-ease_curve = SubResource( 5 )
+ease_curve = SubResource( 6 )
 
 [node name="Bezel" type="Control" parent="Square"]
 anchor_right = 1.0
@@ -163,5 +207,7 @@ __meta__ = {
 }
 
 [connection signal="item_rect_changed" from="Square" to="Square/NoteHandler/Viewport" method="_on_Square_item_rect_changed"]
+[connection signal="combo_changed" from="Square/NoteHandler" to="Square/NoteHandler/lbl_combo" method="_on_NoteHandler_combo_changed"]
+[connection signal="finished_song" from="Square/NoteHandler" to="Square/NoteHandler/lbl_combo" method="_on_NoteHandler_finished_song"]
 [connection signal="column_pressed" from="Square/InputHandler" to="Square/NoteHandler" method="_on_InputHandler_column_pressed"]
 [connection signal="column_released" from="Square/InputHandler" to="Square/NoteHandler" method="_on_InputHandler_column_released"]
