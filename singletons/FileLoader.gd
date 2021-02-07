@@ -14,7 +14,7 @@ const ERROR_CODES := [
 ]
 
 var userroot := OS.get_user_data_dir().rstrip('/')+'/' if OS.get_name() != 'Android' else '/storage/emulated/0/RhythmGame/'
-var PATHS := PoolStringArray([userroot, '/media/fridge-q/Games/Other/maimai Finale/decoded/RhythmGameCharts/slow_userdir/'])  # Temporary hardcoded testing
+var PATHS := PoolStringArray([userroot, '/media/fridge-q/Games/RTG/slow_userdir/'])  # Temporary hardcoded testing
 # The following would probably work. One huge caveat is that permission needs to be manually granted by the user in app settings as we can't use OS.request_permission('WRITE_EXTERNAL_STORAGE')
 # '/storage/emulated/0/Android/data/au.ufeff.rhythmgame/'
 # '/sdcard/Android/data/au.ufeff.rhythmgame/'
@@ -81,72 +81,74 @@ func find_by_extensions(array, extensions=null) -> Dictionary:
 const default_difficulty_keys = ['Z', 'B', 'A', 'E', 'M', 'R']
 func scan_library():
 	print('Scanning library')
-	var rootdir = userroot + 'songs'
-	var dir = Directory.new()
-	var err = dir.make_dir_recursive(rootdir)
-	if err != OK:
-		print_debug('An error occurred while trying to create the songs directory: ', err)
-		return err
-
-	var songslist = directory_list(rootdir, false)
-	if songslist.err != OK:
-		print('An error occurred when trying to access the songs directory: ', songslist.err)
-		return songslist.err
-
 	var song_defs = {}
 	var collections = {}
 	var genres = {}
-	dir.open(rootdir)
-	for folder in songslist.folders:
-		var full_folder := '%s/%s' % [rootdir, folder]
 
-		if dir.file_exists(folder + '/song.json'):
-			# Our format
-			song_defs[folder] = FileLoader.load_folder(full_folder)
-			print('Loaded song directory: %s' % folder)
-			if song_defs[folder]['genre'] in genres:
-				genres[song_defs[folder]['genre']].append(folder)
-			else:
-				genres[song_defs[folder]['genre']] = [folder]
-			if typeof(song_defs[folder]['chart_difficulties']) == TYPE_ARRAY:
-				var diffs = song_defs[folder]['chart_difficulties']
-				var chart_difficulties = {}
-				for i in min(len(diffs), len(default_difficulty_keys)):
-					chart_difficulties[default_difficulty_keys[i]] = diffs[i]
-				song_defs[folder]['chart_difficulties'] = chart_difficulties
+	for root in PATHS:
+		var rootdir = root + 'songs'
+		var dir = Directory.new()
+		var err = dir.make_dir_recursive(rootdir)
+		if err != OK:
+			print_debug('An error occurred while trying to create the songs directory: ', err)
+			return err
 
-		elif dir.file_exists(folder + '/collection.json'):
-			var collection = FileLoader.load_folder(full_folder, 'collection')
-			collections[folder] = collection
-			var base_dict = {'filepath': folder+'/'}  # Top level of the collection dict contains defaults for every song in it
-			for key in collection.keys():
-				if key != 'songs':
-					base_dict[key] = collection[key]
-			for song_key in collection['songs'].keys():
-				var song_dict = collection['songs'][song_key]
-				var song_def = base_dict.duplicate()
-				for key in song_dict.keys():
-					song_def[key] = song_dict[key]
-				Library.add_song(song_key, song_def)
-				# Legacy compat stuff
-				song_defs[song_key] = song_def
-				if song_defs[song_key]['genre'] in genres:
-					genres[song_defs[song_key]['genre']].append(song_key)
+		var songslist = directory_list(rootdir, false)
+		if songslist.err != OK:
+			print('An error occurred when trying to access the songs directory: ', songslist.err)
+			return songslist.err
+
+		dir.open(rootdir)
+		for folder in songslist.folders:
+			var full_folder := '%s/%s' % [rootdir, folder]
+
+			if dir.file_exists(folder + '/song.json'):
+				# Our format
+				song_defs[folder] = FileLoader.load_folder(full_folder)
+				print('Loaded song directory: %s' % folder)
+				if song_defs[folder]['genre'] in genres:
+					genres[song_defs[folder]['genre']].append(folder)
 				else:
-					genres[song_defs[song_key]['genre']] = [song_key]
+					genres[song_defs[folder]['genre']] = [folder]
+				if typeof(song_defs[folder]['chart_difficulties']) == TYPE_ARRAY:
+					var diffs = song_defs[folder]['chart_difficulties']
+					var chart_difficulties = {}
+					for i in min(len(diffs), len(default_difficulty_keys)):
+						chart_difficulties[default_difficulty_keys[i]] = diffs[i]
+					song_defs[folder]['chart_difficulties'] = chart_difficulties
 
-		else:
-			var files_by_ext = find_by_extensions(directory_list(full_folder, false).files)
-			if 'sm' in files_by_ext:
-				var sm_filename = files_by_ext['sm'][0]
-				print(sm_filename)
-				var thing = SM.load_file(full_folder + '/' + sm_filename)
-				print(thing)
-				pass
+			elif dir.file_exists(folder + '/collection.json'):
+				var collection = FileLoader.load_folder(full_folder, 'collection')
+				collections[folder] = collection
+				var base_dict = {'filepath': folder+'/'}  # Top level of the collection dict contains defaults for every song in it
+				for key in collection.keys():
+					if key != 'songs':
+						base_dict[key] = collection[key]
+				for song_key in collection['songs'].keys():
+					var song_dict = collection['songs'][song_key]
+					var song_def = base_dict.duplicate()
+					for key in song_dict.keys():
+						song_def[key] = song_dict[key]
+					Library.add_song(song_key, song_def)
+					# Legacy compat stuff
+					song_defs[song_key] = song_def
+					if song_defs[song_key]['genre'] in genres:
+						genres[song_defs[song_key]['genre']].append(song_key)
+					else:
+						genres[song_defs[song_key]['genre']] = [song_key]
+
 			else:
-				print('Found non-song directory: ' + folder)
-	for file in songslist.files:
-		print('Found file: ' + file)
+				var files_by_ext = find_by_extensions(directory_list(full_folder, false).files)
+				if 'sm' in files_by_ext:
+					var sm_filename = files_by_ext['sm'][0]
+					print(sm_filename)
+					var thing = SM.load_file(full_folder + '/' + sm_filename)
+					print(thing)
+					pass
+				else:
+					print('Found non-song directory: ' + folder)
+		for file in songslist.files:
+			print('Found file: ' + file)
 
 	return {song_defs=song_defs, genres=genres}
 

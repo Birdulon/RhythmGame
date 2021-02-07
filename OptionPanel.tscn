@@ -4,13 +4,13 @@
 [ext_resource path="res://scripts/OptionPanel.gd" type="Script" id=2]
 [ext_resource path="res://default.theme" type="Theme" id=3]
 
-[sub_resource type="DynamicFont" id=3]
+[sub_resource type="DynamicFont" id=1]
 size = 24
 outline_size = 1
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 1 )
 
-[sub_resource type="GDScript" id=4]
+[sub_resource type="GDScript" id=2]
 script/source = "extends Label
 
 var fps: float = 0.0
@@ -22,7 +22,7 @@ func _process(delta):
 	update()
 "
 
-[sub_resource type="GDScript" id=5]
+[sub_resource type="GDScript" id=3]
 script/source = "extends Label
 
 var audio_latency: float = 0.0
@@ -52,19 +52,20 @@ __meta__ = {
 }
 
 [node name="lbl_fps" type="Label" parent="."]
-margin_right = 267.0
+margin_right = 300.0
 margin_bottom = 34.0
-custom_fonts/font = SubResource( 3 )
+custom_fonts/font = SubResource( 1 )
 text = "FPS: "
-script = SubResource( 4 )
+script = SubResource( 2 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
 margin_top = 38.0
-margin_right = 267.0
-margin_bottom = 626.0
+margin_right = 300.0
+margin_bottom = 638.0
+rect_min_size = Vector2( 300, 600 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -72,22 +73,22 @@ __meta__ = {
 [node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 260.0
-margin_bottom = 581.0
+margin_right = 293.0
+margin_bottom = 593.0
 
 [node name="cb_qsettings" type="CheckBox" parent="PanelContainer/VBoxContainer"]
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 31.0
 pressed = true
 text = "Quick Settings"
 
 [node name="vbox_qsettings" type="VBoxContainer" parent="PanelContainer/VBoxContainer"]
 margin_top = 35.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 279.0
 
 [node name="hbox_language" type="HBoxContainer" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 29.0
 custom_constants/separation = 12
 
@@ -102,7 +103,7 @@ __meta__ = {
 
 [node name="btn_language" type="OptionButton" parent="PanelContainer/VBoxContainer/vbox_qsettings/hbox_language"]
 margin_left = 87.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 29.0
 size_flags_horizontal = 3
 text = "Native"
@@ -115,7 +116,7 @@ __meta__ = {
 
 [node name="lbl_volume" type="Label" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 33.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 56.0
 text = "Main Volume"
 __meta__ = {
@@ -124,7 +125,7 @@ __meta__ = {
 
 [node name="sl_volume" type="HSlider" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 60.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 76.0
 min_value = -40.0
 max_value = 0.0
@@ -136,7 +137,7 @@ __meta__ = {
 
 [node name="lbl_vol_music" type="Label" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 80.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 103.0
 text = "Music Volume"
 __meta__ = {
@@ -145,7 +146,7 @@ __meta__ = {
 
 [node name="sl_vol_music" type="HSlider" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 107.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 123.0
 min_value = -20.0
 max_value = 0.0
@@ -158,7 +159,7 @@ __meta__ = {
 
 [node name="lbl_vol_sfx" type="Label" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 127.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 150.0
 text = "Feedback Volume"
 __meta__ = {
@@ -167,7 +168,7 @@ __meta__ = {
 
 [node name="sl_vol_sfx" type="HSlider" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 154.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 170.0
 min_value = -40.0
 max_value = 0.0
@@ -179,7 +180,7 @@ __meta__ = {
 
 [node name="lbl_screenfilter" type="Label" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 174.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 197.0
 text = "Background Video Darkening"
 __meta__ = {
@@ -188,7 +189,7 @@ __meta__ = {
 
 [node name="sl_screenfilter" type="HSlider" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 201.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 217.0
 max_value = 1.0
 step = 0.02
@@ -201,36 +202,36 @@ __meta__ = {
 
 [node name="lbl_audiolatency" type="Label" parent="PanelContainer/VBoxContainer/vbox_qsettings"]
 margin_top = 221.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 244.0
 text = "Audio Latency: "
-script = SubResource( 5 )
+script = SubResource( 3 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="HSeparator" type="HSeparator" parent="PanelContainer/VBoxContainer"]
 margin_top = 283.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 287.0
 
 [node name="cb_graphics" type="CheckBox" parent="PanelContainer/VBoxContainer"]
 margin_top = 291.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 322.0
 text = "Graphics"
 
 [node name="vbox_graphics" type="VBoxContainer" parent="PanelContainer/VBoxContainer"]
 visible = false
 margin_top = 326.0
-margin_right = 281.0
+margin_right = 286.0
 margin_bottom = 433.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="hbox" type="HBoxContainer" parent="PanelContainer/VBoxContainer/vbox_graphics"]
-margin_right = 281.0
+margin_right = 286.0
 margin_bottom = 40.0
 
 [node name="btn_vsync" type="CheckButton" parent="PanelContainer/VBoxContainer/vbox_graphics/hbox"]
@@ -254,7 +255,7 @@ __meta__ = {
 
 [node name="lbl_subsampling" type="Label" parent="PanelContainer/VBoxContainer/vbox_graphics"]
 margin_top = 44.0
-margin_right = 281.0
+margin_right = 286.0
 margin_bottom = 67.0
 size_flags_vertical = 0
 text = "Subsampling (X, Y)"
@@ -264,7 +265,7 @@ __meta__ = {
 
 [node name="sl_SSX" type="HSlider" parent="PanelContainer/VBoxContainer/vbox_graphics"]
 margin_top = 71.0
-margin_right = 281.0
+margin_right = 286.0
 margin_bottom = 87.0
 size_flags_vertical = 1
 min_value = 0.1
@@ -279,7 +280,7 @@ __meta__ = {
 
 [node name="sl_SSY" type="HSlider" parent="PanelContainer/VBoxContainer/vbox_graphics"]
 margin_top = 91.0
-margin_right = 281.0
+margin_right = 286.0
 margin_bottom = 107.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -296,15 +297,15 @@ __meta__ = {
 
 [node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBoxContainer"]
 margin_top = 326.0
-margin_right = 253.0
+margin_right = 286.0
 margin_bottom = 330.0
 
 [node name="VidTextureRect" type="TextureRect" parent="PanelContainer/VBoxContainer" groups=[
 "VideoTexRects",
 ]]
 margin_top = 334.0
-margin_right = 253.0
-margin_bottom = 574.0
+margin_right = 286.0
+margin_bottom = 586.0
 rect_min_size = Vector2( 240, 240 )
 size_flags_horizontal = 7
 size_flags_vertical = 7

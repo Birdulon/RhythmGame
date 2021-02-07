@@ -22,9 +22,10 @@ rect_min_size = Vector2( 1080, 0 )
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_left = -254.0
+margin_left = 0.0
 margin_right = 0.0
 margin_bottom = 0.0
+grow_horizontal = 0
 
 [node name="TouchInput" type="Control" parent="."]
 margin_right = 40.0
