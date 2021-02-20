@@ -369,12 +369,13 @@ class RGT:
 							if SLIDE_TYPES[slide_type] == Note.SlideType.COMPLEX:
 								var col_hit = slide_ids[slide_id].column
 								var RUV = GameTheme.RADIAL_UNIT_VECTORS
+								var RCA = GameTheme.RADIAL_COL_ANGLES
 								slide_ids[slide_id].values.curve2d.add_point(RUV[col_hit])  # Start col
 								match slide_type:
-									'4':  # TODO: Loop ACW around center. Size of loop is roughly inscribed in chords of 0-3, 1-4, 2-5...   NB: doesn't loop if directly opposite col
-										slide_ids[slide_id].values.curve2d.add_point((RUV[posmod(col_hit-3, Rules.COLS)] + RUV[col_hit]) * 0.5)
-									'5':  # TODO: CW of above
-										slide_ids[slide_id].values.curve2d.add_point((RUV[posmod(col_hit+3, Rules.COLS)] + RUV[col_hit]) * 0.5)
+									'4':  # Orbit ACW around center. Size of loop is roughly inscribed in chords of 0-3, 1-4, 2-5...   NB: doesn't loop if directly opposite col
+										Note.curve2d_make_orbit(slide_ids[slide_id].values.curve2d, RCA[col_hit], RCA[column], true)
+									'5':  # CW of above
+										Note.curve2d_make_orbit(slide_ids[slide_id].values.curve2d, RCA[col_hit], RCA[column], false)
 									'6':  # S zigzag through center
 										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit-2, Rules.COLS)] * SLIDE_IN_R)
 										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit+2, Rules.COLS)] * SLIDE_IN_R)
@@ -388,10 +389,10 @@ class RGT:
 									'a':  # TODO: CW of above
 										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
 									'b':  # V into column 2 places ACW
-										slide_ids[slide_id].values.curve2d.add_point(GameTheme.RADIAL_UNIT_VECTORS[posmod(col_hit-2, Rules.COLS)])
+										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit-2, Rules.COLS)])
 									'c':  # V into column 2 places CW
-										slide_ids[slide_id].values.curve2d.add_point(GameTheme.RADIAL_UNIT_VECTORS[posmod(col_hit+2, Rules.COLS)])
-								slide_ids[slide_id].values.curve2d.add_point(GameTheme.RADIAL_UNIT_VECTORS[column])  # End col
+										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit+2, Rules.COLS)])
+								slide_ids[slide_id].values.curve2d.add_point(RUV[column])  # End col
 						else:  # Naked slide start
 							if last_star[column] != null:
 								slide_stars[slide_id] = last_star[column]
