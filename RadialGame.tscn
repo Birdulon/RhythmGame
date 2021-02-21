@@ -57,7 +57,7 @@ outline_size = 2
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 3 )
 
-[sub_resource type="GDScript" id=7]
+[sub_resource type="GDScript" id=5]
 script/source = "extends Label
 
 const colors = [Color.gray, Color.lightgray, Color.aqua, Color.gold]
@@ -73,10 +73,10 @@ func _on_NoteHandler_finished_song(song_key, score_data) -> void:
 	visible = false
 "
 
-[sub_resource type="CanvasItemMaterial" id=5]
+[sub_resource type="CanvasItemMaterial" id=6]
 blend_mode = 4
 
-[sub_resource type="Curve" id=6]
+[sub_resource type="Curve" id=7]
 min_value = -1.0
 _data = [ Vector2( -1, -1 ), 0.0, 0.0, 0, 0, Vector2( 0, 0 ), 2.0, 2.0, 1, 1, Vector2( 1, 1 ), 0.0, 0.0, 0, 0 ]
 
@@ -169,13 +169,13 @@ custom_fonts/font = SubResource( 4 )
 text = "0"
 align = 1
 valign = 1
-script = SubResource( 7 )
+script = SubResource( 5 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Painter" type="Control" parent="Square"]
-material = SubResource( 5 )
+material = SubResource( 6 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource( 6 )
@@ -188,7 +188,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 NoteHandlerPath = NodePath("../NoteHandler")
 ReceptorsPath = NodePath("../Receptors")
-ease_curve = SubResource( 6 )
+ease_curve = SubResource( 7 )
 
 [node name="Bezel" type="Control" parent="Square"]
 anchor_right = 1.0
