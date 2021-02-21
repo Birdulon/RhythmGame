@@ -264,9 +264,7 @@ static func process_note_list(note_array: Array, check_doubles:=true):
 const ORBIT_INNER_RADIUS = sin(deg2rad(22.5))  # ~0.38
 const ORBIT_KAPPA = (sqrt(2)-1) * 4.0 / 3.0  # This is the length of control points along a tangent to approximate a circle (multiply by desired radius)
 
-func curve2d_make_orbit(curve2d, rad_in, rad_out, ccw, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):  #
-#	curve2d.clear_points()
-#	curve2d.bake_interval = 0.05
+func curve2d_make_orbit(curve2d, rad_in, rad_out, ccw, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):
 	var d_sign = -1 if ccw else 1
 	var rad_2 = rad_in+PI*3/8*d_sign
 	var rad_2t = rad_2+PI*0.5*d_sign
@@ -285,4 +283,26 @@ func curve2d_make_orbit(curve2d, rad_in, rad_out, ccw, rad_max_arc:=PI*0.25, kap
 		curve2d.add_point(polar2cartesian(inner_radius, ang), polar2cartesian(k, ang-PI/2*d_sign), polar2cartesian(k, ang+PI/2*d_sign))
 
 	curve2d.add_point(polar2cartesian(inner_radius, rad_3), polar2cartesian(k, rad_3t))
+#	curve2d.add_point(polar2cartesian(1.0, rad_out))
+
+func curve2d_make_sideorbit(curve2d: Curve2D, rad_in: float, rad_out: float, ccw: bool, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):
+	var d_sign := -1 if ccw else 1
+	var sideorbit_center := polar2cartesian(inner_radius, rad_in-PI*0.5*d_sign)
+	var rad_orbit_in := rad_in + PI*0.5*d_sign
+	var orbcenter_to_out := polar2cartesian(1.0, rad_out) - sideorbit_center
+	var rad_orbit_out := orbcenter_to_out.angle() - acos(inner_radius/orbcenter_to_out.length())*d_sign
+	var pos_orbit_out := sideorbit_center + polar2cartesian(inner_radius, rad_orbit_out)
+
+	var a_diff = wrapf((rad_orbit_out-rad_orbit_in)*d_sign, 0.0001, TAU+0.0001)
+	var n = ceil(a_diff/rad_max_arc)
+	var ad = a_diff/n
+	var k = kappa*inner_radius*(2*ad/PI)  # Not geometrically correct scaling but reasonable for now
+
+#	curve2d.add_point(polar2cartesian(1.0, rad_in))
+	curve2d.add_point(Vector2.ZERO, Vector2.ZERO, polar2cartesian(k, rad_in+PI))
+	for i in range(1, n):
+		var ang = rad_orbit_in + i*ad*d_sign
+		curve2d.add_point(sideorbit_center + polar2cartesian(inner_radius, ang), polar2cartesian(k, ang-PI/2*d_sign), polar2cartesian(k, ang+PI/2*d_sign))
+
+	curve2d.add_point(pos_orbit_out, polar2cartesian(k, rad_orbit_out-PI*0.5*d_sign))
 #	curve2d.add_point(polar2cartesian(1.0, rad_out))

@@ -252,12 +252,12 @@ class RGT:
 		'1': Note.SlideType.CHORD,
 		'2': Note.SlideType.ARC_ACW,
 		'3': Note.SlideType.ARC_CW,
-		'4': Note.SlideType.COMPLEX,  # From nekomatsuri master - Loop ACW around center. Size of loop is roughly inscribed in chords of 0-3, 1-4, 2-5...   NB: doesn't loop if directly opposite col
+		'4': Note.SlideType.COMPLEX,  # Orbit around center ACW on the way
 		'5': Note.SlideType.COMPLEX,  # CW of above
 		'6': Note.SlideType.COMPLEX,  # S zigzag through center
 		'7': Note.SlideType.COMPLEX,  # Z zigzag through center
 		'8': Note.SlideType.COMPLEX,  # V into center
-		'9': Note.SlideType.COMPLEX,  # From nekomatsuri master - Seems to loop around to center ACW to make a + to the end
+		'9': Note.SlideType.COMPLEX,  # Go to center then orbit off to the side ACW
 		'a': Note.SlideType.COMPLEX,  # CW of above
 		'b': Note.SlideType.COMPLEX,  # V into column 2 places ACW
 		'c': Note.SlideType.COMPLEX,  # V into column 2 places CW
@@ -384,10 +384,10 @@ class RGT:
 										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit-2, Rules.COLS)] * SLIDE_IN_R)
 									'8':  # V into center
 										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
-									'9':  # TODO: From nekomatsuri master - Seems to loop around to center ACW to make a + to the end
-										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
-									'a':  # TODO: CW of above
-										slide_ids[slide_id].values.curve2d.add_point(Vector2.ZERO)
+									'9':  # Orbit off-center ACW
+										Note.curve2d_make_sideorbit(slide_ids[slide_id].values.curve2d, RCA[col_hit], RCA[column], true)
+									'a':  # CW of above
+										Note.curve2d_make_sideorbit(slide_ids[slide_id].values.curve2d, RCA[col_hit], RCA[column], false)
 									'b':  # V into column 2 places ACW
 										slide_ids[slide_id].values.curve2d.add_point(RUV[posmod(col_hit-2, Rules.COLS)])
 									'c':  # V into column 2 places CW
