@@ -197,15 +197,16 @@ func make_slide_trail_mesh(note) -> ArrayMesh:
 			uvs.resize(3*trail_length)
 			colors.resize(3*trail_length)
 			for i in trail_length:
+				var idx = (trail_length-i-1)*3  # We want the earliest ones to be drawn last so that loops/sharp bends will have the first pass on top
 				var u = GameTheme.UV_ARRAY_SLIDE_ARROW if i%3 else GameTheme.UV_ARRAY_SLIDE_ARROW2
 				for j in 3:
-					uvs[i*3+j] = u[j]
-					colors[i*3+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
+					uvs[idx+j] = u[j]
+					colors[idx+j] = Color(color.r, color.g, color.b, (1.0+float(i))/float(trail_length))
 				var angle : float = angles[i]
 				var offset : Vector2 = positions[i] * GameTheme.receptor_ring_radius
-				vertices[i*3] = offset
-				vertices[i*3+1] = offset + polar2cartesian(size, angle+PI*0.75)
-				vertices[i*3+2] = offset + polar2cartesian(size, angle-PI*0.75)
+				vertices[idx] = offset
+				vertices[idx+1] = offset + polar2cartesian(size, angle+PI*0.75)
+				vertices[idx+2] = offset + polar2cartesian(size, angle-PI*0.75)
 
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
