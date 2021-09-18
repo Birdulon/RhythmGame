@@ -37,9 +37,9 @@ func _draw():  # draw fingers points on screen
 #			draw_line(touch_positions[i], touch_positions[i+1], Color(1,1,1,1))
 
 func _process(delta):
-	swipe_momentum *= max(1.0 - 5.0*delta, 0)
-	if swipe_momentum.length_squared() < 1.0:
-		swipe_momentum = Vector2.ZERO
+#	swipe_momentum *= max(1.0 - 5.0*delta, 0)
+#	if swipe_momentum.length_squared() < 1.0:
+#		swipe_momentum = Vector2.ZERO
 	update()
 
 func update_data():
@@ -57,7 +57,7 @@ func _input(event):
 	if (event is InputEventScreenDrag):
 		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 		touch_points[event.index] = {pressed = true, position = event.position}
-		swipe_momentum = event.speed
+#		swipe_momentum = event.speed
 	elif (event is InputEventScreenTouch):
 		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 		if event.pressed:
