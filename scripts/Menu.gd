@@ -215,6 +215,11 @@ func _draw_song_select(center: Vector2) -> Array:
 	var gy: float = center.y - 500 * f_scale - size*selected_genre_delta
 	var touchrects := []
 
+	if len(genres) <= 0:
+		draw_string_centered(GenreFont, Vector2(center.x, center.y-440*f_scale), 'No Songs in Library!', Color.aqua)
+		draw_string_centered(DiffNumFont, Vector2(center.x, center.y-390*f_scale), FileLoader.userroot, Color.lightgreen)
+		return touchrects
+
 	var ssid = self.selected_song_idx
 	var s_delta = target_song_delta-round(target_song_delta)
 	for gi in [-2, -1, 0, 1, 2]:
