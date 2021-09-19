@@ -206,7 +206,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[connection signal="item_rect_changed" from="Square" to="Square/NoteHandler/Viewport" method="_on_Square_item_rect_changed"]
 [connection signal="combo_changed" from="Square/NoteHandler" to="Square/NoteHandler/lbl_combo" method="_on_NoteHandler_combo_changed"]
 [connection signal="finished_song" from="Square/NoteHandler" to="Square/NoteHandler/lbl_combo" method="_on_NoteHandler_finished_song"]
 [connection signal="column_pressed" from="Square/InputHandler" to="Square/NoteHandler" method="_on_InputHandler_column_pressed"]
