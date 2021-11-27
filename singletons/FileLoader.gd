@@ -51,27 +51,6 @@ func load_image(name: String) -> ImageTexture:  # Searches through all of the pa
 		var filename: return FileHelpers.load_image(filename)
 
 
-func find_by_extensions(array, extensions=null) -> Dictionary:
-	# Both args can be Array or PoolStringArray
-	# If extensions omitted, do all extensions
-	var output = {}
-	if extensions:
-		for ext in extensions:
-			output[ext] = []
-		for filename in array:
-			for ext in extensions:
-				if filename.ends_with(ext):
-					output[ext].append(filename)
-	else:
-		for filename in array:
-			var ext = filename.rsplit('.', false, 1)[1]
-			if ext in output:
-				output[ext].append(filename)
-			else:
-				output[ext] = [filename]
-	return output
-
-
 func scan_library() -> Dictionary:
 	print('Scanning library')
 	var song_defs = {}
@@ -131,7 +110,7 @@ func scan_library() -> Dictionary:
 						genres[song_defs[song_key]['genre']] = [song_key]
 
 			else:
-				var files_by_ext = find_by_extensions(FileHelpers.directory_list(full_folder, false).files)
+				var files_by_ext = FileHelpers.find_by_extensions(FileHelpers.directory_list(full_folder, false).files)
 				if 'sm' in files_by_ext:
 					var sm_filename = files_by_ext['sm'][0]
 					print(sm_filename)

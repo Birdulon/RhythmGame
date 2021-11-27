@@ -13,6 +13,7 @@ const RELEASE_SCORE_TYPES := {
 	NOTE_ROLL: -NOTE_ROLL
 }
 
+
 class NoteBase extends Resource:
 	var time_hit: float setget set_time_hit
 	var time_death: float
@@ -26,8 +27,10 @@ class NoteBase extends Resource:
 		time_hit = value
 		time_death = time_hit + DEATH_DELAY
 
+
 class NoteHittableBase extends NoteBase:
 	const hittable := true
+
 
 class NoteTapBase extends NoteHittableBase:
 	func _init(time_hit: float, column: int, is_break:=false):
@@ -35,16 +38,19 @@ class NoteTapBase extends NoteHittableBase:
 		self.column = column
 		self.is_break = is_break
 
+
 class NoteTap extends NoteTapBase:
 	var type := NOTE_TAP
 	func _init(time_hit: float, column: int, is_break:=false).(time_hit, column, is_break):
 		pass
+
 
 class NoteStar extends NoteTapBase:  # Fancy charts have naked slides which necessitates separation of Star and Slide :(
 	var type := NOTE_STAR
 	var duration := 1.0  # This is required for the spin speed
 	func _init(time_hit: float, column: int, is_break:=false).(time_hit, column, is_break):
 		pass
+
 
 class NoteHoldBase extends NoteHittableBase:
 	var time_release: float setget set_time_release
@@ -72,15 +78,18 @@ class NoteHoldBase extends NoteHittableBase:
 		time_release = time_hit + duration
 		time_death = time_release + DEATH_DELAY
 
+
 class NoteHold extends NoteHoldBase:
 	var type := NOTE_HOLD
 	func _init(time_hit: float, column: int, duration: float).(time_hit, column, duration):
 		pass
 
+
 class NoteRoll extends NoteHoldBase:
 	var type := NOTE_ROLL
 	func _init(time_hit: float, column: int, duration: float).(time_hit, column, duration):
 		pass
+
 
 class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necessitates separation of Star and Slide :(
 	const hittable := false
@@ -204,6 +213,7 @@ class NoteSlide extends NoteBase:  # Fancy charts have naked slides which necess
 				return values.curve2d.get_baked_length()
 		return 0.0
 
+
 static func copy_note(note: NoteBase):
 	# Honestly disappointed I couldn't find a better, more OOP solution for this.
 	var newnote: NoteBase
@@ -223,15 +233,19 @@ static func copy_note(note: NoteBase):
 	newnote.double_hit = note.double_hit
 	return newnote
 
+
 static func make_slide(time_hit: float, duration: float, column: int, column_release: int, slide_type:=SlideType.CHORD) -> NoteSlide:
 	return NoteSlide.new(time_hit, column, duration, column_release, slide_type)
+
 
 static func make_touch(time_hit: float, location: Vector2) -> Dictionary:
 	return {type=NOTE_TOUCH, time_hit=time_hit, time_death=time_hit+DEATH_DELAY, location=location, double_hit=false}
 
+
 static func make_touch_hold(time_hit: float, duration: float, location: Vector2) -> Dictionary:
 	var time_release := time_hit + duration
 	return {type=NOTE_TOUCH_HOLD, time_hit=time_hit, time_release=time_release, time_death=time_release+DEATH_DELAY, location=location, double_hit=false}
+
 
 static func process_note_list(note_array: Array, check_doubles:=true):
 	# Preprocess double hits, assign Slide IDs
@@ -260,11 +274,13 @@ static func process_note_list(note_array: Array, check_doubles:=true):
 				note_array[i].slide_id = slide_id
 				slide_id += 1
 
+
 # These should probably get their own singleton later
 const ORBIT_INNER_RADIUS = sin(deg2rad(22.5))  # ~0.38
 const ORBIT_KAPPA = (sqrt(2)-1) * 4.0 / 3.0  # This is the length of control points along a tangent to approximate a circle (multiply by desired radius)
 
-func curve2d_make_orbit(curve2d, rad_in, rad_out, ccw, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):
+
+static func curve2d_make_orbit(curve2d, rad_in, rad_out, ccw, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):
 	var d_sign = -1 if ccw else 1
 	var rad_2 = rad_in+PI*3/8*d_sign
 	var rad_2t = rad_2+PI*0.5*d_sign
@@ -285,7 +301,8 @@ func curve2d_make_orbit(curve2d, rad_in, rad_out, ccw, rad_max_arc:=PI*0.25, kap
 	curve2d.add_point(polar2cartesian(inner_radius, rad_3), polar2cartesian(k, rad_3t))
 #	curve2d.add_point(polar2cartesian(1.0, rad_out))
 
-func curve2d_make_sideorbit(curve2d: Curve2D, rad_in: float, rad_out: float, ccw: bool, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):
+
+static func curve2d_make_sideorbit(curve2d: Curve2D, rad_in: float, rad_out: float, ccw: bool, rad_max_arc:=PI*0.25, kappa:=ORBIT_KAPPA, inner_radius:=ORBIT_INNER_RADIUS):
 	var d_sign := -1 if ccw else 1
 	var sideorbit_center := polar2cartesian(inner_radius, rad_in-PI*0.5*d_sign)
 	var rad_orbit_in := rad_in + PI*0.5*d_sign

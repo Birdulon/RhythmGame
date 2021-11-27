@@ -2,6 +2,7 @@ extends Node
 
 const difficulty_translations = {'01': 'Z', '02': 'B', '03': 'A', '04': 'E', '05': 'M', '06': 'R', '10': '宴'}  # A bit redundant now but might be useful later for other hacks
 
+
 class MultilangStr:
 	# Automatically propogate higher langs to lower ones if lower ones are missing.
 	# e.g. if we don't have a proper english title, return the transliterated one instead
@@ -27,6 +28,7 @@ class MultilangStr:
 		en = english
 	func _to_string() -> String:
 		return self[GameTheme.display_language]
+
 
 class Song:
 	var title: MultilangStr
@@ -98,6 +100,7 @@ var genre_songs = []  # Dictionaries of key: Song
 var tile_tex_cache = {}  # We'll need some way of managing this later since holding all the tiles in memory might be expensive
 var charts_cache = {}
 
+
 func add_song(key: String, data: Dictionary):
 	if not data.has('index'):
 		data['index'] = key
@@ -109,6 +112,7 @@ func add_song(key: String, data: Dictionary):
 		genre_songs.append({})
 	genre_songs[genre_ids[song.genre]][key] = song
 
+
 func get_song_tile_texture(song_key):
 	if song_key in tile_tex_cache:
 		return tile_tex_cache[song_key]
@@ -117,6 +121,7 @@ func get_song_tile_texture(song_key):
 		return tile_tex_cache[song_key]
 	else:
 		print_debug('Invalid song_key: ', song_key)
+
 
 func get_song_charts(song_key):
 	if song_key in charts_cache:
@@ -142,6 +147,7 @@ func get_song_charts(song_key):
 		return charts_cache[song_key]
 	else:
 		print_debug('Invalid song_key: ', song_key)
+
 
 func initialize():
 	pass

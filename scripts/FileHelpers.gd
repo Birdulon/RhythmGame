@@ -68,6 +68,27 @@ static func directory_list(directory: String, hidden: bool, sort:=true) -> Dicti
 	return output
 
 
+static func find_by_extensions(array, extensions=null) -> Dictionary:
+	# Both args can be Array or PoolStringArray
+	# If extensions omitted, do all extensions
+	var output = {}
+	if extensions:
+		for ext in extensions:
+			output[ext] = []
+		for filename in array:
+			for ext in extensions:
+				if filename.ends_with(ext):
+					output[ext].append(filename)
+	else:
+		for filename in array:
+			var ext = filename.rsplit('.', false, 1)[1]
+			if ext in output:
+				output[ext].append(filename)
+			else:
+				output[ext] = [filename]
+	return output
+
+
 static func init_directory(directory: String):
 	var dir = Directory.new()
 	var err = dir.make_dir_recursive(directory)
