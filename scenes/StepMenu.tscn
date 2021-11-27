@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://scripts/ScoreText.gd" type="Script" id=1]
-[ext_resource path="res://scripts/TouchMenu.gd" type="Script" id=2]
+[ext_resource path="res://scripts/StepMenu.gd" type="Script" id=2]
 [ext_resource path="res://shaders/menu.tres" type="Material" id=3]
 [ext_resource path="res://shaders/scoretext.tres" type="Material" id=4]
 
@@ -9,7 +9,7 @@
 min_value = -1.0
 _data = [ Vector2( -1, -1 ), 0.0, 0.0, 0, 0, Vector2( 0, 0 ), 2.0, 2.0, 1, 1, Vector2( 1, 1 ), 0.0, 0.0, 0, 0 ]
 
-[node name="Menu" type="Control"]
+[node name="StepMenu" type="Control"]
 material = ExtResource( 3 )
 anchor_right = 1.0
 anchor_bottom = 1.0
