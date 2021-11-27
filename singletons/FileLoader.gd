@@ -540,7 +540,8 @@ class SM:
 		metadata['num_holds'] = num_holds
 		metadata['num_rolls'] = num_rolls
 		metadata['num_mines'] = num_mines
-		return [metadata, notes]
+		metadata['notes'] = notes
+		return metadata
 
 	static func load_file(filename: String) -> Array:
 		# Output is [metadata, [[meta0, chart0], ..., [metaN, chartN]]]
@@ -652,8 +653,8 @@ func load_filelist(filelist: Array, directory=''):
 				'sm':  # Stepmania, multiple charts
 					var res = SM.load_file(filename)
 					for chart in res[1]:
-						var diff = chart[0].difficulty_str
-						charts[diff] = chart[1]
+						var diff = chart.difficulty_str
+						charts[diff] = chart.notes
 				_:
 					pass
 	return charts

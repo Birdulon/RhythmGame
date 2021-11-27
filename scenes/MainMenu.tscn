@@ -1,0 +1,58 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://mainmenu_theme.tres" type="Theme" id=1]
+[ext_resource path="res://scripts/MainMenu.gd" type="Script" id=2]
+
+[node name="MainMenu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 1 )
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/separation = 16
+alignment = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="btn_touch" type="Button" parent="VBoxContainer"]
+margin_left = 451.0
+margin_top = 380.0
+margin_right = 629.0
+margin_bottom = 448.0
+size_flags_horizontal = 4
+text = "Touch"
+
+[node name="btn_step" type="Button" parent="VBoxContainer"]
+margin_left = 465.0
+margin_top = 464.0
+margin_right = 614.0
+margin_bottom = 532.0
+size_flags_horizontal = 4
+text = "Step"
+
+[node name="btn_settings" type="Button" parent="VBoxContainer"]
+margin_left = 426.0
+margin_top = 548.0
+margin_right = 653.0
+margin_bottom = 616.0
+size_flags_horizontal = 4
+text = "Settings"
+
+[node name="btn_quit" type="Button" parent="VBoxContainer"]
+margin_left = 471.0
+margin_top = 632.0
+margin_right = 608.0
+margin_bottom = 700.0
+size_flags_horizontal = 4
+text = "Quit"
+
+[connection signal="pressed" from="VBoxContainer/btn_touch" to="." method="_on_btn_touch_pressed"]
+[connection signal="pressed" from="VBoxContainer/btn_step" to="." method="_on_btn_step_pressed"]
+[connection signal="pressed" from="VBoxContainer/btn_quit" to="." method="quit"]

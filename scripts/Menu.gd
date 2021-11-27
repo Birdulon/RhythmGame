@@ -1,5 +1,4 @@
 #tool
-#extends Node2D
 extends Control
 
 export var NoteHandlerPath := @'../Center/NoteHandler'

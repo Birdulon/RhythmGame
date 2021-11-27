@@ -35,7 +35,6 @@ Video="*res://singletons/Video.gd"
 
 [debug]
 
-settings/fps/force_fps=120
 gdscript/warnings/unused_variable=false
 gdscript/warnings/shadowed_variable=false
 gdscript/warnings/unused_argument=false
